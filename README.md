@@ -5,3 +5,4 @@ Advisor-Olarn rojanapornpun
 * thannapat khamjun 65130500101
 # announcements
 - Pattern การ commit จะให้เขียนว่า "รหัสนศ[สิ่งที่ทำ add, update, delete, เพิ่มfolder] รายละเอียดสิ่งที่ทำแบบย่อ"
+- การใช้Frontend แนะนำ CMD > NPM i
