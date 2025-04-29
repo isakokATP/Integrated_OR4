@@ -3,8 +3,13 @@ package com.int221.int221backend.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "Brand")
 public class Brand {
@@ -34,15 +39,5 @@ public class Brand {
 
     @Column(name = "updatedOn", nullable = false)
     private LocalDateTime updatedOn;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdOn = this.updatedOn = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedOn = LocalDateTime.now();
-    }
 }
 
