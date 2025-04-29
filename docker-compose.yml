@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: int221-mysql
+    restart: always
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - int221-net
+
+volumes:
+  mysql-data:
+
+networks:
+  int221-net:
