@@ -9,10 +9,10 @@ DROP TABLE IF EXISTS Brand;
 -- CREATE TABLE Brand
 CREATE TABLE Brand (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(name) <> ''),
-    websiteUrl VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (websiteUrl IS NULL OR TRIM(websiteUrl) <> ''),
+    name VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(name) <> '') ,
+    websiteUrl VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (TRIM(websiteUrl) <> '')  ,
     isActive BOOLEAN NOT NULL DEFAULT TRUE,
-    countryOfOrigin VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (countryOfOrigin IS NULL OR TRIM(countryOfOrigin) <> ''),
+    countryOfOrigin VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (TRIM(countryOfOrigin) <> ''),
     createdOn DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedOn DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
