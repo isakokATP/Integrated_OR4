@@ -3,6 +3,7 @@ package com.int221.int221backend.controller;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.services.BrandService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +11,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/brands")
-@RequiredArgsConstructor
 public class BrandController {
 
-    private final BrandService brandService;
+    private BrandService brandService;
+
+    @Autowired
+    public BrandController(BrandService brandService){
+        this.brandService = brandService;
+    }
 
     @GetMapping
     public List<Brand> getAllBrands() {

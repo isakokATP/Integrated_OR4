@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/sale-items")
 @RequiredArgsConstructor
 public class SaleItemController {
-    private final SaleItemService saleItemService;
+    private SaleItemService saleItemService;
 
     @GetMapping
     public List<SaleItem> getAllItems() {

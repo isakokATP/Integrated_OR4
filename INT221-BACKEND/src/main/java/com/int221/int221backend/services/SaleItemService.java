@@ -11,7 +11,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class SaleItemService {
-    private final SaleItemRepository saleItemRepository;
+    private SaleItemRepository saleItemRepository;
 
 
     public List<SaleItem> getAllSaleItems() {
