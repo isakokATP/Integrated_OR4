@@ -22,23 +22,17 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { fetchAllSaleItems } from "@/services/saleItemService";
 
 // สร้างตัวแปร reactive เพื่อเก็บข้อมูล
 const items = ref([]);
 
-onMounted(() => {
-  fetch("/api/sale-items/all") // ใช้ /api ถ้าคุณตั้ง proxy ไว้ใน vite.config.js
-    .then((response) => {
-      if (!response.ok) throw new Error("Failed to fetch items");
-      return response.json();
-      console.log(data);
-    })
-    .then((data) => {
-      items.value = data; // อัปเดตค่าของ items
-    })
-    .catch((error) => {
-      console.error("Error fetching items:", error);
-    });
+onMounted(async () => {
+  try {
+    items.value = await fetchAllSaleItems();
+  } catch (error) {
+    console.error("Error fetching items:", error);
+  }
 });
 </script>
 
