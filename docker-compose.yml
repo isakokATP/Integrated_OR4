@@ -12,7 +12,34 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
+      - int221-net
+
+  backend:
+    container_name: backend
+    image: backend/image
+    build:
+      context: ./Integrated_OR4/INT221-BACKEND
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mysql
+    networks:
+      - int221-net
+
+  frontend:
+    container: frontend
+    image: frontend/image
+    build:
+      context: ./Integrated_OR4/frontend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+    - backend
+  networks:
       - int221-net
 
 volumes:

@@ -1,3 +1,7 @@
+-- create user for connecting to database
+CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';
+GRANT ALL ON *.* TO 'user'@'%';
+
 -- Create Database
 CREATE SCHEMA IF NOT EXISTS pbi1;
 USE pbi1;
@@ -64,3 +68,5 @@ INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
 
 -- แสดงข้อมูลใน Table Brand
 SELECT * FROM brands;
+
+
