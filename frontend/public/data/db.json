@@ -1,0 +1,75 @@
+[
+    {
+      "id": 1,
+      "brand_id": 2,
+      "model": "iPhone 14 Pro Max",
+      "description": "ไอโฟนเรือธงรุ่นล่าสุด มาพร้อม Dynamic Island จอใหญ่สุดในตระกูล กล้องระดับโปร",
+      "quantity": 5,
+      "price": 42900,
+      "screen_size_inch": 6.7,
+      "ram_gb": 6,
+      "stroage_gb": 512,
+      "color": "Space Black"
+    },
+    {
+      "id": 2,
+      "brand_id": 2,
+      "model": "iPhone 14",
+      "description": "ไอโฟนรุ่นใหม่ล่าสุด รองรับ 5G เร็วแรง ถ่ายภาพสวยทุกสภาพแสง",
+      "quantity": 8,
+      "price": 29700,
+      "screen_size_inch": 6.1,
+      "ram_gb": 6,
+      "stroage_gb": 256,
+      "color": "Midnight"
+    },
+    {
+      "id": 3,
+      "brand_id": 2,
+      "model": "iPhone 13 Pro",
+      "description": "ไอโฟนรุ่นโปร จอ ProMotion 120Hz กล้องระดับมืออาชีพ",
+      "quantity": 3,
+      "price": 33000,
+      "screen_size_inch": 6.1,
+      "ram_gb": 6,
+      "stroage_gb": 256,
+      "color": "Sierra Blue"
+    },
+    {
+      "id": 7,
+      "brand_id": 2,
+      "model": "iPhone SE 2022",
+      "description": "Budget-friendly model",
+      "quantity": 15,
+      "price": 14190,
+      "screen_size_inch": 4.7,
+      "ram_gb": 4,
+      "stroage_gb": 64,
+      "color": "Starlight"
+    },
+    {
+      "id": 8,
+      "brand_id": 2,
+      "model": "iPhone 14 Plus",
+      "description": "iPhone 14 Plus 128GB สี Starlight เครื่องศูนย์ไทย โมเดล TH แบต 100% มีกล่องครบ ประกันศูนย์ถึง พ.ย. 68 ส่งฟรี",
+      "quantity": 7,
+      "price": 29700,
+      "screen_size_inch": 6.7,
+      "ram_gb": 6,
+      "stroage_gb": 256,
+      "color": "Blue"
+    },
+    {
+      "id": 16,
+      "brand_id": 1,
+      "model": "Galaxy S23 Ultra",
+      "description": "Samsung Galaxy S23 Ultra 512GB สีดำปีศาจ สภาพนางฟ้า 99% ไร้รอย แถมเคสแท้ แบตอึดสุดๆ รองรับปากกา S-Pen",
+      "quantity": 1,
+      "price": 32900,
+      "screen_size_inch": 7.6,
+      "ram_gb": null,
+      "stroage_gb": 512,
+      "color": null
+    }
+  ]
+  
