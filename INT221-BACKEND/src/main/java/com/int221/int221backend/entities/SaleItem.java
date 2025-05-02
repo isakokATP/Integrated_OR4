@@ -5,14 +5,18 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
 @Entity
-@Table(name = "SaleItem", schema = "pbi1")
+@Table(name = "sale_items", schema = "pbi1")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class SaleItem {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -30,10 +34,13 @@ public class SaleItem {
     @Column(nullable = false)
     private Integer price;
 
+    @Column(name = "ram_gb")
     private Integer ramGb;
 
+    @Column(name = "screen_size_inch", precision = 3, scale = 1)
     private BigDecimal screenSizeInch;
 
+    @Column(name = "storage_gb")
     private Integer storageGb;
 
     @Column(length = 30)
@@ -42,10 +49,10 @@ public class SaleItem {
     @Column(nullable = false)
     private Integer quantity = 1;
 
-    @Column(nullable = false)
+    @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn;
 
-    @Column(nullable = false)
+    @Column(name = "updated_on", nullable = false)
     private LocalDateTime updatedOn;
 
     @PrePersist

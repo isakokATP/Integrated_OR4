@@ -1,6 +1,19 @@
-const baseUrl = import.meta.env.VITE_API_URL || '/api';
+
+const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1";;
+
+export const apiUrl = isLocalhost
+    ? import.meta.env.VITE_API_URL_LOCAL
+    : window.location.origin;
+
+if (!isLocalhost && !window.location.origin.startsWith('https')) {
+    throw new Error('Invalid production API URL');
+}
+
 async function apiCall(endpoint, options = {}) {
-    const url = `${baseUrl}${endpoint}`;
+    const url = `${apiUrl}${endpoint}`;
+    console.log('--- API REQUEST LOG ---');
+    console.log('URL:', url);
+
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -9,38 +22,43 @@ async function apiCall(endpoint, options = {}) {
 
     const requestOptions = { ...defaultOptions, ...options };
 
-    try {
-        const response = await fetch(url, requestOptions);
-        if (!response.ok) {
-            let errorMessage;
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorData.error || `HTTP Error: ${response.status}`;
-            } catch (e) {
-                errorMessage = `HTTP Error: ${response.status} ${response.statusText}`;
-            }
+    const response = await fetch(url, requestOptions);
 
-            const error = new Error(errorMessage);
-            error.status = response.status;
-            error.response = response;
-            throw error;
+    if (!response.ok) {
+        let errorMessage = `HTTP Error: ${response.status} ${response.statusText}`;
+        try {
+            const clonedResponse = response.clone();
+            const errorData = await clonedResponse.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (_) {
+            // Ignore parsing error
         }
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return await response.json();
-        }
+        const apiError = {
+            isApiError: true,
+            status: response.status,
+            message: errorMessage,
+            url: response.url,
+            response: response
+        };
 
-        return response;
-    } catch (error) {
-        if (!error.status) {
-            error.message = `Network Error: ${error.message}`;
-            error.isNetworkError = true;
-        }
+        // ✅ Log ทันทีตรงนี้
+        console.error('--- API ERROR LOG ---');
+        console.error('URL:', apiError.url);
+        console.error('Status:', apiError.status);
+        console.error('Message:', apiError.message);
+        console.error('Full Error Object:', apiError);
+        console.error('----------------------');
 
-        console.error('API Error:', error);
-        throw error;
+        throw apiError;
     }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+    }
+
+    return response;
 }
 
 export const api = {
@@ -60,16 +78,11 @@ export const api = {
 
 export function handleApiError(error, defaultMessage = 'not connect server') {
     switch (error.status) {
-        case 400:
-            return '400';
-        case 401:
-            return '401';
-        case 403:
-            return '403';
-        case 404:
-            return '404';
-        case 500:
-            return '500';
+        case 400: return '400';
+        case 401: return '401';
+        case 403: return '403';
+        case 404: return '404';
+        case 500: return '500';
         default:
             if (error.isNetworkError) {
                 return 'not connect server';

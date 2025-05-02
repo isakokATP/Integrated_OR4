@@ -6,38 +6,50 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @Entity
-@Table(name = "Brand", schema = "pbi1")
+@Table(name = "brands", schema = "pbi1")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Brand {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank
-    @Size(max = 30)
-    @Column(name = "name", nullable = false, length = 30)
+    @Column(length = 30, nullable = false)
     private String name;
 
-    @Size(max = 40)
-    @Column(name = "websiteUrl", length = 40)
+    @Column(name = "website_url", length = 40)
     private String websiteUrl;
 
-    @Column(name = "isActive", nullable = false)
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    @Size(max = 80)
-    @Column(name = "countryOfOrigin", length = 80)
+    @Column(name = "country_of_origin", length = 80)
     private String countryOfOrigin;
 
-    @Column(name = "createdOn", nullable = false, updatable = false)
-    private LocalDateTime createdOn;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updatedOn", nullable = false)
-    private LocalDateTime updatedOn;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
 
