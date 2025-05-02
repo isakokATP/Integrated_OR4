@@ -1,21 +1,18 @@
--- create user for connecting to database
 CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';
 GRANT ALL ON *.* TO 'user'@'%';
-
--- Create Database
 CREATE SCHEMA IF NOT EXISTS pbi1;
 USE pbi1;
 
--- ก่อน Drop table ต้องลบ Foreign Key Constraint ก่อน
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Drop tables
 DROP TABLE IF EXISTS sale_items;
 DROP TABLE IF EXISTS brands;
 
+DROP TABLE IF EXISTS SaleItem;
+DROP TABLE IF EXISTS Brand;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
--- CREATE TABLE Brand
 CREATE TABLE brands (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(name) <> '') ,
@@ -26,7 +23,6 @@ CREATE TABLE brands (
                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- CREATE TABLE SaleItem
 CREATE TABLE sale_items (
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             model VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(model) <> ''),
@@ -43,7 +39,6 @@ CREATE TABLE sale_items (
                             FOREIGN KEY (brand_id) REFERENCES brands(id)
 );
 
--- INSERT ข้อมูลลงใน Table Brand
 INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
                                                                          ('Samsung', 'South Korea', 'https://www.samsung.com', TRUE),
                                                                          ('Apple', 'United States', 'https://www.apple.com', TRUE),
@@ -66,7 +61,13 @@ INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
                                                                          ('Honor', 'China', 'https://www.hihonor.com', TRUE),
                                                                          ('Nothing', 'United Kingdom', 'https://nothing.tech', TRUE);
 
--- แสดงข้อมูลใน Table Brand
+INSERT INTO sale_items
+(model, brand_id, description, price, ram_gb, screen_size_inch, storage_gb, color, quantity, created_on, updated_on)
+VALUES
+    ('Galaxy S24', 1, 'Newest Samsung model', 30000, 8, 6.8, 256, 'Phantom Black', 5, NOW(), NOW()),
+    ('iPhone 15', 2, 'Latest iPhone model', 42000, 6, 6.1, 128, 'Silver', 3, NOW(), NOW());
+
+
+SELECT * FROM sale_items WHERE brand_id IS NULL;
+
 SELECT * FROM brands;
-
-

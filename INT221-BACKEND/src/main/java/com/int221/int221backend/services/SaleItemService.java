@@ -9,17 +9,38 @@ import com.int221.int221backend.repositories.SaleItemRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
 @Service
 public class SaleItemService {
 
-    @Autowired
-    private SaleItemRepository saleItemRepository;
+   private final SaleItemRepository saleItemRepository;
 
-    public List<SaleItem> getAllSaleItems() {
-        return saleItemRepository.findAll();
+   public SaleItemService(SaleItemRepository saleItemRepository) {
+      this.saleItemRepository = saleItemRepository;
+   }
+
+   public List<SaleItemDto> getAllSaleItems() {
+      List<SaleItem> saleItems = saleItemRepository.findAll();
+      return saleItems.stream()
+                   .map(this::mapToDto)
+                   .collect(Collectors.toList());
+   }
+
+    private SaleItemDto mapToDto(SaleItem saleItem) {
+            SaleItemDto dto = new SaleItemDto();
+            dto.setId(saleItem.getId());
+            dto.setModel(saleItem.getModel());
+            dto.setBrandName(
+                saleItem.getBrand() != null ? saleItem.getBrand().getName() : null
+            );
+            dto.setPrice(saleItem.getPrice());
+            dto.setRamGb(saleItem.getRamGb());
+            dto.setStorageGb(saleItem.getStorageGb());
+            dto.setColor(saleItem.getColor());
+            return dto;
     }
 
 //    public List<SaleItemDto> getAllSaleItemDtos() {

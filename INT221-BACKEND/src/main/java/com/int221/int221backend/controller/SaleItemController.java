@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/sale-items")
 public class SaleItemController {
@@ -21,9 +21,9 @@ public class SaleItemController {
     private SaleItemService saleItemService;
 
     @GetMapping("/all")
-    public List<SaleItem> getAllItems() {
-        return saleItemService.getAllSaleItems();
-    }
+     public List<SaleItemDto> getAllSaleItems() {
+            return saleItemService.getAllSaleItems();
+     }
 
     @PostMapping
     public ResponseEntity<SaleItem> createItem(@RequestBody SaleItem saleItem) {
