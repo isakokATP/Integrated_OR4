@@ -1,14 +1,18 @@
 <script setup>
 import { ref, onMounted} from "vue";
 import { fetchSaleItemById, fetchSaleItems } from '@/services/saleItemService';
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const item = ref({});
 const route = useRoute();
 const id = route.params.id;
+const router = useRouter();
 
 onMounted(async() => {
     item.value = await fetchSaleItemById(id);
+    if(item.value.status === "not_found"){
+        router.push({name: "sale-items-page" });
+    }
 });
 </script>
 
