@@ -22,19 +22,18 @@ function goToSaleItem(id) {
     <div v-if="items.length === 0" class="flex justify-center w-full">
       No Sale item
     </div>
-    <div v-else class="grid">
+    <div v-else class="grid grid-cols-5 gap-4">
       <div v-for="item in items" :key="item.id" class="card">
         <div @click="goToSaleItem(item.id)">
           <img src="../../public/images/iphone.png" class="card-image" />
           <div class="card-info">
-            <h3>{{ item.model }}</h3>
-            <p>Brand: {{ item.brandName }}</p>
-            <p>Color: {{ item.color }}</p>
-            <p>Ram:{{ item.ramGb }}GB</p>
-            <p>{{ item.storageGb }}GB</p>
-
             <div>
-              <strong>{{ item.price }} BAHT</strong>
+              <strong>{{ item.brandName }}</strong>
+              <p>{{ item.model }}</p>
+              <p>{{ item.ramGb }}/{{ item.storageGb }}GB</p>
+            </div>
+            <div class="mt-4">
+              <strong>BAHT {{ item.price }}</strong>
             </div>
           </div>
         </div>
