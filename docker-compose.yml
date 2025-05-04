@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: int221-mysql
+    restart: always
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - int221-net
+
+  backend:
+    build:
+      context: ./Oct_backend
+      dockerfile: Dockerfile
+    container_name: int221-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - int221-net
+
+volumes:
+  mysql-data:
+
+networks:
+  int221-net:
