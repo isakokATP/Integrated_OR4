@@ -14,7 +14,7 @@ public class SaleItemByIdDto {
     private String description;
     private Integer price;
     private Integer ramGb;
-    private Double screensizeInch;
+    private Double screenSizeInch;
     private Integer quantity;
     private Integer storageGb;
     private String color;
