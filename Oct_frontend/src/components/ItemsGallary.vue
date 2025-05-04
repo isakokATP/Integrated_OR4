@@ -18,9 +18,11 @@ function goToSaleItem(id) {
 </script>
 
 <template>
-  <div class="container">
-    <div class="grid">
-      <div v-if="items.length === 0" class="no-data-message">No Sale item</div>
+  <div class="container mx-auto px-4">
+    <div v-if="items.length === 0" class="flex justify-center w-full">
+      No Sale item
+    </div>
+    <div v-else class="grid">
       <div v-for="item in items" :key="item.id" class="card">
         <div @click="goToSaleItem(item.id)">
           <img src="../../public/images/iphone.png" class="card-image" />
