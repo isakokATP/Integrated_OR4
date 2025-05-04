@@ -14,5 +14,6 @@ public class SaleItemDto {
     private Integer price;
     private Integer storageGb;
     private String color;
+    private String ramGb;
     
 }
