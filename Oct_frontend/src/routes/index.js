@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomePage from "../views/HomeView.vue";
 import SaleItemPage from "../views/SaleList.vue";
+import SaleItemById from "../views/SaleListById.vue"
 
 const routes = [
   {
@@ -13,6 +14,11 @@ const routes = [
     name: "sale-items-page",
     component: SaleItemPage,
   },
+  {
+    path: "/sale-items/:id",
+    name: "sale-items-page-byId",
+    component: SaleItemById,
+  }
 ];
 
 const router = createRouter({

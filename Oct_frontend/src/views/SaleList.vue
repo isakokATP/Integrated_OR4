@@ -4,8 +4,8 @@
 </script>
 
 <template>
-      <Header />
-      <ItemsGallary />
+    <Header />
+    <ItemsGallary />
 </template>
 
 <style scoped>
