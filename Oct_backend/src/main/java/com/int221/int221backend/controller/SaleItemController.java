@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/itb-mshop/v1")
 @CrossOrigin(origins = "*")
 public class SaleItemController {
     @Autowired
