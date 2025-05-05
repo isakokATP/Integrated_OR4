@@ -3,9 +3,10 @@ import { ENDPOINTS } from "../api/endpoints";
 
 const URL = import.meta.env.VITE_API_URL_PROD;
 
+console.log(URL);
 async function fetchSaleItems() {
   try {
-    const response = await fetch(`${URL}/v1/sale-items`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -24,7 +25,7 @@ async function fetchSaleItems() {
 
 async function fetchSaleItemById(id) {
   try {
-    const response = await fetch(`${URL}/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -35,9 +36,9 @@ async function fetchSaleItemById(id) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data;
+    return { ...data, httpStatus: response.status };
   } catch (error) {
-    console.error("Fetch error:", error);
+    return { status: "not_found" };
   }
 }
 
