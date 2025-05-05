@@ -6,12 +6,26 @@ services:
     container_name: int221-mysql
     restart: always
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${MYSQL_PORT}:3306"
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: 'mysql'
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - int221-net
+
+  backend:
+    build:
+      context: ./Oct_backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: int221-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
     networks:
       - int221-net
 

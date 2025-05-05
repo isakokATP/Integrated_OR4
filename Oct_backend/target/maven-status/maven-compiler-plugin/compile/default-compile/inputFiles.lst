@@ -1,0 +1,12 @@
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/AppConfig.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/Int221BackendApplication.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/controller/BrandController.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/controller/SaleItemController.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/dto/BrandDto.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/dto/SaleItemDto.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/entities/Brand.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/entities/SaleItem.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/repositories/BrandRepository.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/repositories/SaleItemRepository.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/services/BrandService.java
+/mnt/c/Users/Phakp/Documents/Oct_backend/src/main/java/com/int221/int221backend/services/SaleItemService.java
