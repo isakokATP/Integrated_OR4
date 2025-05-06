@@ -29,7 +29,7 @@ CREATE TABLE sale_items (
                             description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(description) <> ''),
                             price INT NOT NULL CHECK (price >= 0),
                             ram_gb INT DEFAULT NULL CHECK (ram_gb IS NULL OR ram_gb >= 0),
-                            screen_size_inch DECIMAL(3,1) DEFAULT NULL,
+                            screen_size_inch DECIMAL(4,2) DEFAULT NULL,
                             storage_gb INT DEFAULT NULL,
                             color VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (color IS NULL OR TRIM(color) <> ''),
                             quantity INT NOT NULL DEFAULT 1,
