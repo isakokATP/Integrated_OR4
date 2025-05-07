@@ -7,7 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SaleItemDto {
-
     private Integer id;
     private String model;
     private String brandName;
@@ -15,5 +14,4 @@ public class SaleItemDto {
     private Integer storageGb;
     private String color;
     private String ramGb;
-    
 }

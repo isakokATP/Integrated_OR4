@@ -22,4 +22,12 @@ public class SaleItemService {
         return saleItemRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("No Item id = " + id));   
     }
+
+    public SaleItem createSaleItem(SaleItem saleItem){
+        return saleItemRepository.save(saleItem);
+    }
+
+    public SaleItem updateSaleItem(SaleItem saleItem) {
+        return saleItemRepository.save(saleItem);
+    }
 }
