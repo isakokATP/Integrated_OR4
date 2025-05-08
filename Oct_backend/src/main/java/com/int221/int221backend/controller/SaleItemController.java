@@ -1,6 +1,7 @@
 package com.int221.int221backend.controller;
 
-import com.int221.int221backend.dto.post.NewSaleItemDto;
+import com.int221.int221backend.dto.request.NewSaleItemDto;
+import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.SaleItemByIdDto;
 import com.int221.int221backend.dto.response.SaleItemDto;
 
@@ -59,49 +60,27 @@ public class SaleItemController {
 
 //  PBI3
     @PostMapping("/sale-items/add")
-    public ResponseEntity<SaleItemByIdDto> createNewSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
-        SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
-
-        Brand brand = brandRepository.findById(newSaleItemDto.getBrandId())
-                .orElseThrow(() -> new NotFoundException("Brand Id " + newSaleItemDto.getBrandId() + "Not found"));
-        saleItem.setBrand(brand);
-
-        SaleItem savedItem = saleItemService.createSaleItem(saleItem);
-
-        SaleItemByIdDto responseDto = modelMapper.map(savedItem, SaleItemByIdDto.class);
-        responseDto.setBrandName(savedItem.getBrand().getName());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    public ResponseEntity<NewSaleItemDto> addSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
+        SaleItem cratedItem = saleItemService.createSaleItem(newSaleItemDto);
+        NewSaleItemDto createdDto = modelMapper.map(cratedItem, NewSaleItemDto.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdDto);
     }
 
 //  PBI4
     @PutMapping("/sale-items/{id}")
-    public ResponseEntity<SaleItemByIdDto> updateSaleItem(
-            @PathVariable Integer id,
-            @Valid @RequestBody NewSaleItemDto updateDto
-    ) {
-        SaleItem existingSaleItem = saleItemService.getSaleItemById(id);
+    public ResponseEntity<SaleItemsUpdateDto> updateSaleItem(@RequestBody NewSaleItemDto newSaleItemDto, @PathVariable Integer id) {
+        SaleItem saleItem = saleItemService.getSaleItemById(id);
+        SaleItemsUpdateDto updatedDto = modelMapper.map(saleItem, SaleItemsUpdateDto.class);
 
-        Brand brand = brandRepository.findById(updateDto.getBrandId())
-                .orElseThrow(() -> new NotFoundException("Brand id" + updateDto.getBrandId() + "not_found"));
+        updatedDto.setBrandId(newSaleItemDto.getBrandId());
+        updatedDto.setModel(newSaleItemDto.getModel());
+        updatedDto.setRamGb(newSaleItemDto.getRamGb());
+        updatedDto.setScreenSizeInch(newSaleItemDto.getScreenSizeInch());
+        updatedDto.setStorageGb(newSaleItemDto.getStorageGb());
+        updatedDto.setColor(newSaleItemDto.getColor());
+        updatedDto.setQuantity(newSaleItemDto.getQuantity());
 
-        existingSaleItem.setModel(updateDto.getModel().trim());
-        existingSaleItem.setPrice(updateDto.getPrice());
-        existingSaleItem.setDescription(updateDto.getDescription().trim());
-        existingSaleItem.setRamGb(updateDto.getRamGb());
-        existingSaleItem.setScreenSizeInch(updateDto.getScreenSizeInch());
-        existingSaleItem.setStorageGb(updateDto.getStorageGb());
-        existingSaleItem.setColor(
-                updateDto.getColor() != null ? updateDto.getColor().trim() : null);
-        existingSaleItem.setQuantity(updateDto.getQuantity());
-
-        existingSaleItem.setBrand(brand);
-
-        SaleItem saved = saleItemService.updateSaleItem(existingSaleItem);
-
-        SaleItemByIdDto responseDto = modelMapper.map(saved, SaleItemByIdDto.class);
-
-        return ResponseEntity.ok(responseDto);
-
+        saleItemService.updateSaleItem(updatedDto);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedDto);
     }
 }
