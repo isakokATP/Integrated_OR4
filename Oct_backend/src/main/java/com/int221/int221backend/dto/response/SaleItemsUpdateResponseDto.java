@@ -1,17 +1,18 @@
-package com.int221.int221backend.dto.request;
+package com.int221.int221backend.dto.response;
 
-import com.int221.int221backend.dto.response.BrandDto;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 
 @Getter
 @Setter
-public class SaleItemsUpdateDto {
-    private Integer Id;
+public class SaleItemsUpdateResponseDto {
+    private Integer id;
     private String model;
-    private BrandDto brand;
+    private String brandName;
     private String description;
     private Integer price;
     private Integer ramGb;
@@ -19,4 +20,6 @@ public class SaleItemsUpdateDto {
     private Integer quantity;
     private Integer storageGb;
     private String color;
+    private LocalDateTime createdOn;
+    private LocalDateTime updatedOn;
 }

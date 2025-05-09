@@ -1,7 +1,6 @@
 package com.int221.int221backend.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,10 +40,10 @@ public class SaleItem {
     @Column(name = "quantity",nullable = false)
     private Integer quantity = 1;
 
-    @Column(name = "created_on", nullable = false)
+    @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdOn;
 
-    @Column(name = "updated_on", nullable = false)
+    @Column(name = "updated_on", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedOn;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -60,5 +59,4 @@ public class SaleItem {
     protected void onUpdate() {
         updatedOn = LocalDateTime.now();
     }
-
 }

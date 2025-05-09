@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/brands")
+@RequestMapping("/v1/brands")
 @CrossOrigin(origins = "*")
 public class BrandController {
     private final BrandService brandService;
