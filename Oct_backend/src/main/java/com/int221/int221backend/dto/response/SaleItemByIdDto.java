@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class SaleItemByIdDto {
-
     private Integer id;
     private String model;
     private String brandName;
@@ -20,5 +19,4 @@ public class SaleItemByIdDto {
     private Integer quantity;
     private Integer storageGb;
     private String color;
-    
 }

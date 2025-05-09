@@ -2,15 +2,14 @@ package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
+import com.int221.int221backend.dto.response.NewSaleItemResponseDto;
 import com.int221.int221backend.dto.response.SaleItemByIdDto;
 import com.int221.int221backend.dto.response.SaleItemDto;
 
-import com.int221.int221backend.entities.Brand;
+import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
 import com.int221.int221backend.entities.SaleItem;
-import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.services.SaleItemService;
-import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -60,27 +59,23 @@ public class SaleItemController {
 
 //  PBI3
     @PostMapping("/sale-items/add")
-    public ResponseEntity<NewSaleItemDto> addSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
-        SaleItem cratedItem = saleItemService.createSaleItem(newSaleItemDto);
-        NewSaleItemDto createdDto = modelMapper.map(cratedItem, NewSaleItemDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdDto);
+    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
+        NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
 
 //  PBI4
     @PutMapping("/sale-items/{id}")
-    public ResponseEntity<SaleItemsUpdateDto> updateSaleItem(@RequestBody NewSaleItemDto newSaleItemDto, @PathVariable Integer id) {
-        SaleItem saleItem = saleItemService.getSaleItemById(id);
-        SaleItemsUpdateDto updatedDto = modelMapper.map(saleItem, SaleItemsUpdateDto.class);
+    public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
+        saleItemsUpdateDto.setId(id);
+        SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
-        updatedDto.setBrandId(newSaleItemDto.getBrandId());
-        updatedDto.setModel(newSaleItemDto.getModel());
-        updatedDto.setRamGb(newSaleItemDto.getRamGb());
-        updatedDto.setScreenSizeInch(newSaleItemDto.getScreenSizeInch());
-        updatedDto.setStorageGb(newSaleItemDto.getStorageGb());
-        updatedDto.setColor(newSaleItemDto.getColor());
-        updatedDto.setQuantity(newSaleItemDto.getQuantity());
-
-        saleItemService.updateSaleItem(updatedDto);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedDto);
+//  PBI5
+    @DeleteMapping("/sale-items/{id}")
+    public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
+        saleItemService.deleteSaleItemById(id);
+        return ResponseEntity.noContent().build();
     }
 }

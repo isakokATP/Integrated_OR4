@@ -2,14 +2,20 @@ package com.int221.int221backend.services;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
+import com.int221.int221backend.dto.response.NewSaleItemResponseDto;
+import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +28,9 @@ public class SaleItemService {
     private ModelMapper modelMapper;
     @Autowired
     private BrandRepository brandRepository;
+    @Autowired
+    private EntityManager entityManager;
+
 
 
     public List<SaleItem> getAllSaleItem(){
@@ -33,22 +42,34 @@ public class SaleItemService {
         .orElseThrow(() -> new NotFoundException("No Item id = " + id));   
     }
 
-    public SaleItem createSaleItem(NewSaleItemDto newSaleItemDto) {
+    public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
-        return saleItemRepository.save(saleItem);
+        return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
     }
 
-    public SaleItem updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
+    @Transactional
+    public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
         SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
-        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrandId());
+        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
         if (brand.isPresent()) {
             Brand brandModel = brand.get();
             saleItem.setBrand(brandModel);
         }
         else {
-            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrandId());
+            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
         }
+        SaleItem updatedItem = saleItemRepository.save(saleItem);
+        entityManager.refresh(updatedItem);
+        SaleItem updatedSaleItem = saleItemRepository.findById(saleItemsUpdateDto.getId())
+                .orElseThrow(() -> new NotFoundException("No Item id = " + saleItemsUpdateDto.getId()));
+        return modelMapper.map(updatedSaleItem, SaleItemsUpdateResponseDto.class);
+    }
 
-        return saleItemRepository.save(saleItem);
+    public void deleteSaleItemById(Integer id) {
+        if (saleItemRepository.existsById(id)) {
+            saleItemRepository.deleteById(id);
+        } else {
+            throw new NotFoundException("No Item id = " + id);
+        }
     }
 }
