@@ -32,11 +32,33 @@ CREATE TABLE sale_items (
                             screen_size_inch DECIMAL(4,2) DEFAULT NULL,
                             storage_gb INT DEFAULT NULL,
                             color VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (color IS NULL OR TRIM(color) <> ''),
-                            quantity INT NOT NULL DEFAULT 1,
+                            quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
                             created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             FOREIGN KEY (brand_id) REFERENCES brands(id)
 );
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_insert_sale_items
+BEFORE INSERT ON sale_items
+FOR EACH ROW
+BEGIN
+  SET NEW.model = TRIM(NEW.model);
+  SET NEW.description = TRIM(NEW.description);
+  SET NEW.color = TRIM(NEW.color);
+END $$
+
+CREATE TRIGGER trg_before_update_sale_items
+BEFORE UPDATE ON sale_items
+FOR EACH ROW
+BEGIN
+  SET NEW.model = TRIM(NEW.model);
+  SET NEW.description = TRIM(NEW.description);
+  SET NEW.color = TRIM(NEW.color);
+END $$
+
+DELIMITER ;
 
 INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
                                                                          ('Samsung', 'South Korea', 'https://www.samsung.com', TRUE),
@@ -59,6 +81,7 @@ INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
                                                                          ('Lenovo', 'China', 'https://www.lenovo.com', TRUE),
                                                                          ('Honor', 'China', 'https://www.hihonor.com', TRUE),
                                                                          ('Nothing', 'United Kingdom', 'https://nothing.tech', TRUE);
+                                                                         
 INSERT INTO sale_items
 (id, model, brand_id, description, price, ram_gb, screen_size_inch, storage_gb, color, quantity, created_on, updated_on)
 VALUES
