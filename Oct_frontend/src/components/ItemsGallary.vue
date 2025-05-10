@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import { fetchSaleItems } from "../services/saleItemService";
 import { useRouter } from "vue-router";
-import Header from "@/components/Header.vue";
 
 const items = ref([]);
 const loading = ref(true);
@@ -22,7 +21,7 @@ function goToSaleItem(id) {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto mt-8">
+  <div class="max-w-6xl mx-auto mt-8">
     <div v-if="loading" class="text-center text-gray-400">Loading...</div>
     <div v-else>
       <div
@@ -33,15 +32,20 @@ function goToSaleItem(id) {
       </div>
       <div
         v-else-if="Array.isArray(items) && items.length > 0"
-        class="grid grid-cols-5 gap-4"
+        class="grid grid-cols-5 gap-8"
       >
         <itbms-row v-for="item in items" :key="item.id" class="card itbms-row">
           <div @click="goToSaleItem(item.id)">
-            <img src="../../public/images/iphone.png" class="card-image" />
-            <div class="card-info">
+            <img
+              src="../assets/iphone.png"
+              alt="Product"
+              class="card-image w-48 h-56 object-contain mx-auto"
+            />
+            <div class="card-info text-lg p-4">
               <strong class="itbms-brand">{{ item.brandName }}</strong>
               <p class="itbms-model">{{ item.model }}</p>
-              <span class="itbms-ramGb">{{ item.ramGb ?? "-" }}</span>/
+              <span class="itbms-ramGb">{{ item.ramGb ?? "-" }}</span
+              >/
               <span class="itbms-storageGb">{{ item.storageGb ?? "-" }}</span>
               <span class="itbms-storageGb-unit">GB</span>
               <div class="itbms-price">
@@ -54,6 +58,3 @@ function goToSaleItem(id) {
     </div>
   </div>
 </template>
-
-
-
