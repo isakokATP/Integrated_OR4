@@ -38,28 +38,6 @@ CREATE TABLE sale_items (
                             FOREIGN KEY (brand_id) REFERENCES brands(id)
 );
 
-DELIMITER $$
-
-CREATE TRIGGER trg_before_insert_sale_items
-BEFORE INSERT ON sale_items
-FOR EACH ROW
-BEGIN
-  SET NEW.model = TRIM(NEW.model);
-  SET NEW.description = TRIM(NEW.description);
-  SET NEW.color = TRIM(NEW.color);
-END $$
-
-CREATE TRIGGER trg_before_update_sale_items
-BEFORE UPDATE ON sale_items
-FOR EACH ROW
-BEGIN
-  SET NEW.model = TRIM(NEW.model);
-  SET NEW.description = TRIM(NEW.description);
-  SET NEW.color = TRIM(NEW.color);
-END $$
-
-DELIMITER ;
-
 INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES
                                                                          ('Samsung', 'South Korea', 'https://www.samsung.com', TRUE),
                                                                          ('Apple', 'United States', 'https://www.apple.com', TRUE),
