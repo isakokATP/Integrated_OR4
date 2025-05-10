@@ -1,33 +1,64 @@
 <script setup>
+import { ref } from "vue";
 
+const searchQuery = ref("");
 </script>
 
 <template>
-    <!-- Navbar Start -->
-    <div class="container mx-auto px-5">
-        <header class="flex justify-between py-12 items-center">
-            <div>
-              <a href="/" class="flex items-center space-x-2">
-                <img
-                  src="https://img.freepik.com/free-vector/shop-with-sign-we-are-open_23-2148553675.jpg"
-                  alt="Site Logo"
-                  class="w-10 h-10 object-cover rounded"
-                />
-                <span class="text-2xl font-semibold ml-1"> ITB MShop </span>
-              </a>
-          </div>
-            
-            <nav class="flex justify-end flex-col md:flex-row">
-                <!-- Desktop Menu -->
-                <ul class="space-x-10 font-theme-heading font-medium items-center hidden md:flex  flex-col space-y-7 md:space-y-0 md:flex-row">
-                    <li class="text-xl uppercase hover:text-theme-secondary transition duration-200"><a href="#features" v-smooth-scroll>Features</a></li>
-                    <li class="text-xl uppercase hover:text-theme-secondary transition duration-200"><a href="#faq" v-smooth-scroll>FAQ</a></li>                    
-                    <li class="text-xl uppercase btn btn-outline btn-secondary">
-                        <a href="#download-section" v-smooth-scroll>Subscribe</a>
-                    </li>
-                </ul>
-            </nav>
-        </header>      
+  <!-- แถบแดงบน -->
+  <div class="w-full bg-red-600 h-12 flex items-center justify-end px-8">
+    <a href="#signin" class="text-white text-sm font-semibold ml-6">Signin</a>
+    <a href="#register" class="text-white text-sm font-semibold ml-6"
+      >Register</a
+    >
+  </div>
+  <!-- ส่วน header หลัก -->
+  <div class="container mx-auto px-5 py-6 flex items-center justify-between">
+    <!-- logo + search -->
+    <div class="flex items-center space-x-4 flex-1">
+      <a href="/"><span class="text-3xl font-bold">ITB MShop</span></a>
+      <div class="w-full max-w-md">
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search..."
+          class="w-full p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
       </div>
-    <!-- Navbar End -->
+    </div>
+    <!-- ไอคอน user/cart -->
+    <div class="flex items-center space-x-6 ml-6">
+      <!-- user icon -->
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-gray-700"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z"
+        />
+      </svg>
+      <!-- cart icon -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-gray-700"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007 17h10a1 1 0 00.95-.68l3.24-7.24A1 1 0 0020 8H6.21"
+        />
+      </svg>
+    </div>
+  </div>
 </template>
