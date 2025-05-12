@@ -29,6 +29,6 @@ public class NewSaleItemDto {
     }
 
     public void setColor(String color) {
-        this.color = color.trim();
+        this.color = color == null ? null : color.trim();
     }
 }
