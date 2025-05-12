@@ -58,11 +58,11 @@ public class SaleItemService {
         else {
             throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
         }
-        SaleItem updatedItem = saleItemRepository.save(saleItem);
+        SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(updatedItem);
         SaleItem updatedSaleItem = saleItemRepository.findById(saleItemsUpdateDto.getId())
                 .orElseThrow(() -> new NotFoundException("No Item id = " + saleItemsUpdateDto.getId()));
-        return modelMapper.map(updatedSaleItem, SaleItemsUpdateResponseDto.class);
+        return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
     }
 
     public void deleteSaleItemById(Integer id) {
