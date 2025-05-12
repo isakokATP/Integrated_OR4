@@ -19,4 +19,16 @@ public class SaleItemsUpdateDto {
     private Integer quantity;
     private Integer storageGb;
     private String color;
+
+    public void setModel(String model) {
+        this.model = model.trim();
+    }
+
+    public void setDescription(String description) {
+        this.description = description.trim();
+    }
+
+    public void setColor(String color) {
+        this.color = color.trim();
+    }
 }
