@@ -44,8 +44,6 @@ async function fetchSaleItemById(id) {
 
 async function createSaleItem(saleItemData) {
   try {
-    console.log("API URL:", URL);
-    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items/add`);
     console.log(
       "Sending data to server:",
       JSON.stringify(saleItemData, null, 2)
@@ -87,10 +85,17 @@ export const deleteSaleItem = async (id) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to delete item");
+      const error = new Error("Failed to delete item");
+      error.status = response.status;
+      throw error;
     }
 
-    return await response.json();
+    const text = await response.text();
+    if (text) {
+      return JSON.parse(text);
+    } else {
+      return { status: response.status };
+    }
   } catch (error) {
     throw error;
   }
@@ -98,6 +103,7 @@ export const deleteSaleItem = async (id) => {
 
 export const updateSaleItem = async (id, saleItemData) => {
   try {
+    console.log("Sending data to server:", JSON.stringify(saleItemData, id, 2));
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "PUT",
       headers: {

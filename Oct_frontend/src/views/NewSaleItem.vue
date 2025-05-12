@@ -4,7 +4,7 @@
   <div class="max-w-4xl mx-auto p-6">
     <div class="flex items-center mb-6">
       <nav class="text-sm mb-4 flex items-center space-x-2">
-        <router-link to="/" class="text-blue-600 hover:underline font-medium"
+        <router-link to="/sale-items" class="text-blue-600 hover:underline font-medium"
           >Home</router-link
         >
         <span class="mx-1">›</span>
@@ -38,8 +38,7 @@
           <label class="block mb-1">Brand</label>
           <select
             v-model="form.brandId"
-            id="itbms-brand"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-brand w-full border rounded px-2 py-1"
           >
             <option value="">Select Brand</option>
             <option v-for="brand in brands" :key="brand.id" :value="brand.id">
@@ -51,84 +50,75 @@
           <label class="block mb-1">Model</label>
           <input
             v-model="form.model"
-            id="itbms-model"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-model w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Price (Baht)</label>
           <input
             v-model="form.price"
-            id="itbms-price"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-price w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Description</label>
           <textarea
             v-model="form.description"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-description w-full border rounded px-2 py-1"
           ></textarea>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Ram (GB)</label>
           <input
             v-model="form.ramGb"
-            id="itbms-ramGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-ramGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Screen Size (Inches)</label>
           <input
             v-model="form.screenSizeInch"
-            id="itbms-screenSizeInch"
             type="number"
             step="0.1"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-screenSizeInch w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
-            id="itbms-storageGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-storageGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Color</label>
           <input
             v-model="form.color"
-            id="itbms-color"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-color w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Quantity</label>
           <input
             v-model="form.quantity"
-            id="itbms-quantity"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-quantity w-full border rounded px-2 py-1"
           />
         </div>
         <div class="flex gap-4 mt-6">
           <button
-            id="itbms-save-button"
             type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="itbms-save-button bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
             :disabled="!isFormValid"
           >
             Save
           </button>
           <button
-            id="itbms-cancel-button"
             type="button"
-            class="border border-gray-400 px-4 py-2 rounded"
+            class="itbms-cancel-button border border-gray-400 px-4 py-2 rounded"
             @click="handleCancel"
           >
             Cancel
@@ -186,8 +176,7 @@ const isFormValid = computed(() => {
     form.value.brandId &&
     form.value.model.trim() &&
     form.value.description.trim() &&
-    form.value.price &&
-    form.value.quantity
+    form.value.price
   );
 });
 
@@ -212,7 +201,7 @@ async function handleSave() {
     const dataToSend = {
       model: form.value.model.trim(),
       brand: brandObj ? { id: brandObj.id, name: brandObj.name } : null,
-      description: form.value.description.trim(), // Added trim() here
+      description: form.value.description.trim(),
       price: parseInt(form.value.price),
       ramGb: form.value.ramGb ? parseInt(form.value.ramGb) : null,
       screenSizeInch: form.value.screenSizeInch
@@ -220,13 +209,18 @@ async function handleSave() {
         : null,
       quantity: parseInt(form.value.quantity) || 1,
       storageGb: form.value.storageGb ? parseInt(form.value.storageGb) : null,
-      color: form.value.color.trim() || null,
+      color: form.value.color ? form.value.color.trim() : null,
     };
 
-    //console.log("ข้อมูลที่จะส่ง:", dataToSend);
-    await createSaleItem(dataToSend);
-    alert("สร้างรายการขายสำเร็จ!");
-    handleCancel();
+    const response = await createSaleItem(dataToSend);
+    if (response && response.id) {
+      router.push({
+        name: "sale-items-page",
+        query: { msg: "success", source: "new" },
+      });
+    } else {
+      throw new Error("Failed to create sale item");
+    }
   } catch (err) {
     alert("เกิดข้อผิดพลาด: " + err);
   }

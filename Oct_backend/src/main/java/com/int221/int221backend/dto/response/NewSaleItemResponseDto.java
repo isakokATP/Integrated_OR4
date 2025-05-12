@@ -21,4 +21,5 @@ public class NewSaleItemResponseDto {
     private String color;
     private LocalDateTime createdOn;
     private LocalDateTime updatedOn;
+
 }

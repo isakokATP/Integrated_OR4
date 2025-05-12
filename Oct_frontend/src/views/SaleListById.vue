@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import { fetchSaleItemById, deleteSaleItem } from "@/services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import Header from "@/components/Header.vue";
+import status from "daisyui/components/status";
 
 const item = ref({});
 const errorMsg = ref("");
@@ -10,6 +11,10 @@ const route = useRoute();
 const id = route.params.id;
 const router = useRouter();
 const isLoading = ref(true);
+const msg = route.query.msg;
+const source = route.query.source;
+const showMsg = ref(msg === "success");
+const showDeleteDialog = ref(false);
 
 onMounted(async () => {
   item.value = await fetchSaleItemById(id);
@@ -18,7 +23,15 @@ onMounted(async () => {
     errorMsg.value = "The requested sale item does not exist.";
     // แสดง alert ให้ user กด OK ก่อน redirect
     alert("The requested sale item does not exist.");
-    router.push({ name: "sale-items-page" });
+    setTimeout(() => {
+      router.push({ name: "sale-items-page" });
+    }, 3000);
+  }
+  if (showMsg.value) {
+    setTimeout(() => {
+      showMsg.value = false;
+      router.replace({ query: {} });
+    }, 3000);
   }
 });
 
@@ -29,21 +42,33 @@ const handleEdit = () => {
 
 // เพิ่มฟังก์ชัน handleDelete
 const handleDelete = async () => {
-  if (confirm("Are you sure you want to delete this item?")) {
-    try {
-      const response = await deleteSaleItem(id);
-      if (response.ok || response.status === 200) {
-        alert("Item deleted successfully");
-        router.push({ name: "sale-items-page" }); // Use push instead of back for more reliability
-      } else {
-        throw new Error("Failed to delete item");
-      }
-    } catch (error) {
-      alert("Item was deleted, but there was an issue with the response. Redirecting...");
-      console.error("Error:", error);
+  showDeleteDialog.value = true;
+};
+
+const confirmDelete = async () => {
+  try {
+    const response = await deleteSaleItem(id);
+    if (response.ok || response.status === 204) {
+      router.push({
+        name: "sale-items-page",
+        query: { msg: "success", source: "delete" },
+      });
+    } else {
+      throw new Error("Failed to delete item");
+    }
+  } catch (error) {
+    console.log("error:", error.status);
+    if (error.status === 404) {
+      errorMsg.value = "The requested sale item does not exist.";
+      router.push({ name: "sale-items-page", query: { msg: "notfound" } });
+    } else {
       router.push({ name: "sale-items-page" });
     }
   }
+};
+
+const cancelDelete = () => {
+  showDeleteDialog.value = false;
 };
 </script>
 
@@ -51,9 +76,37 @@ const handleDelete = async () => {
   <Header />
   <div v-if="isLoading"></div>
   <div v-else class="max-w-4xl mx-auto mt-8">
+    <!-- Delete Confirmation Dialog -->
+    <div
+      v-if="showDeleteDialog"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg">
+        <div class="itbms-message mb-4">
+          Do you want to delete this sale item?
+        </div>
+        <div class="flex justify-end gap-4">
+          <button
+            @click="cancelDelete"
+            class="itbms-cancel-button px-4 py-2 border border-gray-400 rounded hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDelete"
+            class="itbms-confirm-button px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Breadcrumb -->
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link to="/" class="text-blue-600 hover:underline font-medium"
+      <router-link
+        to="/sale-items"
+        class="itbms-home-button text-blue-600 hover:underline font-medium"
         >Home</router-link
       >
       <span class="mx-1">›</span>
@@ -66,8 +119,18 @@ const handleDelete = async () => {
       </span>
     </nav>
     <div
+      v-if="showMsg"
+      class="itbms-message bg-green-50 border border-green-300 text-green-800 px-6 py-3 mb-4 rounded"
+    >
+      <strong>success</strong>
+      <div v-if="source === 'new'">
+        The sale item has been successfully added.
+      </div>
+      <div v-else>The sale item has been updated.</div>
+    </div>
+    <div
       v-if="errorMsg"
-      class="itbms-message text-center text-red-600 text-lg my-8"
+      class="itbms-message bg-red-50 border border-red-300 text-red-800 px-6 py-3 mb-4 rounded"
     >
       {{ errorMsg }}
     </div>
@@ -115,13 +178,13 @@ const handleDelete = async () => {
         <div class="flex gap-4 mt-6">
           <button
             @click="handleEdit"
-            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            class="itbms-edit-button bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Edit
           </button>
           <button
             @click="handleDelete"
-            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            class="itbms-delete-button bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
             Delete
           </button>

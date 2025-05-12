@@ -9,8 +9,9 @@ const router = useRouter();
 const id = route.params.id;
 const isLoading = ref(true);
 const errorMsg = ref("");
-const originalData = ref(null); // Store original data for comparison
-// เพิ่มตัวแปร brands
+const originalData = ref(null);
+const successMsg = ref("");
+
 const brands = [
   { id: 1, name: "Samsung" },
   { id: 2, name: "Apple" },
@@ -49,10 +50,8 @@ const form = ref({
   quantity: "",
 });
 
-// Computed property to check if form has changes
 const hasChanges = computed(() => {
   if (!originalData.value) return false;
-  //console.log(form.value.brand.id, originalData.value.brand.id);
   return (
     form.value.brand.id !== originalData.value.brand.id ||
     form.value.model.trim() !== originalData.value.model.trim() ||
@@ -61,7 +60,8 @@ const hasChanges = computed(() => {
     form.value.ramGb !== originalData.value.ramGb ||
     form.value.screenSizeInch !== originalData.value.screenSizeInch ||
     form.value.storageGb !== originalData.value.storageGb ||
-    form.value.color.trim() !== originalData.value.color.trim() ||
+    (form.value.color || " ").trim() !==
+      (originalData.value.color || " ").trim() ||
     form.value.quantity !== originalData.value.quantity
   );
 });
@@ -79,7 +79,6 @@ const isFormValid = computed(() => {
 onMounted(async () => {
   try {
     const item = await fetchSaleItemById(id);
-    //console.log("API Response:", item);
 
     if (item.status === "not_found") {
       errorMsg.value = "The requested sale item does not exist.";
@@ -88,10 +87,7 @@ onMounted(async () => {
       return;
     }
 
-    // หา brand จาก brandName ที่ได้จาก API
     const brand = brands.find((b) => b.name === item.brandName);
-    //console.log("Found brand:", brand);
-    //console.log("item.brandName:", item.brandName);
 
     form.value = {
       brand: {
@@ -108,7 +104,6 @@ onMounted(async () => {
       quantity: item.quantity,
     };
 
-    // Store original data for comparison
     originalData.value = {
       brand: {
         id: brand ? brand.id : "",
@@ -123,11 +118,7 @@ onMounted(async () => {
       color: item.color,
       quantity: item.quantity,
     };
-
-    //console.log("form.value:", form.value);
-    //console.log("originalData.value:", originalData.value);
   } catch (error) {
-    //console.error("Error in onMounted:", error);
     errorMsg.value = "Error loading item: " + error.message;
   } finally {
     isLoading.value = false;
@@ -137,20 +128,29 @@ onMounted(async () => {
 const handleSave = async () => {
   try {
     const dataToSend = {
-      model: form.value.model.trim(),
+      model:
+        form.value.model && form.value.model.trim()
+          ? form.value.model.trim()
+          : null,
       brand: {
         id: parseInt(form.value.brand.id),
         name: form.value.brand.name,
       },
-      description: form.value.description.trim(),
+      description:
+        form.value.description && form.value.description.trim()
+          ? form.value.description.trim()
+          : null,
       price: parseInt(form.value.price),
       ramGb: form.value.ramGb ? parseInt(form.value.ramGb) : null,
       screenSizeInch: form.value.screenSizeInch
         ? parseFloat(form.value.screenSizeInch)
         : null,
-      storageGb: form.value.storageGb ? parseInt(form.value.storageGb) : null,
-      color: form.value.color.trim() || null,
       quantity: parseInt(form.value.quantity) || 1,
+      storageGb: form.value.storageGb ? parseInt(form.value.storageGb) : null,
+      color:
+        form.value.color && form.value.color.trim()
+          ? form.value.color.trim()
+          : null,
     };
 
     if (
@@ -162,10 +162,22 @@ const handleSave = async () => {
       throw new Error("Please fill in all required fields");
     }
 
-    await updateSaleItem(id, dataToSend);
-    alert("Update successful!");
-    router.push({ name: "sale-items-page" });
+    console.log("Updating item with ID:", id);
+    const response = await updateSaleItem(id, dataToSend);
+    console.log("Update response:", response);
+
+    if (response) {
+      console.log("Redirecting to details page with ID:", id);
+      router.push({
+        name: "sale-items-page-byId",
+        params: { id: id },
+        query: { msg: "success", source: "edit" },
+      });
+    } else {
+      throw new Error("Failed to update sale item");
+    }
   } catch (err) {
+    console.error("Error in handleSave:", err);
     alert("Error: " + err.message);
   }
 };
@@ -183,8 +195,16 @@ const handleCancel = () => {
     {{ errorMsg }}
   </div>
   <div v-else class="max-w-4xl mx-auto p-6">
+    <div
+      v-if="successMsg"
+      class="itbms-message text-green-600 text-center mb-4"
+    >
+      {{ successMsg }}
+    </div>
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link to="/" class="text-blue-600 hover:underline font-medium"
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
         >Home</router-link
       >
       <span class="mx-1">›</span>
@@ -195,7 +215,6 @@ const handleCancel = () => {
       @submit.prevent="handleSave"
       class="grid grid-cols-1 md:grid-cols-2 gap-8"
     >
-      <!-- Left: Picture -->
       <div>
         <div
           class="w-64 h-64 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-4"
@@ -213,13 +232,12 @@ const handleCancel = () => {
         </div>
       </div>
 
-      <!-- Right: Form -->
       <div>
         <div class="mb-3">
           <label class="block mb-1">Brand</label>
           <select
             v-model="form.brand.id"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-brand w-full border rounded px-2 py-1"
             @change="
               form.brand.name =
                 brands.find((b) => b.id == form.brand.id)?.name || ''
@@ -233,21 +251,24 @@ const handleCancel = () => {
         </div>
         <div class="mb-3">
           <label class="block mb-1">Model</label>
-          <input v-model="form.model" class="w-full border rounded px-2 py-1" />
+          <input
+            v-model="form.model"
+            class="itbms-model w-full border rounded px-2 py-1"
+          />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Price (Baht)</label>
           <input
             v-model="form.price"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-price w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Description</label>
           <textarea
             v-model="form.description"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-description w-full border rounded px-2 py-1"
           ></textarea>
         </div>
         <div class="mb-3">
@@ -255,7 +276,7 @@ const handleCancel = () => {
           <input
             v-model="form.ramGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-ramGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
@@ -264,7 +285,7 @@ const handleCancel = () => {
             v-model="form.screenSizeInch"
             type="number"
             step="0.1"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-screenSizeInch w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
@@ -272,32 +293,35 @@ const handleCancel = () => {
           <input
             v-model="form.storageGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-storageGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Color</label>
-          <input v-model="form.color" class="w-full border rounded px-2 py-1" />
+          <input
+            v-model="form.color"
+            class="itbms-color w-full border rounded px-2 py-1"
+          />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Quantity</label>
           <input
             v-model="form.quantity"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-quantity w-full border rounded px-2 py-1"
           />
         </div>
         <div class="flex gap-4 mt-6">
           <button
             type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="itbms-save-button bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
             :disabled="!hasChanges || !isFormValid"
           >
             Save
           </button>
           <button
             type="button"
-            class="border border-gray-400 px-4 py-2 rounded"
+            class="itbms-cancel-button border border-gray-400 px-4 py-2 rounded"
             @click="handleCancel"
           >
             Cancel
