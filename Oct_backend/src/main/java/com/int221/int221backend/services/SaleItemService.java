@@ -59,13 +59,13 @@ public class SaleItemService {
             saleItemsUpdateDto.setColor(null);
         }
         SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
-        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
-        if (brand.isPresent()) {
-            Brand brandModel = brand.get();
-            saleItem.setBrand(brandModel);
+        Optional<Brand> brandName = brandRepository.findById(saleItemsUpdateDto.getBrandName().getId());
+        if (brandName.isPresent()) {
+            Brand brandModel = brandName.get();
+            saleItem.setBrandName(brandModel);
         }
         else {
-            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
+            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrandName().getId());
         }
         SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(updatedItem);
