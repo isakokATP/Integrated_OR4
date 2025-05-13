@@ -25,7 +25,7 @@ public class NewSaleItemDto {
     }
 
     public void setDescription(String description) {
-        this.description = description.trim();
+        this.description = description == null ? null : description.trim();
     }
 
     public void setColor(String color) {

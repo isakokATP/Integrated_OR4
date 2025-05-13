@@ -44,11 +44,20 @@ public class SaleItemService {
 
     public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
+        if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
+            saleItem.setColor(null);
+        }
         return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
     }
 
     @Transactional
     public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
+        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0 || saleItemsUpdateDto.getQuantity().toString().isEmpty()) {
+            saleItemsUpdateDto.setQuantity(1); // set default value to 1
+        }
+        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
+            saleItemsUpdateDto.setColor(null);
+        }
         SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
         Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
         if (brand.isPresent()) {
@@ -60,8 +69,8 @@ public class SaleItemService {
         }
         SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(updatedItem);
-        SaleItem updatedSaleItem = saleItemRepository.findById(saleItemsUpdateDto.getId())
-                .orElseThrow(() -> new NotFoundException("No Item id = " + saleItemsUpdateDto.getId()));
+//        SaleItem updatedSaleItem = saleItemRepository.findById(saleItemsUpdateDto.getId())
+//                .orElseThrow(() -> new NotFoundException("No Item id = " + saleItemsUpdateDto.getId()));
         return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
     }
 

@@ -58,7 +58,7 @@ public class SaleItemController {
     }
 
 //  PBI3
-    @PostMapping("/sale-items/add")
+    @PostMapping("/sale-items")
     public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
         NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
