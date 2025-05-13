@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class NewSaleItemDto {
     private Integer Id;
     private String model;
-    private BrandDto brand;
+    private BrandDto brandName;
     private String description;
     private Integer price;
     private Integer ramGb;
@@ -20,13 +20,21 @@ public class NewSaleItemDto {
     private Integer storageGb;
     private String color;
 
+//    public void setModel(String model) {
+//        this.model = model.trim();
+//    }
+//
+//    public void setDescription(String description) {
+//        this.description = description.trim();
+//    }
+
     public void setModel(String model) {
-        this.model = model.trim();
+        this.model = model == null ? null : model.trim();
+    }
+    public void setDescription(String description) {
+        this.description = description == null ? null : description.trim();
     }
 
-    public void setDescription(String description) {
-        this.description = description.trim();
-    }
 
     public void setColor(String color) {
         this.color = color == null ? null : color.trim();

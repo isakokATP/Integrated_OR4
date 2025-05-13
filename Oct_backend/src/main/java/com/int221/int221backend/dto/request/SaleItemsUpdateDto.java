@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class SaleItemsUpdateDto {
     private Integer Id;
     private String model;
-    private BrandDto brand;
+    private BrandDto brandName;
     private String description;
     private Integer price;
     private Integer ramGb;
@@ -29,6 +29,6 @@ public class SaleItemsUpdateDto {
     }
 
     public void setColor(String color) {
-        this.color = color.trim();
+        this.color = color == null ? null : color.trim();
     }
 }
