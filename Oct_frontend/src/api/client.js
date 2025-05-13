@@ -5,7 +5,7 @@ const isLocalhost =
 
 export const apiUrl = isLocalhost
   ? import.meta.env.VITE_API_URL_LOCAL
-  : import.meta.env.VITE_API_URL_PROD;
+  : `${import.meta.env.VITE_API_URL_PROD}/ip24or4`;
 
 // if (!isLocalhost && !window.location.origin.startsWith("https")) {
 //   throw new Error("Invalid production API URL");

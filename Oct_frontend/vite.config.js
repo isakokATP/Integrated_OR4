@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
-    base: "/",
+    base: "/ip24or4/",
     build: {
       assetsDir: "assets",
       outDir: "dist",
