@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Oct_backend/INT-221-backend.iml" filepath="$PROJECT_DIR$/Oct_backend/INT-221-backend.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/Integrated_OR4.iml" filepath="$PROJECT_DIR$/.idea/Integrated_OR4.iml" />
     </modules>
   </component>
