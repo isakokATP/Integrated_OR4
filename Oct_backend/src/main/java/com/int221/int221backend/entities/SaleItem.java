@@ -48,7 +48,7 @@ public class SaleItem {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
-    private Brand brandName;
+    private Brand brand;
 
     @PrePersist
     protected void onCreate() {

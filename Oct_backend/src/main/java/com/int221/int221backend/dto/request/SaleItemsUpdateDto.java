@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class SaleItemsUpdateDto {
     private Integer Id;
     private String model;
-    private BrandDto brandName;
+    private BrandDto brand;
     private String description;
     private Integer price;
     private Integer ramGb;

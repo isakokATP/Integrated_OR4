@@ -42,7 +42,7 @@ public class SaleItemController {
                 .map(saleItem -> {
                     SaleItemDto saleItemDto =  modelMapper.map(saleItem, SaleItemDto.class);
                     // saleItemDto.setBrandName(saleItem.getBrand().getName());
-                    saleItemDto.setBrandName(saleItem.getBrandName().getName());
+                    saleItemDto.setBrandName(saleItem.getBrand().getName());
                     System.out.println("Mapped SaleItemDTO: " + saleItemDto);
                     return saleItemDto;
                 })
@@ -53,7 +53,7 @@ public class SaleItemController {
     public SaleItemByIdDto getItemById(@PathVariable Integer id) {
         SaleItem saleItem = saleItemService.getSaleItemById(id);
         SaleItemByIdDto saleItemByIdDto = modelMapper.map(saleItem, SaleItemByIdDto.class);
-        saleItemByIdDto.setBrandName(saleItem.getBrandName().getName());
+        saleItemByIdDto.setBrandName(saleItem.getBrand().getName());
         return saleItemByIdDto;
     }
 
