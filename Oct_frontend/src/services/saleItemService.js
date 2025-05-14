@@ -49,7 +49,7 @@ async function createSaleItem(saleItemData) {
       JSON.stringify(saleItemData, null, 2)
     );
 
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/add`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
