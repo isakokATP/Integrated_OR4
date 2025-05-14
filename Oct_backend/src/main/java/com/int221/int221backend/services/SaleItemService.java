@@ -47,6 +47,9 @@ public class SaleItemService {
         if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
             saleItem.setColor(null);
         }
+        if (saleItem.getQuantity() < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative.");
+        }
         return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
     }
 

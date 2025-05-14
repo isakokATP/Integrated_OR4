@@ -1,5 +1,6 @@
 package com.int221.int221backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,9 +42,11 @@ public class SaleItem {
     private Integer quantity = 1;
 
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Bangkok")
     private LocalDateTime createdOn;
 
     @Column(name = "updated_on", nullable = false, insertable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Bangkok")
     private LocalDateTime updatedOn;
 
     @ManyToOne(fetch = FetchType.EAGER)

@@ -10,6 +10,7 @@ import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
 import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.services.SaleItemService;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -59,7 +60,7 @@ public class SaleItemController {
 
 //  PBI3
     @PostMapping("/sale-items")
-    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@RequestBody NewSaleItemDto newSaleItemDto) {
+    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
         NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
@@ -69,6 +70,7 @@ public class SaleItemController {
     public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
         saleItemsUpdateDto.setId(id);
         SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
+        System.out.println("Mapped SaleItemsUpdateResponseDto: " + response);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
