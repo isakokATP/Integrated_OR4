@@ -1,6 +1,8 @@
 package com.int221.int221backend.dto.request;
 
 import com.int221.int221backend.dto.response.BrandDto;
+import com.int221.int221backend.exception.InvalidValueException;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,14 +11,25 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class NewSaleItemDto {
-    private Integer Id;
+
+//    @Null(message = "Id must not be provided when creating a new item")
+//    @Positive(message = "Id must be positive")
+//    private Integer Id;
+
+    @NotNull(message = "Model is required")
     private String model;
+
+    @NotNull(message = "Brand is required")
     private BrandDto brand;
     private String description;
     private Integer price;
     private Integer ramGb;
+
+    @DecimalMin(value = "0.1", message = "Screen size must be greater than 0")
     private BigDecimal screenSizeInch;
+
     private Integer quantity;
+
     private Integer storageGb;
     private String color;
 
@@ -31,4 +44,14 @@ public class NewSaleItemDto {
     public void setColor(String color) {
         this.color = color == null ? null : color.trim();
     }
+
+    public void setQuantity(Integer quantity) {
+        if (quantity == null || quantity < 0) {
+            this.quantity = 1;
+        } else {
+            this.quantity = quantity;
+        }
+    }
+
+
 }
