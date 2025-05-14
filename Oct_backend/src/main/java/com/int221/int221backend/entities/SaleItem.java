@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Setter
@@ -42,12 +43,10 @@ public class SaleItem {
     private Integer quantity = 1;
 
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Bangkok")
-    private LocalDateTime createdOn;
+    private ZonedDateTime createdOn;
 
     @Column(name = "updated_on", nullable = false, insertable = false, updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Bangkok")
-    private LocalDateTime updatedOn;
+    private ZonedDateTime updatedOn;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
@@ -55,11 +54,11 @@ public class SaleItem {
 
     @PrePersist
     protected void onCreate() {
-        createdOn = updatedOn = LocalDateTime.now();
+        createdOn = updatedOn = ZonedDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedOn = LocalDateTime.now();
+        updatedOn = ZonedDateTime.now();
     }
 }

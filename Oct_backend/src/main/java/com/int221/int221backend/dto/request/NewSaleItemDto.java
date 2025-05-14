@@ -12,10 +12,6 @@ import java.math.BigDecimal;
 @Setter
 public class NewSaleItemDto {
 
-//    @Null(message = "Id must not be provided when creating a new item")
-//    @Positive(message = "Id must be positive")
-//    private Integer Id;
-
     @NotNull(message = "Model is required")
     private String model;
 
