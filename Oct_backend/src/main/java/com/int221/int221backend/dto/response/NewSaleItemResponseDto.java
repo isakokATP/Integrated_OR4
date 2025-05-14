@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -19,7 +19,7 @@ public class NewSaleItemResponseDto {
     private Integer quantity;
     private Integer storageGb;
     private String color;
-    private LocalDateTime createdOn;
-    private LocalDateTime updatedOn;
+    private ZonedDateTime createdOn;
+    private ZonedDateTime updatedOn;
 
 }
