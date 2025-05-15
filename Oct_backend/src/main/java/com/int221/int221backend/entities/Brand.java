@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Data
@@ -26,19 +27,19 @@ public class Brand {
     private String countryOfOrigin;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private ZonedDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = updatedAt = LocalDateTime.now();
+        createdAt = updatedAt = ZonedDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = ZonedDateTime.now();
     }
 
 

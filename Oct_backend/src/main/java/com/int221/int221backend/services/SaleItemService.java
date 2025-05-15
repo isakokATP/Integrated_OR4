@@ -56,7 +56,7 @@ public class SaleItemService {
     @Transactional
     public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
         if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0 || saleItemsUpdateDto.getQuantity().toString().isEmpty()) {
-            saleItemsUpdateDto.setQuantity(1); // set default value to 1
+            saleItemsUpdateDto.setQuantity(1);
         }
         if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
             saleItemsUpdateDto.setColor(null);
@@ -72,8 +72,6 @@ public class SaleItemService {
         }
         SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(updatedItem);
-//        SaleItem updatedSaleItem = saleItemRepository.findById(saleItemsUpdateDto.getId())
-//                .orElseThrow(() -> new NotFoundException("No Item id = " + saleItemsUpdateDto.getId()));
         return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
     }
 
