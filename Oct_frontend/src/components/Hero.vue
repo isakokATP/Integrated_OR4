@@ -6,6 +6,10 @@ const router = useRouter();
 function goToSaleItem() {
   router.push({ name: "sale-items-page" });
 }
+
+function goToSaleItemList() {
+  router.push({ name: "sale-items-list-page" });
+}
 </script>
 
 <template>
@@ -21,6 +25,11 @@ function goToSaleItem() {
         <div class="flex justify-center lg:justify-start mt-10">
           <button class="btn btn-soft btn-primary" @click="goToSaleItem">
             Shop now
+          </button>
+        </div>
+        <div class="flex justify-center lg:justify-start mt-10">
+          <button class="btn btn-soft btn-primary" @click="goToSaleItemList">
+            Seller
           </button>
         </div>
       </div>
