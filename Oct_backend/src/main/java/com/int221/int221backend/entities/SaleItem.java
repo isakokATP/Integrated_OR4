@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,23 +44,15 @@ public class SaleItem {
     @Column(name = "quantity",nullable = false)
     private Integer quantity = 1;
 
+    @CreationTimestamp
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdOn;
 
+    @UpdateTimestamp
     @Column(name = "updated_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedOn;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;
-
-    @PrePersist
-    protected void onCreate() {
-        createdOn = updatedOn = ZonedDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedOn = ZonedDateTime.now();
-    }
 }
