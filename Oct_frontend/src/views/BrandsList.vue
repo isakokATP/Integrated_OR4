@@ -43,7 +43,7 @@
               <button
                 class="btn btn-xs btn-outline mr-1"
                 data-testid="itbms-edit-button"
-                @click="handleEdit()"
+                @click="goToEditBrand(brand.id)"
               >
                 E
               </button>
@@ -83,8 +83,8 @@ const goToAddBrand = () => {
   router.push("/brands/add");
 };
 
-const handleEdit = () => {
-  router.push({ name: "edit-sale-item", params: { id: id } });
+const goToEditBrand = (id) => {
+  router.push(`/brands/edit/${id}`);
 };
 
 const deleteBrandItem = async (id) => {
