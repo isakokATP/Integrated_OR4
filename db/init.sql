@@ -1,6 +1,3 @@
-SET time_zone = '+07:00';
-default-time-zone = '+07:00';
-
 SET NAMES utf8mb4;
 
 CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';

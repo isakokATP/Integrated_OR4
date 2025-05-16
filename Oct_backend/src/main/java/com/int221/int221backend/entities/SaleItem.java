@@ -44,11 +44,9 @@ public class SaleItem {
     @Column(name = "quantity",nullable = false)
     private Integer quantity = 1;
 
-    @CreationTimestamp
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdOn;
 
-    @UpdateTimestamp
     @Column(name = "updated_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedOn;
 

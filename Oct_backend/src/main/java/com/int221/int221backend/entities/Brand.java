@@ -28,11 +28,9 @@ public class Brand {
     @Column(name = "country_of_origin", length = 80)
     private String countryOfOrigin;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private ZonedDateTime updatedAt;
 }

@@ -44,13 +44,25 @@ public class SaleItemService {
 
     public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
+//        if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
+//            saleItem.setColor(null);
+//        }
+//        if (saleItem.getQuantity() < 0) {
+//            throw new IllegalArgumentException("Quantity cannot be negative.");
+//        }
+//        return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
+
         if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
             saleItem.setColor(null);
         }
+
         if (saleItem.getQuantity() < 0) {
             throw new IllegalArgumentException("Quantity cannot be negative.");
         }
-        return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
+        SaleItem savedItem = saleItemRepository.save(saleItem);
+        SaleItem reloadedItem = saleItemRepository.findById(savedItem.getId())
+                .orElseThrow(() -> new RuntimeException("Saved item not found."));
+        return modelMapper.map(reloadedItem, NewSaleItemResponseDto.class);
     }
 
     @Transactional
