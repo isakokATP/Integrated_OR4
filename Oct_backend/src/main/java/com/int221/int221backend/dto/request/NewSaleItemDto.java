@@ -48,6 +48,4 @@ public class NewSaleItemDto {
             this.quantity = quantity;
         }
     }
-
-
 }
