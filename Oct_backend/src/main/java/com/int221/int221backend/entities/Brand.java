@@ -2,10 +2,7 @@ package com.int221.int221backend.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -33,4 +30,12 @@ public class Brand {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedAt;
+
+    public void setActive(Boolean active) {
+        if (active == null) {
+            this.isActive = true;
+        } else {
+            this.isActive = active;
+        }
+    }
 }

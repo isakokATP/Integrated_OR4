@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BrandService {
@@ -34,7 +35,13 @@ public class BrandService {
     }
 
     public NewBrandResponseDto createNewBrand(NewBrandDto newBrandDto) {
+        Optional<Brand> existingBrandOptional = brandRepository.findByName(newBrandDto.getName());
+        if (existingBrandOptional.isPresent() &&
+                existingBrandOptional.get().getName().equalsIgnoreCase(newBrandDto.getName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name already exists");
+        }
         Brand brand = modelMapper.map(newBrandDto, Brand.class);
+        brand.setActive(newBrandDto.getIsActive());
         Brand savedBrand = brandRepository.save(brand);
         return modelMapper.map(savedBrand, NewBrandResponseDto.class);
     }
