@@ -16,9 +16,9 @@
       class="grid grid-cols-1 md:grid-cols-2 gap-8"
     >
       <!-- Left: Picture -->
-      <div>
+      <div class="mt-2">
         <div
-          class="w-64 h-64 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-4"
+          class="w-70 h-70 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-2 border border-gray-300 rounded"
         >
           No Picture
         </div>
@@ -26,7 +26,7 @@
           <div
             v-for="n in 4"
             :key="n"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs"
+            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded"
           >
             No Picture
           </div>
@@ -120,7 +120,7 @@
           <button
             id="itbms-save-button"
             type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
             :disabled="!isFormValid"
           >
             Save
@@ -128,7 +128,7 @@
           <button
             id="itbms-cancel-button"
             type="button"
-            class="border border-gray-400 px-4 py-2 rounded"
+            class="border border-gray-400 px-4 py-2 rounded hover:bg-blue-200 transition-colors duration-300"
             @click="handleCancel"
           >
             Cancel
