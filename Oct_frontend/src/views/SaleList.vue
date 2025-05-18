@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 function goToAddSaleItem() {
-  router.push("/sale-items/add");
+  router.push({ name: "new-sale-item-page" });
 }
 </script>
 

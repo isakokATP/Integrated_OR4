@@ -5,7 +5,7 @@
       <nav class="text-sm mb-4 flex items-center space-x-2">
         <router-link
           to="/sale-items/list"
-          class="text-blue-600 hover:underline font-medium"
+          class="itbms-sale-items-list text-blue-600 hover:underline font-medium"
           >Sale Item List</router-link
         >
         <span class="mx-1"> › </span>
@@ -13,8 +13,7 @@
       </nav>
       <div class="flex justify-end">
         <button
-          class="btn btn-primary"
-          data-testid="itbms-sale-item-add"
+          class="itbms-add-brand btn btn-primary"
           @click="goToAddBrand"
         >
           Add Brand
@@ -34,22 +33,19 @@
           <tr
             v-for="brand in brands"
             :key="brand.id"
-            data-testid="itbms-row"
-            class="border-t"
+            class="itbms-row border-t"
           >
             <td>{{ brand.id }}</td>
             <td>{{ brand.name }}</td>
             <td>
               <button
-                class="btn btn-xs btn-outline mr-1"
-                data-testid="itbms-edit-button"
+                class="itbms-edit-brand btn btn-xs btn-outline mr-1"
                 @click="goToEditBrand(brand.id)"
               >
                 E
               </button>
               <button
-                class="btn btn-xs btn-outline btn-error"
-                data-testid="itbms-delete-button"
+                class="itbms-delete-brand btn btn-xs btn-outline btn-error"
                 @click="deleteBrandItem(brand.id)"
               >
                 D
@@ -76,15 +72,15 @@ const loadBrands = async () => {
 };
 
 const goToSaleItemList = () => {
-  router.push("/sale-items/list");
+  router.push({ name: "sale-items-list-page" });
 };
 
 const goToAddBrand = () => {
-  router.push("/brands/add");
+  router.push({ name: "new-brand-page" });
 };
 
 const goToEditBrand = (id) => {
-  router.push(`/brands/edit/${id}`);
+  router.push({ name: "edit-brand-page", params: { id } });
 };
 
 const deleteBrandItem = async (id) => {

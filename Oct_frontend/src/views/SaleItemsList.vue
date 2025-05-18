@@ -4,15 +4,13 @@
     <header />
     <div class="flex justify-between mb-4">
       <button
-        class="btn btn-primary"
-        data-testid="itbms-sale-item-add"
+        class="itbms-add-sale-item btn btn-primary"
         @click="goToAddSaleItem"
       >
         Add Sale Item
       </button>
       <button
-        class="btn btn-secondary"
-        data-testid="itbms-manage-brand"
+        class="itbms-manage-brand btn btn-secondary"
         @click="goToManageBrand"
       >
         Manage Brand
@@ -36,27 +34,24 @@
           <tr
             v-for="item in saleItems"
             :key="item.id"
-            data-testid="itbms-row"
-            class="border-t"
+            class="itbms-row border-t"
           >
-            <td data-testid="itbms-id">{{ item.id }}</td>
-            <td data-testid="itbms-brand">{{ item.brand }}</td>
-            <td data-testid="itbms-model">{{ item.model }}</td>
-            <td data-testid="itbms-ramGb">{{ item.ramGb }}</td>
-            <td data-testid="itbms-storageGb">{{ item.storageGb }}</td>
-            <td data-testid="itbms-color">{{ item.color }}</td>
-            <td data-testid="itbms-price">{{ item.price.toLocaleString() }}</td>
+            <td class="itbms-id">{{ item.id }}</td>
+            <td class="itbms-brand">{{ item.brand }}</td>
+            <td class="itbms-model">{{ item.model }}</td>
+            <td class="itbms-ramGb">{{ item.ramGb }}</td>
+            <td class="itbms-storageGb">{{ item.storageGb }}</td>
+            <td class="itbms-color">{{ item.color }}</td>
+            <td class="itbms-price">{{ item.price.toLocaleString() }}</td>
             <td>
               <button
-                class="btn btn-xs btn-outline mr-1"
-                data-testid="itbms-edit-button"
+                class="itbms-edit-sale-item btn btn-xs btn-outline mr-1"
                 @click="goToEdit(item.id)"
               >
                 E
               </button>
               <button
-                class="btn btn-xs btn-outline btn-error"
-                data-testid="itbms-delete-button"
+                class="itbms-delete-sale-item btn btn-xs btn-outline btn-error"
                 @click="deleteItem(item.id)"
               >
                 D
@@ -83,15 +78,15 @@ const loadSaleItems = async () => {
 };
 
 const goToAddSaleItem = () => {
-  router.push("/sale-items/add");
+  router.push({ name: "new-sale-item-page" });
 };
 
 const goToManageBrand = () => {
-  router.push("/brands");
+  router.push({ name: "brands-list-page" });
 };
 
 const goToEdit = (id) => {
-  router.push(`/sale-items/edit/${id}`);
+  router.push({ name: "sale-items-page-byId", params: { id } });
 };
 
 const deleteItem = async (id) => {

@@ -7,6 +7,7 @@ import EditSaleItem from "../views/EditSaleItem.vue";
 import SaleItemList from "../views/SaleItemsList.vue";
 import BrandsList from "../views/BrandsList.vue";
 import NewBrand from "../views/NewBrand.vue";
+import EditBrand from "../views/EditBrand.vue";
 const routes = [
   {
     path: "/",
@@ -29,11 +30,6 @@ const routes = [
     component: SaleItemById,
   },
   {
-    path: "/sale-items/:id",
-    name: "edit-sale-item",
-    component: EditSaleItem,
-  },
-  {
     path: "/sale-items/list",
     name: "sale-items-list-page",
     component: SaleItemList,
@@ -47,6 +43,11 @@ const routes = [
     path: "/brands/add",
     name: "new-brand-page",
     component: NewBrand,
+  },
+  {
+    path: "/brands/:id",
+    name: "edit-brand-page",
+    component: EditBrand,
   },
 ];
 

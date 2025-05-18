@@ -67,32 +67,6 @@
             data-testid="itbms-countryOfOrigin"
           />
         </div>
-        <div>
-          <label class="block mb-1 font-medium" for="createdOn"
-            >Created On</label
-          >
-          <input
-            id="createdOn"
-            v-model="form.createdOn"
-            type="text"
-            class="input input-bordered w-full bg-gray-100"
-            data-testid="itbms-createdOn"
-            disabled
-          />
-        </div>
-        <div>
-          <label class="block mb-1 font-medium" for="updatedOn"
-            >Updated On</label
-          >
-          <input
-            id="updatedOn"
-            v-model="form.updatedOn"
-            type="text"
-            class="input input-bordered w-full bg-gray-100"
-            data-testid="itbms-updatedOn"
-            disabled
-          />
-        </div>
         <div class="flex gap-2 mt-4">
           <button
             type="submit"
@@ -130,8 +104,6 @@ const form = ref({
   websiteUrl: "",
   isActive: false,
   countryOfOrigin: "",
-  createdOn: new Date().toISOString().slice(0, 19).replace("T", " "),
-  updatedOn: new Date().toISOString().slice(0, 19).replace("T", " "),
 });
 
 const handleSubmit = async () => {
@@ -140,17 +112,17 @@ const handleSubmit = async () => {
     await createBrand({
       name: form.value.name,
       websiteUrl: form.value.websiteUrl,
-      isActive: form.value.isActive,
       countryOfOrigin: form.value.countryOfOrigin,
+      isActive: form.value.isActive,
     });
-    router.push("/brands");
+    router.push({ name: "brands-list-page" });
   } catch (err) {
     error.value = err.message || "Failed to add brand";
   }
 };
 
 const goBack = () => {
-  router.push("/brands");
+  router.push({ name: "brands-list-page" });
 };
 </script>
 
