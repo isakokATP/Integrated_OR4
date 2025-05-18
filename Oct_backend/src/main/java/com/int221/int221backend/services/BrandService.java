@@ -30,7 +30,7 @@ public class BrandService {
 
     public Brand getBrandById(Integer id) {
         return brandRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Brand not found"));
+                .orElseThrow(() -> new NotFoundException("Brand not found"));
     }
 
     public NewBrandResponseDto createNewBrand(NewBrandDto newBrandDto) {
