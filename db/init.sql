@@ -16,7 +16,7 @@ CREATE TABLE brands (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL CHECK (TRIM(name) <> '') ,
                         website_url VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (TRIM(website_url) IS NULL OR TRIM(website_url) <> '')  ,
-                        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                        is_active BOOLEAN NOT NULL DEFAULT FALSE,
                         country_of_origin VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL CHECK (TRIM(country_of_origin) IS NULL OR TRIM(country_of_origin) <> ''),
                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

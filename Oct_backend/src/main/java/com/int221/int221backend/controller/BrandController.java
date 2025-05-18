@@ -60,6 +60,7 @@ public class BrandController {
     @PostMapping("/brands")
     public ResponseEntity<NewBrandResponseDto> createBrand(@Valid @RequestBody NewBrandDto newBrandDto) {
         NewBrandResponseDto response = brandService.createNewBrand(newBrandDto);
+        response.setNoOfSaleItems(saleItemRepository.countSaleItemByBrand_Id(response.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
