@@ -116,4 +116,115 @@ export const updateSaleItem = async (id, saleItemData) => {
   }
 };
 
-export { fetchSaleItems, fetchSaleItemById, createSaleItem };
+// Brand related functions
+async function fetchBrands() {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Fetch brands error:", error);
+    throw handleApiError(error);
+  }
+}
+
+async function fetchBrandById(id) {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Fetch brand by id error:", error);
+    throw handleApiError(error);
+  }
+}
+
+async function createBrand(brandData) {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(brandData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Create brand error:", error);
+    throw handleApiError(error);
+  }
+}
+
+async function updateBrand(id, brandData) {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(brandData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Update brand error:", error);
+    throw handleApiError(error);
+  }
+}
+
+async function deleteBrand(id) {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return true;
+  } catch (error) {
+    console.error("Delete brand error:", error);
+    throw handleApiError(error);
+  }
+}
+
+export {
+  fetchSaleItems,
+  fetchSaleItemById,
+  createSaleItem,
+  fetchBrands,
+  fetchBrandById,
+  createBrand,
+  updateBrand,
+  deleteBrand,
+};
