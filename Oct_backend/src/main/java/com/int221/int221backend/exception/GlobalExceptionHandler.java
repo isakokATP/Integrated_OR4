@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(404).body(response);
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleException(Exception ex) {
         Map<String, Object> response = new HashMap<>();

@@ -14,6 +14,8 @@ public class BrandByIdDto {
     private Boolean isActive;
     private String countryOfOrigin;
 
+    private Integer noOfSaleItems;
+
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }
