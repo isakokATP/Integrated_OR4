@@ -28,9 +28,9 @@ public class Brand {
     @Column(name = "country_of_origin", length = 80)
     private String countryOfOrigin;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedAt;
 }
