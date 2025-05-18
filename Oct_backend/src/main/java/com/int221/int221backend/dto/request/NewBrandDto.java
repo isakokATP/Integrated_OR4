@@ -14,8 +14,8 @@ public class NewBrandDto {
     @Size(min = 2, max = 30, message = "Brand name must be between 2 and 30 characters.")
     private String name;
 
-    @NotEmpty
-    @Size(max = 40, message = "Website URL must not exceed 40 characters.")
+
+    @Size(min = 0, max = 40, message = "Website URL must not exceed 40 characters.")
     private String websiteUrl;
 
     @Size(max = 80, message = "Country of origin must not exceed 80 characters.")
@@ -37,7 +37,7 @@ public class NewBrandDto {
 
     public void setActive(Boolean active) {
         if (active == null) {
-            this.isActive = false;
+            this.isActive = true;
         } else {
             this.isActive = active;
         }

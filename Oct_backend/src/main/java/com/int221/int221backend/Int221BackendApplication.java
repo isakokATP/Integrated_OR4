@@ -9,5 +9,4 @@ public class Int221BackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(Int221BackendApplication.class, args);
     }
-
 }
