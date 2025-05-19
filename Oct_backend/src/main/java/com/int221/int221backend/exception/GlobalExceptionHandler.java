@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,17 +28,6 @@ public class GlobalExceptionHandler {
         response.put("message", ex.getMessage());
         return ResponseEntity.status(500).body(response);
     }
-
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-//        Map<String, String> errors = new HashMap<>();
-//        ex.getBindingResult().getFieldErrors().forEach(error ->
-//                errors.put(error.getField(), error.getDefaultMessage()));
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("status", "validation_failed");
-//        response.put("errors", errors);
-//        return ResponseEntity.badRequest().body(response);
-//    }
 
     @ExceptionHandler(InvalidValueException.class)
     public ResponseEntity<Object> handleInvalidValueException(InvalidValueException ex) {
@@ -66,8 +56,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex) {
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("status", ex.getStatusCode().value());
+        errorBody.put("message", ex.getReason());
+        return ResponseEntity.status(ex.getStatusCode()).body(errorBody);
     }
 }

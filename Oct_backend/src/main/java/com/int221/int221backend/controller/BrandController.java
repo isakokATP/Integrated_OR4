@@ -73,9 +73,8 @@ public class BrandController {
 
 //  PBI8
     @DeleteMapping("/brands/{id}")
-    public ResponseEntity<BrandByIdDto> deleteBrand(@PathVariable Integer id) {
-        Brand brand = brandService.getBrandById(id);
+    public ResponseEntity<Void> deleteBrand(@PathVariable Integer id) {
         brandService.deleteBrandById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.noContent().build(); // status 204
     }
 }

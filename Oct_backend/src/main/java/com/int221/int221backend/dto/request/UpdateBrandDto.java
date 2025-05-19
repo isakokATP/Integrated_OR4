@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class UpdateBrandDto {
 
-    @Size(min = 2, max = 30, message = "Brand name must be between 2 and 30 characters.")
+//    @Size(max = 30, message = "Brand name must be at most 30 characters.")
     private String name;
 
     @Size(min = 0, max = 40, message = "Website URL must not exceed 40 characters.")
