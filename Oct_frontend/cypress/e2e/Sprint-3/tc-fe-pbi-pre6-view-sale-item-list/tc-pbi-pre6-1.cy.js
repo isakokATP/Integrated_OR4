@@ -1,7 +1,7 @@
-describe(`TC-FE-PBI1-VIEW-SALE-ITEM-GALLERY-1\n 
+describe(`TC-FE-PBI-PRE6-VIEW-SALE-ITEM-LIST-1\n 
     Test Scenario : normal - sale item table is empty`, () => {
 
-    let resource = '/sale-items'
+    let resource = '/sale-items/list'
     let baseAPI = Cypress.config('baseAPI')
 
     beforeEach(()=> {
@@ -9,12 +9,13 @@ describe(`TC-FE-PBI1-VIEW-SALE-ITEM-GALLERY-1\n
         cy.wait(100) ;
     }) ;
 
-    it(`Open the sale item gallery page at ${resource}`, () => {
+    it(`Open the sale item list page at ${resource}`, () => {
     })
 
     it('The sale item table shoud be empty and the page show "no sale item".',()=>{
         cy.intercept('GET',`${baseAPI}/v1/**`,{
-            statusCode: 200
+            statusCode: 200,
+            body:  []
         }).as('request')
 
         cy.visit(resource)

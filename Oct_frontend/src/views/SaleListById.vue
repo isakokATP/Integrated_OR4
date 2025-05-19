@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { fetchSaleItemById, deleteSaleItem } from "@/services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import Header from "@/components/Header.vue";
+import Notification from "@/components/Notification.vue";
 
 const item = ref({});
 const errorMsg = ref("");
@@ -10,38 +11,57 @@ const route = useRoute();
 const id = route.params.id;
 const router = useRouter();
 const isLoading = ref(true);
+const message = ref("");
+
+// Watch for route changes to get message from query params
+watch(
+  () => route.query.message,
+  (newMessage) => {
+    if (newMessage) {
+      message.value = newMessage;
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        message.value = "";
+        // Remove message from URL without refreshing
+        router.replace({ query: {} });
+      }, 3000);
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   item.value = await fetchSaleItemById(id);
   isLoading.value = false;
   if (item.value.status === "not_found") {
     errorMsg.value = "The requested sale item does not exist.";
-    // แสดง alert ให้ user กด OK ก่อน redirect
     alert("The requested sale item does not exist.");
     router.push({ name: "sale-items-page" });
   }
 });
 
-// เพิ่มฟังก์ชัน handleEdit
 const handleEdit = () => {
-  router.push({ name: "edit-sale-item", params: { id: id } });
+  router.push({ name: "edit-sale-item-page", params: { id: id } });
 };
 
-// เพิ่มฟังก์ชัน handleDelete
 const handleDelete = async () => {
   if (confirm("Are you sure you want to delete this item?")) {
     try {
       const response = await deleteSaleItem(id);
       if (response.ok || response.status === 200) {
-        alert("Item deleted successfully");
-        router.push({ name: "sale-items-page" }); // Use push instead of back for more reliability
+        router.push({
+          name: "sale-items-page",
+          query: { message: "Item deleted successfully" },
+        });
       } else {
         throw new Error("Failed to delete item");
       }
     } catch (error) {
-      alert("Item was deleted, but there was an issue with the response. Redirecting...");
       console.error("Error:", error);
-      router.push({ name: "sale-items-page" });
+      router.push({
+        name: "sale-items-page",
+        query: { message: "Item has been deleted" },
+      });
     }
   }
 };
@@ -49,11 +69,13 @@ const handleDelete = async () => {
 
 <template>
   <Header />
+  <Notification :message="message" />
   <div v-if="isLoading"></div>
   <div v-else class="max-w-4xl mx-auto mt-8">
-    <!-- Breadcrumb -->
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link to="/" class="text-blue-600 hover:underline font-medium"
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
         >Home</router-link
       >
       <span class="mx-1">›</span>
@@ -65,21 +87,51 @@ const handleDelete = async () => {
         }}{{ item.color ? " " + item.color : "" }}
       </span>
     </nav>
+
     <div
       v-if="errorMsg"
       class="itbms-message text-center text-red-600 text-lg my-8"
     >
       {{ errorMsg }}
     </div>
+
+    <div
+      v-if="errorMsg"
+      class="itbms-message text-center text-red-600 text-lg my-8"
+    >
+      {{ errorMsg }}
+    </div>
+
     <div v-else class="itbms-row flex flex-col md:flex-row gap-8">
-      <!-- รูปใหญ่ -->
-      <div class="flex-shrink-0">
-        <img
-          src="../assets/iphone.png"
-          class="w-72 h-80 object-contain rounded"
-          alt="Product"
-        />
+      <!-- Left: Picture -->
+      <div class="mt-2">
+        <!-- รูปหลัก -->
+        <div
+          class="w-72 h-72 flex items-center justify-center mb-2.5 border border-gray-300 rounded overflow-hidden bg-white"
+        >
+          <img
+            src="../assets/iphone.png"
+            class="object-contain w-full h-full"
+            alt="Main Product"
+          />
+        </div>
+
+        <!-- รูปรอง -->
+        <div class="flex gap-2.5 mb-4">
+          <div
+            v-for="n in 4"
+            :key="n"
+            class="w-16 h-16 border border-gray-300 rounded overflow-hidden bg-white cursor-pointer hover:ring-2 hover:ring-blue-400"
+          >
+            <img
+              src="../assets/iphone.png"
+              class="object-contain w-full h-full"
+              alt="Thumbnail"
+            />
+          </div>
+        </div>
       </div>
+
       <!-- รายละเอียด -->
       <div class="flex-1 space-y-2 text-base">
         <div class="itbms-brand">Brand : {{ item.brandName }}</div>
@@ -111,47 +163,25 @@ const handleDelete = async () => {
           Available quantity : {{ item.quantity }} units
         </div>
 
-        <!-- เพิ่มปุ่ม Edit และ Delete -->
         <div class="flex gap-4 mt-6">
           <button
             @click="handleEdit"
-            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            class="w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"
           >
             Edit
           </button>
           <button
             @click="handleDelete"
-            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            class="w-24 bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
           >
             Delete
           </button>
         </div>
       </div>
     </div>
-    <!-- แถบรูปเล็ก (thumbnail) -->
-    <div v-if="!errorMsg" class="flex gap-4 mt-6 ml-2">
-      <img
-        src="../assets/iphone.png"
-        class="w-16 h-16 object-contain border rounded cursor-pointer hover:ring-2 hover:ring-blue-400"
-        alt="Product"
-      />
-      <img
-        src="../assets/iphone.png"
-        class="w-16 h-16 object-contain border rounded cursor-pointer hover:ring-2 hover:ring-blue-400"
-        alt="Product"
-      />
-      <img
-        src="../assets/iphone.png"
-        class="w-16 h-16 object-contain border rounded cursor-pointer hover:ring-2 hover:ring-blue-400"
-        alt="Product"
-      />
-      <img
-        src="../assets/iphone.png"
-        class="w-16 h-16 object-contain border rounded cursor-pointer hover:ring-2 hover:ring-blue-400"
-        alt="Product"
-      />
-    </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* ถ้าอยากใส่ style เพิ่มเติม สามารถใส่ที่นี่ */
+</style>

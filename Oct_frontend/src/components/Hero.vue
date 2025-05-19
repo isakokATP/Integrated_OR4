@@ -15,36 +15,34 @@ function goToSaleItemList() {
 <template>
   <div class="container mx-auto px-5 overflow-x-hidden">
     <section
-      class="flex flex-col lg:flex-row items-center justify-center min-h-[calc(100vh-96px-64px)] pb-10 relative"
+      class="flex flex-col items-center justify-start min-h-[calc(100vh-96px-64px)] pb-10 relative pt-0"
     >
-      <!-- Left Content -->
-      <div class="lg:w-5/6 order-2 lg:order-none text-center lg:text-left">
-        <h1 class="text-4xl xl:text-5xl font-bold font-theme-heading">
-          ITB MShop
-        </h1>
-        <div class="flex justify-center lg:justify-start mt-10">
-          <button class="btn btn-soft btn-primary" @click="goToSaleItem">
-            Shop now
-          </button>
-        </div>
-        <div class="flex justify-center lg:justify-start mt-10">
-          <button class="btn btn-soft btn-primary" @click="goToSaleItemList">
-            Seller
-          </button>
-        </div>
-      </div>
-
-      <!-- Right Image -->
-      <div
-        class="relative order-1 lg:order-none mb-8 lg:mt-0 lg:mb-0 lg:-mr-10"
-      >
+      <!-- Image -->
+      <div class="relative mb-8 max-w-[720px] w-full mx-auto overflow-hidden rounded-xl -mt-2">
         <img
-          class="z-10 w-full max-w-lg mx-auto"
-          src="https://img.freepik.com/free-vector/shop-with-sign-we-are-open_23-2148553675.jpg"
+          src="../assets/homepage.jpg"
+          alt="Mobile Home Page"
+          class="z-10 w-full h-[450px] object-cover rounded-xl"
         />
         <div
-          class="-z-10 bg-theme-primary h-52 w-full sm:h-80 sm:w-full rounded-l-full absolute -right-16 md:-right-24 -bottom-8"
+          class="-z-10 bg-theme-primary h-52 w-full sm:h-80 rounded-full absolute -bottom-8 left-1/2 -translate-x-1/2"
         ></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-center space-x-4 max-w-md mx-auto w-full">
+        <button
+          class="flex-1 py-3 text-lg bg-blue-900 hover:bg-blue-500 text-white rounded transition duration-200"
+          @click="goToSaleItem"
+        >
+          Shop now
+        </button>
+        <button
+          class="flex-1 py-3 text-lg bg-blue-900 hover:bg-blue-500 text-white rounded transition duration-200"
+          @click="goToSaleItemList"
+        >
+          Seller
+        </button>
       </div>
     </section>
   </div>

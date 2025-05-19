@@ -7,9 +7,7 @@ const items = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
-  items.value = Array.isArray(await fetchSaleItems())
-    ? await fetchSaleItems()
-    : [];
+  items.value = await fetchSaleItems();
   loading.value = false;
 });
 
@@ -23,38 +21,56 @@ function goToSaleItem(id) {
 <template>
   <div class="max-w-6xl mx-auto mt-8">
     <div v-if="loading" class="text-center text-gray-400">Loading...</div>
+
     <div v-else>
       <div
         v-if="Array.isArray(items) && items.length === 0"
         class="flex justify-center w-full"
       >
-        no sale item
+        No sale item
       </div>
+
       <div
         v-else-if="Array.isArray(items) && items.length > 0"
-        class="grid grid-cols-5 gap-8"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
       >
-        <itbms-row v-for="item in items" :key="item.id" class="card itbms-row">
-          <div @click="goToSaleItem(item.id)">
-            <img
-              src="../assets/iphone.png"
-              alt="Product"
-              class="card-image w-48 h-56 object-contain mx-auto"
-            />
-            <div class="card-info text-lg p-4">
-              <strong class="itbms-brand">{{ item.brandName }}</strong>
-              <p class="itbms-model">{{ item.model }}</p>
-              <span class="itbms-ramGb">{{ item.ramGb ?? "-" }}</span
-              >/
-              <span class="itbms-storageGb">{{ item.storageGb ?? "-" }}</span>
-              <span class="itbms-storageGb-unit">GB</span>
-              <div class="itbms-price">
-                <strong>Baht {{ item.price.toLocaleString() }}</strong>
-              </div>
+        <div
+          v-for="item in items"
+          :key="item.id"
+          @click="goToSaleItem(item.id)"
+          class="bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
+        >
+          <!-- รูปด้านบน -->
+          <img
+            src="../assets/iphone.png"
+            alt="Product"
+            class="w-full h-56 object-cover"
+          />
+
+          <!-- ข้อความด้านล่าง -->
+          <div class="p-4 text-center" style="background-color: #e3f2fd">
+            <strong class="block text-lg">{{ item.brandName }}</strong>
+            <p class="text-gray-600">{{ item.model }}</p>
+            <p class="text-sm text-gray-500">
+              {{ item.ramGb ?? "-" }}/{{ item.storageGb ?? "-" }} GB
+            </p>
+            <div class="text-blue-800 font-bold mt-2">
+              Baht {{ item.price.toLocaleString() }}
             </div>
           </div>
-        </itbms-row>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.custom-shadow {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.11);
+  transition: box-shadow 0.3s ease;
+}
+
+.custom-shadow:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+}
+</style>

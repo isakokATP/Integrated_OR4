@@ -23,7 +23,6 @@
             >Name<span class="text-red-500">*</span></label
           >
           <input
-            id="name"
             v-model="form.name"
             type="text"
             class="itbms-name input input-bordered w-full"
@@ -35,7 +34,6 @@
             >Website URL</label
           >
           <input
-            id="websiteUrl"
             v-model="form.websiteUrl"
             type="url"
             class="itbms-websiteUrl input input-bordered w-full"
@@ -44,7 +42,6 @@
         <div class="flex items-center gap-2">
           <label class="font-medium" for="isActive">Active</label>
           <input
-            id="isActive"
             v-model="form.isActive"
             type="checkbox"
             class="itbms-isActive toggle"
@@ -55,7 +52,6 @@
             >Country of Origin</label
           >
           <input
-            id="countryOfOrigin"
             v-model="form.countryOfOrigin"
             type="text"
             class="itbms-countryOfOrigin input input-bordered w-full"
@@ -64,15 +60,14 @@
         <div class="flex gap-2 mt-4">
           <button
             type="submit"
-            class="btn btn-primary"
-            data-testid="itbms-save-button"
+            class="itbms-save-button btn text-white bg-blue-900 hover:bg-blue-500"
+            :disabled="!hasChanges"
           >
             Save
           </button>
           <button
             type="button"
-            class="btn btn-secondary"
-            data-testid="itbms-cancel-button"
+            class="itbms-cancel-button btn text-white bg-red-700 hover:bg-red-500"
             @click="goBack"
           >
             Cancel
@@ -85,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { fetchBrandById, updateBrand } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
@@ -105,10 +100,23 @@ const loadBrandData = async () => {
   try {
     const brandId = route.params.id;
     const brandData = await fetchBrandById(brandId);
+    if (brandData.status === "not_found") {
+      router.push({
+        name: "brands-list-page",
+        query: { message: "The brand is not found.", type: "error" },
+      });
+      return;
+    }
+    console.log("brandData", brandData);
     form.value = {
       ...brandData,
-      isActive: brandData.isActive === 1,
-      countryOfOrigin: brandData.countryOfOrigin || "",
+      isActive: brandData.isActive,
+      countryOfOrigin: brandData.countryOfOrigin,
+    };
+    originalData.value = {
+      ...brandData,
+      isActive: brandData.isActive,
+      countryOfOrigin: brandData.countryOfOrigin,
     };
   } catch (err) {
     error.value = "Cannot load brand data";
@@ -120,17 +128,43 @@ const handleSubmit = async () => {
   error.value = "";
   try {
     const brandId = route.params.id;
-    await updateBrand( {
+    await updateBrand(brandId, {
       name: form.value.name,
-      websiteUrl: form.value.websiteUrl,
+      websiteUrl: form.value.websiteUrl ? form.value.websiteUrl.trim() : null,
       isActive: form.value.isActive,
-      countryOfOrigin: form.value.countryOfOrigin,
+      countryOfOrigin: form.value.countryOfOrigin
+        ? form.value.countryOfOrigin.trim()
+        : null,
     });
-    router.push({ name: "brands-list-page" });
+
+    router.push({
+      name: "brands-list-page",
+      query: { message: "The brand has been updated." },
+    });
   } catch (err) {
     error.value = err.message || "Cannot update brand data";
   }
 };
+const originalData = ref({
+  name: "",
+  websiteUrl: "",
+  isActive: false,
+  countryOfOrigin: "",
+});
+const hasChanges = computed(() => {
+  return (
+    form.value.name !== originalData.value.name ||
+    (form.value.websiteUrl ? form.value.websiteUrl.trim() : null) !==
+      (originalData.value.websiteUrl
+        ? originalData.value.websiteUrl.trim()
+        : null) ||
+    form.value.isActive !== originalData.value.isActive ||
+    (form.value.countryOfOrigin ? form.value.countryOfOrigin.trim() : null) !==
+      (originalData.value.countryOfOrigin
+        ? originalData.value.countryOfOrigin.trim()
+        : null)
+  );
+});
 
 const goBack = () => {
   router.push({ name: "brands-list-page" });

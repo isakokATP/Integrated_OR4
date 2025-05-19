@@ -1,44 +1,26 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { fetchSaleItemById, updateSaleItem } from "@/services/saleItemService";
+import { ref, onMounted, computed, watch } from "vue";
+import {
+  fetchSaleItemById,
+  updateSaleItem,
+  deleteSaleItem,
+} from "@/services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
+import { fetchBrands } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
-
+import Notification from "@/components/Notification.vue";
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
 const isLoading = ref(true);
 const errorMsg = ref("");
+const message = ref("");
 const originalData = ref(null); // Store original data for comparison
 // เพิ่มตัวแปร brands
-const brands = [
-  { id: 1, name: "Samsung" },
-  { id: 2, name: "Apple" },
-  { id: 3, name: "Xiaomi" },
-  { id: 4, name: "Huawei" },
-  { id: 5, name: "OnePlus" },
-  { id: 6, name: "Sony" },
-  { id: 7, name: "LG" },
-  { id: 8, name: "Nokia" },
-  { id: 9, name: "Motorola" },
-  { id: 10, name: "OPPO" },
-  { id: 11, name: "Vivo" },
-  { id: 12, name: "ASUS" },
-  { id: 13, name: "Google" },
-  { id: 14, name: "Realme" },
-  { id: 15, name: "BlackBerry" },
-  { id: 16, name: "HTC" },
-  { id: 17, name: "ZTE" },
-  { id: 18, name: "Lenovo" },
-  { id: 19, name: "Honor" },
-  { id: 20, name: "Nothing" },
-];
+const brands = ref([]);
 
 const form = ref({
-  brand: {
-    id: "",
-    name: "",
-  },
+  brandId: "",
   model: "",
   price: "",
   description: "",
@@ -49,12 +31,10 @@ const form = ref({
   quantity: "",
 });
 
-// Computed property to check if form has changes
 const hasChanges = computed(() => {
   if (!originalData.value) return false;
-  //console.log(form.value.brand.id, originalData.value.brand.id);
   return (
-    form.value.brand.id !== originalData.value.brand.id ||
+    form.value.brandId !== originalData.value.brandId ||
     form.value.model.trim() !== originalData.value.model.trim() ||
     form.value.price !== originalData.value.price ||
     form.value.description.trim() !== originalData.value.description.trim() ||
@@ -68,18 +48,18 @@ const hasChanges = computed(() => {
 
 const isFormValid = computed(() => {
   return (
-    form.value.brand.id && // ต้องมี id
+    form.value.brandId && // ต้องมี id
     form.value.model.trim() &&
     form.value.description.trim() &&
-    form.value.price &&
-    form.value.quantity
+    form.value.price
   );
 });
 
 onMounted(async () => {
   try {
+    brands.value = await fetchBrands();
+    console.log(brands.value);
     const item = await fetchSaleItemById(id);
-    //console.log("API Response:", item);
 
     if (item.status === "not_found") {
       errorMsg.value = "The requested sale item does not exist.";
@@ -88,16 +68,10 @@ onMounted(async () => {
       return;
     }
 
-    // หา brand จาก brandName ที่ได้จาก API
-    const brand = brands.find((b) => b.name === item.brandName);
-    //console.log("Found brand:", brand);
-    //console.log("item.brandName:", item.brandName);
+    const brand = brands.value.find((b) => b.name === item.brandName);
 
     form.value = {
-      brand: {
-        id: brand ? brand.id : "",
-        name: brand ? brand.name : "",
-      },
+      brandId: brand.id,
       model: item.model,
       price: item.price,
       description: item.description,
@@ -123,16 +97,29 @@ onMounted(async () => {
       color: item.color,
       quantity: item.quantity,
     };
-
-    //console.log("form.value:", form.value);
-    //console.log("originalData.value:", originalData.value);
   } catch (error) {
-    //console.error("Error in onMounted:", error);
     errorMsg.value = "Error loading item: " + error.message;
   } finally {
     isLoading.value = false;
   }
 });
+
+// Watch for route changes to get message from query params
+watch(
+  () => route.query.message,
+  (newMessage) => {
+    if (newMessage) {
+      message.value = newMessage;
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        message.value = "";
+        // Remove message from URL without refreshing
+        router.replace({ query: {} });
+      }, 3000);
+    }
+  },
+  { immediate: true }
+);
 
 const handleSave = async () => {
   try {
@@ -163,8 +150,11 @@ const handleSave = async () => {
     }
 
     await updateSaleItem(id, dataToSend);
-    alert("Update successful!");
-    router.push({ name: "sale-items-page" });
+    router.push({
+      name: "sale-items-page-byId",
+      params: { id },
+      query: { message: "Item updated successfully!" },
+    });
   } catch (err) {
     alert("Error: " + err.message);
   }
@@ -174,17 +164,35 @@ const handleCancel = () => {
   confirm("Are you sure you want to cancel?") &&
     router.push({ name: "sale-items-page" });
 };
+
+const handleDelete = async () => {
+  if (confirm("Are you sure you want to delete this item?")) {
+    try {
+      // เรียก service เพื่อลบ
+      await deleteSaleItem(id);
+      router.push({
+        name: "sale-items-page",
+        query: { message: "Item deleted successfully!" },
+      });
+    } catch (error) {
+      alert("Failed to delete item");
+    }
+  }
+};
 </script>
 
 <template>
   <Header />
+  <Notification :message="message" />
   <div v-if="isLoading">Loading...</div>
   <div v-else-if="errorMsg" class="text-red-600 text-center mt-8">
     {{ errorMsg }}
   </div>
   <div v-else class="max-w-4xl mx-auto p-6">
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link to="/" class="text-blue-600 hover:underline font-medium"
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
         >Home</router-link
       >
       <span class="mx-1">›</span>
@@ -196,9 +204,9 @@ const handleCancel = () => {
       class="grid grid-cols-1 md:grid-cols-2 gap-8"
     >
       <!-- Left: Picture -->
-      <div>
+      <div class="mt-2">
         <div
-          class="w-64 h-64 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-4"
+          class="w-70 h-70 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-2 border border-gray-300 rounded"
         >
           No Picture
         </div>
@@ -206,7 +214,7 @@ const handleCancel = () => {
           <div
             v-for="n in 4"
             :key="n"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs"
+            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded"
           >
             No Picture
           </div>
@@ -218,12 +226,8 @@ const handleCancel = () => {
         <div class="mb-3">
           <label class="block mb-1">Brand</label>
           <select
-            v-model="form.brand.id"
-            class="w-full border rounded px-2 py-1"
-            @change="
-              form.brand.name =
-                brands.find((b) => b.id == form.brand.id)?.name || ''
-            "
+            v-model="form.brandId"
+            class="itbms-brand w-full border rounded px-2 py-1"
           >
             <option value="">Select Brand</option>
             <option v-for="brand in brands" :key="brand.id" :value="brand.id">
@@ -289,15 +293,17 @@ const handleCancel = () => {
         </div>
         <div class="flex gap-4 mt-6">
           <button
+            id="itbms-save-button"
             type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
-            :disabled="!hasChanges || !isFormValid"
+            class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            :disabled="!isFormValid || !hasChanges"
           >
             Save
           </button>
           <button
+            id="itbms-cancel-button"
             type="button"
-            class="border border-gray-400 px-4 py-2 rounded"
+            class="border border-gray-400 px-4 py-2 rounded hover:bg-blue-200 transition-colors duration-300"
             @click="handleCancel"
           >
             Cancel
@@ -305,5 +311,12 @@ const handleCancel = () => {
         </div>
       </div>
     </form>
+
+    <button
+      class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
+      @click="handleDelete"
+    >
+      Delete
+    </button>
   </div>
 </template>
