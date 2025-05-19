@@ -49,18 +49,10 @@ public class BrandService {
     public UpdateBrandResponseDto updateBrand(Integer id, UpdateBrandDto updateBrandDto) {
         Brand existingBrand = brandRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found"));
-        if (updateBrandDto.getName() != null) {
-            existingBrand.setName(updateBrandDto.getName());
-        }
-        if (updateBrandDto.getWebsiteUrl() != null) {
-            existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
-        }
-        if (updateBrandDto.getCountryOfOrigin() != null) {
-            existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
-        }
-        if (updateBrandDto.getIsActive() != null) {
-            existingBrand.setIsActive(updateBrandDto.getIsActive());
-        }
+        existingBrand.setName(updateBrandDto.getName());
+        existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
+        existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
+        existingBrand.setIsActive(updateBrandDto.getIsActive());
         Brand savedBrand = brandRepository.save(existingBrand);
         return modelMapper.map(savedBrand, UpdateBrandResponseDto.class);
     }
