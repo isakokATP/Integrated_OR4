@@ -11,4 +11,5 @@ public class UpdateBrandResponseDto {
     private String websiteUrl;
     private Boolean isActive;
     private String countryOfOrigin;
+    private Integer noOfSaleItems;
 }

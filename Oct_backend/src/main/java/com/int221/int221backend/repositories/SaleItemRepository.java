@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
     Integer countSaleItemByBrand_Id(Integer brandId);
+    Integer countByBrand_Id(Integer brandId);
 }
