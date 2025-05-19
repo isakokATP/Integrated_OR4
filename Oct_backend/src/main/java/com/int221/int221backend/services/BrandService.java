@@ -103,19 +103,17 @@ public class BrandService {
                 // สถานะที่ไม่ใช่ 409 ตาม requirement เลือก 422 Unprocessable Entity
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Brand name already exists");
             }
-
             existingBrand.setName(newName);
         }
 
         existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
 
-        if (updateBrandDto.getCountryOfOrigin() != null) {
-            existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
-        }
+        existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
+
+
         if (updateBrandDto.getIsActive() != null) {
             existingBrand.setIsActive(updateBrandDto.getIsActive());
         }
-
         Brand savedBrand = brandRepository.save(existingBrand);
         UpdateBrandResponseDto responseDto = modelMapper.map(savedBrand, UpdateBrandResponseDto.class);
         int count = saleItemRepository.countSaleItemByBrand_Id(savedBrand.getId());
