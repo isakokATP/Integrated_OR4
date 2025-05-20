@@ -237,7 +237,11 @@ const handleDelete = async () => {
         </div>
         <div class="mb-3">
           <label class="block mb-1">Model</label>
-          <input v-model="form.model" class="w-full border rounded px-2 py-1" />
+          <input
+            v-model="form.model"
+            v-trim
+            class="w-full border rounded px-2 py-1"
+          />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Price (Baht)</label>
@@ -251,6 +255,7 @@ const handleDelete = async () => {
           <label class="block mb-1">Description</label>
           <textarea
             v-model="form.description"
+            v-trim
             class="w-full border rounded px-2 py-1"
           ></textarea>
         </div>
@@ -281,7 +286,11 @@ const handleDelete = async () => {
         </div>
         <div class="mb-3">
           <label class="block mb-1">Color</label>
-          <input v-model="form.color" class="w-full border rounded px-2 py-1" />
+          <input
+            v-model="form.color"
+            v-trim
+            class="w-full border rounded px-2 py-1"
+          />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Quantity</label>

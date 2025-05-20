@@ -24,6 +24,7 @@
           >
           <input
             v-model="form.name"
+            v-trim
             type="text"
             class="itbms-name input input-bordered w-full"
             required
@@ -35,6 +36,7 @@
           >
           <input
             v-model="form.websiteUrl"
+            v-trim
             type="url"
             class="itbms-websiteUrl input input-bordered w-full"
           />
@@ -53,6 +55,7 @@
           >
           <input
             v-model="form.countryOfOrigin"
+            v-trim
             type="text"
             class="itbms-countryOfOrigin input input-bordered w-full"
           />

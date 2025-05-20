@@ -52,6 +52,7 @@
           <label class="block mb-1">Model</label>
           <input
             v-model="form.model"
+            v-trim
             class="itbms-model w-full border rounded px-2 py-1"
           />
         </div>
@@ -67,6 +68,7 @@
           <label class="block mb-1">Description</label>
           <textarea
             v-model="form.description"
+            v-trim
             class="itbms-description w-full border rounded px-2 py-1"
           ></textarea>
         </div>
@@ -99,6 +101,7 @@
           <label class="block mb-1">Color</label>
           <input
             v-model="form.color"
+            v-trim
             class="itbms-color w-full border rounded px-2 py-1"
           />
         </div>
