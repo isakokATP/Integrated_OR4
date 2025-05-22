@@ -7,9 +7,7 @@ const items = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
-  items.value = Array.isArray(await fetchSaleItems())
-    ? await fetchSaleItems()
-    : [];
+  items.value = await fetchSaleItems();
   loading.value = false;
 });
 
@@ -50,7 +48,7 @@ function goToSaleItem(id) {
           />
 
           <!-- ข้อความด้านล่าง -->
-          <div class="p-4 text-center" style="background-color: #E3F2FD;">
+          <div class="p-4 text-center" style="background-color: #e3f2fd">
             <strong class="block text-lg">{{ item.brandName }}</strong>
             <p class="text-gray-600">{{ item.model }}</p>
             <p class="text-sm text-gray-500">

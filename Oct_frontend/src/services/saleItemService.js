@@ -45,13 +45,13 @@ async function fetchSaleItemById(id) {
 async function createSaleItem(saleItemData) {
   try {
     console.log("API URL:", URL);
-    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items/add`);
+    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items`);
     console.log(
       "Sending data to server:",
       JSON.stringify(saleItemData, null, 2)
     );
 
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/add`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +90,10 @@ export const deleteSaleItem = async (id) => {
       throw new Error("Failed to delete item");
     }
 
-    return await response.json();
+    return {
+      status: response.status,
+      ok: response.ok,
+    };
   } catch (error) {
     throw error;
   }
@@ -149,11 +152,10 @@ async function fetchBrandById(id) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = await response.json();
-    return data;
+  const data = await response.json();
+    return { ...data, httpStatus: response.status };
   } catch (error) {
-    console.error("Fetch brand by id error:", error);
-    throw handleApiError(error);
+    return { status: "not_found" };
   }
 }
 

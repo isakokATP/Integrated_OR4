@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { fetchSaleItemById, deleteSaleItem } from "@/services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import Header from "@/components/Header.vue";
+import Notification from "@/components/Notification.vue";
 
 const item = ref({});
 const errorMsg = ref("");
@@ -10,6 +11,24 @@ const route = useRoute();
 const id = route.params.id;
 const router = useRouter();
 const isLoading = ref(true);
+const message = ref("");
+
+// Watch for route changes to get message from query params
+watch(
+  () => route.query.message,
+  (newMessage) => {
+    if (newMessage) {
+      message.value = newMessage;
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        message.value = "";
+        // Remove message from URL without refreshing
+        router.replace({ query: {} });
+      }, 3000);
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   item.value = await fetchSaleItemById(id);
@@ -22,7 +41,7 @@ onMounted(async () => {
 });
 
 const handleEdit = () => {
-  router.push({ name: "edit-sale-item", params: { id: id } });
+  router.push({ name: "edit-sale-item-page", params: { id: id } });
 };
 
 const handleDelete = async () => {
@@ -30,15 +49,19 @@ const handleDelete = async () => {
     try {
       const response = await deleteSaleItem(id);
       if (response.ok || response.status === 200) {
-        alert("Item deleted successfully");
-        router.push({ name: "sale-items-page" });
+        router.push({
+          name: "sale-items-page",
+          query: { message: "Item deleted successfully" },
+        });
       } else {
         throw new Error("Failed to delete item");
       }
     } catch (error) {
-      alert("Item was deleted, but there was an issue with the response. Redirecting...");
       console.error("Error:", error);
-      router.push({ name: "sale-items-page" });
+      router.push({
+        name: "sale-items-page",
+        query: { message: "Item has been deleted" },
+      });
     }
   }
 };
@@ -46,10 +69,13 @@ const handleDelete = async () => {
 
 <template>
   <Header />
+  <Notification :message="message" />
   <div v-if="isLoading"></div>
   <div v-else class="max-w-4xl mx-auto mt-8">
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link to="/" class="text-blue-600 hover:underline font-medium"
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
         >Home</router-link
       >
       <span class="mx-1">›</span>
@@ -127,7 +153,9 @@ const handleDelete = async () => {
           </span>
         </div>
         <div>
-          <span class="itbms-storageGb">Storage : {{ item.storageGb ?? "-" }}</span>
+          <span class="itbms-storageGb"
+            >Storage : {{ item.storageGb ?? "-" }}</span
+          >
           <span class="itbms-storageGb-unit"> GB</span>
         </div>
         <div class="itbms-color">Color : {{ item.color ?? "-" }}</div>

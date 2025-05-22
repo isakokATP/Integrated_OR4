@@ -4,11 +4,13 @@
   <div class="max-w-4xl mx-auto p-6">
     <div class="flex items-center mb-6">
       <nav class="text-sm mb-4 flex items-center space-x-2">
-        <router-link to="/" class="text-blue-600 hover:underline font-medium"
+        <router-link
+          to="/sale-items"
+          class="itbms-home text-blue-600 hover:underline font-medium"
           >Home</router-link
         >
         <span class="mx-1">›</span>
-        <span class="font-semibold">New Sale Item</span>
+        <span class="itbms-new-sale-item font-semibold">New Sale Item</span>
       </nav>
     </div>
     <form
@@ -38,8 +40,7 @@
           <label class="block mb-1">Brand</label>
           <select
             v-model="form.brandId"
-            id="itbms-brand"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-brand w-full border rounded px-2 py-1"
           >
             <option value="">Select Brand</option>
             <option v-for="brand in brands" :key="brand.id" :value="brand.id">
@@ -51,84 +52,78 @@
           <label class="block mb-1">Model</label>
           <input
             v-model="form.model"
-            id="itbms-model"
-            class="w-full border rounded px-2 py-1"
+            v-trim
+            class="itbms-model w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Price (Baht)</label>
           <input
             v-model="form.price"
-            id="itbms-price"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-price w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Description</label>
           <textarea
             v-model="form.description"
-            class="w-full border rounded px-2 py-1"
+            v-trim
+            class="itbms-description w-full border rounded px-2 py-1"
           ></textarea>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Ram (GB)</label>
           <input
             v-model="form.ramGb"
-            id="itbms-ramGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-ramGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Screen Size (Inches)</label>
           <input
             v-model="form.screenSizeInch"
-            id="itbms-screenSizeInch"
             type="number"
             step="0.1"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-screenSizeInch w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
-            id="itbms-storageGb"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-storageGb w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Color</label>
           <input
             v-model="form.color"
-            id="itbms-color"
-            class="w-full border rounded px-2 py-1"
+            v-trim
+            class="itbms-color w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
           <label class="block mb-1">Quantity</label>
           <input
             v-model="form.quantity"
-            id="itbms-quantity"
             type="number"
-            class="w-full border rounded px-2 py-1"
+            class="itbms-quantity w-full border rounded px-2 py-1"
           />
         </div>
         <div class="flex gap-4 mt-6">
           <button
-            id="itbms-save-button"
             type="submit"
-            class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="itbms-save-button bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
             :disabled="!isFormValid"
           >
             Save
           </button>
           <button
-            id="itbms-cancel-button"
             type="button"
-            class="border border-gray-400 px-4 py-2 rounded hover:bg-blue-200 transition-colors duration-300"
+            class="itbms-cancel-button border border-gray-400 px-4 py-2 rounded hover:bg-blue-200 transition-colors duration-300"
             @click="handleCancel"
           >
             Cancel
@@ -140,34 +135,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import { createSaleItem } from "../services/saleItemService";
+import { ref, computed, onMounted } from "vue";
+import { createSaleItem, fetchBrands } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const brands = [
-  { id: 1, name: "Samsung" },
-  { id: 2, name: "Apple" },
-  { id: 3, name: "Xiaomi" },
-  { id: 4, name: "Huawei" },
-  { id: 5, name: "OnePlus" },
-  { id: 6, name: "Sony" },
-  { id: 7, name: "LG" },
-  { id: 8, name: "Nokia" },
-  { id: 9, name: "Motorola" },
-  { id: 10, name: "OPPO" },
-  { id: 11, name: "Vivo" },
-  { id: 12, name: "ASUS" },
-  { id: 13, name: "Google" },
-  { id: 14, name: "Realme" },
-  { id: 15, name: "BlackBerry" },
-  { id: 16, name: "HTC" },
-  { id: 17, name: "ZTE" },
-  { id: 18, name: "Lenovo" },
-  { id: 19, name: "Honor" },
-  { id: 20, name: "Nothing" },
-];
+const brands = ref([]);
+
+const loadBrands = async () => {
+  try {
+    brands.value = await fetchBrands();
+  } catch (error) {
+    console.error("Error loading brands:", error);
+  }
+};
+
+onMounted(loadBrands);
 
 const form = ref({
   brandId: "",
@@ -186,8 +170,7 @@ const isFormValid = computed(() => {
     form.value.brandId &&
     form.value.model.trim() &&
     form.value.description.trim() &&
-    form.value.price &&
-    form.value.quantity
+    form.value.price
   );
 });
 
@@ -208,11 +191,13 @@ function handleCancel() {
 
 async function handleSave() {
   try {
-    const brandObj = brands.find((b) => b.id === parseInt(form.value.brandId));
+    const brandObj = brands.value.find(
+      (b) => b.id === parseInt(form.value.brandId)
+    );
     const dataToSend = {
       model: form.value.model.trim(),
       brand: brandObj ? { id: brandObj.id, name: brandObj.name } : null,
-      description: form.value.description.trim(), // Added trim() here
+      description: form.value.description.trim(),
       price: parseInt(form.value.price),
       ramGb: form.value.ramGb ? parseInt(form.value.ramGb) : null,
       screenSizeInch: form.value.screenSizeInch
@@ -223,10 +208,12 @@ async function handleSave() {
       color: form.value.color.trim() || null,
     };
 
-    //console.log("ข้อมูลที่จะส่ง:", dataToSend);
     await createSaleItem(dataToSend);
     alert("สร้างรายการขายสำเร็จ!");
-    handleCancel();
+    router.push({
+      name: "sale-items-list-page",
+      query: { message: "The sale item has been successfully added." },
+    });
   } catch (err) {
     alert("เกิดข้อผิดพลาด: " + err);
   }
