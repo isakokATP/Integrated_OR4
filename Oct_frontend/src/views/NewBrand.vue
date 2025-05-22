@@ -27,22 +27,22 @@
           <input
             id="name"
             v-model="form.name"
+            v-trim
             type="text"
-            class="input input-bordered w-full"
-            data-testid="itbms-name"
+            class="itbms-name input input-bordered w-full"
             required
           />
         </div>
         <div>
-          <label class="block mb-1 font-medium" for="websiteUrl"
+          <label class="lock mb-1 font-medium" for="websiteUrl"
             >Website URL</label
           >
           <input
             id="websiteUrl"
             v-model="form.websiteUrl"
+            v-trim
             type="url"
-            class="input input-bordered w-full"
-            data-testid="itbms-websiteUrl"
+            class="itbms-websiteUrl input input-bordered w-full"
           />
         </div>
         <div class="flex items-center gap-2">
@@ -51,8 +51,7 @@
             id="isActive"
             v-model="form.isActive"
             type="checkbox"
-            class="toggle"
-            data-testid="itbms-isActive"
+            class="itbms-isActive toggle"
           />
         </div>
         <div>
@@ -62,23 +61,23 @@
           <input
             id="countryOfOrigin"
             v-model="form.countryOfOrigin"
+            v-trim
             type="text"
-            class="input input-bordered w-full"
-            data-testid="itbms-countryOfOrigin"
+            class="itbms-countryOfOrigin input input-bordered w-full"
           />
         </div>
         <div class="flex gap-2 mt-4">
           <button
             type="submit"
-            class="btn text-white bg-blue-900 hover:bg-blue-500"
-            data-testid="itbms-save-button"
+            class="itbms-save-button btn text-white bg-blue-900 hover:bg-blue-500"
+            :disabled="!isFormValid"
+            :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
           >
             Save
           </button>
           <button
             type="button"
-            class="btn text-white bg-red-700 hover:bg-red-500"
-            data-testid="itbms-cancel-button"
+            class="itbms-cancel-button btn text-white bg-red-700 hover:bg-red-500"
             @click="goBack"
           >
             Cancel
@@ -91,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { createBrand } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
@@ -106,16 +105,25 @@ const form = ref({
   countryOfOrigin: "",
 });
 
+const isFormValid = computed(() => {
+  return form.value.name.trim() !== "";
+});
+
 const handleSubmit = async () => {
   error.value = "";
   try {
     await createBrand({
-      name: form.value.name,
-      websiteUrl: form.value.websiteUrl,
-      countryOfOrigin: form.value.countryOfOrigin,
+      name: form.value.name.trim(),
+      websiteUrl: form.value.websiteUrl ? form.value.websiteUrl.trim() : null,
+      countryOfOrigin: form.value.countryOfOrigin
+        ? form.value.countryOfOrigin.trim()
+        : null,
       isActive: form.value.isActive,
     });
-    router.push({ name: "brands-list-page" });
+    router.push({
+      name: "brands-list-page",
+      query: { message: "The brand has been added." },
+    });
   } catch (err) {
     error.value = err.message || "Failed to add brand";
   }
