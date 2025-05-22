@@ -70,7 +70,7 @@
           <button
             type="submit"
             class="itbms-save-button btn text-white bg-blue-900 hover:bg-blue-500"
-            :disabled="!isFormValid"
+            :disabled="!isFormValid || !form.name.trim()"
             :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
           >
             Save
@@ -101,7 +101,7 @@ const error = ref("");
 const form = ref({
   name: "",
   websiteUrl: "",
-  isActive: false,
+  isActive: true,
   countryOfOrigin: "",
 });
 
