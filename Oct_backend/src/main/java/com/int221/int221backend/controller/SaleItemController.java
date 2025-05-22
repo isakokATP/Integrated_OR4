@@ -2,12 +2,10 @@ package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
-import com.int221.int221backend.dto.response.NewSaleItemResponseDto;
-import com.int221.int221backend.dto.response.SaleItemByIdDto;
-import com.int221.int221backend.dto.response.SaleItemDto;
+import com.int221.int221backend.dto.response.*;
 
-import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
 import com.int221.int221backend.entities.SaleItem;
+import com.int221.int221backend.enums.SaleItemSortType;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.services.SaleItemService;
 import jakarta.validation.Valid;
@@ -23,7 +21,7 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@RequestMapping("/itb-mshop/v1")
+@RequestMapping("/itb-mshop")
 @CrossOrigin(origins = "*")
 public class SaleItemController {
     @Autowired
@@ -35,7 +33,7 @@ public class SaleItemController {
     @Autowired
     private ModelMapper modelMapper;
 
-    @GetMapping("/sale-items")
+    @GetMapping("/v1/sale-items")
     public List<SaleItemDto> getAllSaleItem(){
         List<SaleItem> saleItemList = saleItemService.getAllSaleItem();
         System.out.println(saleItemList);
@@ -50,7 +48,7 @@ public class SaleItemController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/sale-items/{id}")
+    @GetMapping("/v1/sale-items/{id}")
     public SaleItemByIdDto getItemById(@PathVariable Integer id) {
         SaleItem saleItem = saleItemService.getSaleItemById(id);
         SaleItemByIdDto saleItemByIdDto = modelMapper.map(saleItem, SaleItemByIdDto.class);
@@ -59,14 +57,14 @@ public class SaleItemController {
     }
 
 //  PBI3
-    @PostMapping("/sale-items")
+    @PostMapping("/v1/sale-items")
     public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
         NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
 
 //  PBI4
-    @PutMapping("/sale-items/{id}")
+    @PutMapping("/v1/sale-items/{id}")
     public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
         saleItemsUpdateDto.setId(id);
         SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
@@ -75,9 +73,21 @@ public class SaleItemController {
     }
 
 //  PBI5
-    @DeleteMapping("/sale-items/{id}")
+    @DeleteMapping("/v1/sale-items/{id}")
     public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
         saleItemService.deleteSaleItemById(id);
         return ResponseEntity.noContent().build();
+    }
+
+//  PBI 10
+    @GetMapping("/v2/sale-items")
+    public List<SortSaleItemByBrandName> getSortedSaleItems(@RequestParam(defaultValue = "DEFAULT") String sort) {
+        SaleItemSortType sortType;
+        try {
+            sortType = SaleItemSortType.valueOf(sort.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            sortType = SaleItemSortType.DEFAULT;
+        }
+        return saleItemService.getAllSaleItemsSortType(sortType);
     }
 }

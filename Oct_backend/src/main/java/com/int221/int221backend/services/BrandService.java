@@ -51,66 +51,23 @@ public class BrandService {
         return modelMapper.map(savedBrand, NewBrandResponseDto.class);
     }
 
-//    public UpdateBrandResponseDto updateBrand(Integer id, UpdateBrandDto updateBrandDto) {
-//        Brand existingBrand = brandRepository.findById(id)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found"));
-//        existingBrand.setName(updateBrandDto.getName());
-//        existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
-//        existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
-//        existingBrand.setIsActive(updateBrandDto.getIsActive());
-//        Brand savedBrand = brandRepository.save(existingBrand);
-//        return modelMapper.map(savedBrand, UpdateBrandResponseDto.class);
-//    }
-
-//    PBI7
-//    public UpdateBrandResponseDto updateBrand(Integer id, UpdateBrandDto updateBrandDto) {
-//        Brand existingBrand = brandRepository.findById(id)
-//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found"));
-//        if (updateBrandDto.getName() != null && updateBrandDto.getName().trim().isEmpty()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Brand not found due to empty name");
-//        }
-//        existingBrand.setName(updateBrandDto.getName());
-//        existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
-//
-//        if (updateBrandDto.getCountryOfOrigin() != null) {
-//        existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
-//        }
-//        if (updateBrandDto.getIsActive() != null) {
-//        existingBrand.setIsActive(updateBrandDto.getIsActive());
-//        }
-//        Brand savedBrand = brandRepository.save(existingBrand);
-//        UpdateBrandResponseDto responseDto = modelMapper.map(savedBrand, UpdateBrandResponseDto.class);
-//        int count = saleItemRepository.countSaleItemByBrand_Id(savedBrand.getId());
-//        responseDto.setNoOfSaleItems(count);
-//        return responseDto;
-//    }
-
+//  PBI7
     public UpdateBrandResponseDto updateBrand(Integer id, UpdateBrandDto updateBrandDto) {
         Brand existingBrand = brandRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found"));
-
-        // เช็คชื่อถ้ามีค่า
         if (updateBrandDto.getName() != null) {
             String newName = updateBrandDto.getName().trim();
-
             if (newName.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Brand name cannot be empty");
             }
-
-            // เช็คชื่อซ้ำแบบ ignore case และไม่รวม id ตัวเอง
             boolean nameExists = brandRepository.existsByNameIgnoreCaseAndIdNot(newName, id);
             if (nameExists) {
-                // สถานะที่ไม่ใช่ 409 ตาม requirement เลือก 422 Unprocessable Entity
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Brand name already exists");
             }
             existingBrand.setName(newName);
         }
-
         existingBrand.setWebsiteUrl(updateBrandDto.getWebsiteUrl());
-
         existingBrand.setCountryOfOrigin(updateBrandDto.getCountryOfOrigin());
-
-
         if (updateBrandDto.getIsActive() != null) {
             existingBrand.setIsActive(updateBrandDto.getIsActive());
         }
@@ -120,7 +77,6 @@ public class BrandService {
         responseDto.setNoOfSaleItems(count);
         return responseDto;
     }
-
 
     //PBI8
     public void deleteBrandById(Integer id) {
