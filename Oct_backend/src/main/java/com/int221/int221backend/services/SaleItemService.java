@@ -4,19 +4,21 @@ import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.NewSaleItemResponseDto;
 import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
+import com.int221.int221backend.dto.response.SortSaleItemByBrandName;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.entities.SaleItem;
+import com.int221.int221backend.enums.SaleItemSortType;
 import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,14 +46,6 @@ public class SaleItemService {
 
     public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
-//        if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
-//            saleItem.setColor(null);
-//        }
-//        if (saleItem.getQuantity() < 0) {
-//            throw new IllegalArgumentException("Quantity cannot be negative.");
-//        }
-//        return modelMapper.map(saleItemRepository.save(saleItem), NewSaleItemResponseDto.class);
-
         if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
             saleItem.setColor(null);
         }
@@ -93,5 +87,22 @@ public class SaleItemService {
         } else {
             throw new NotFoundException("No Item id = " + id);
         }
+    }
+
+//  PBI10 (test)
+    public List<SortSaleItemByBrandName> getAllSaleItemsSortType(SaleItemSortType sortType) {
+        List<SaleItem> saleItems;
+
+        switch (sortType) {
+            case BRAND_ASC -> saleItems = saleItemRepository.findAllByOrderByBrand_NameAsc();
+            case BRAND_DESC -> saleItems = saleItemRepository.findAllByOrderByBrand_NameDesc();
+            default -> saleItems = saleItemRepository.findAllByOrderByCreatedOnAsc();
+        }
+
+        return saleItems.stream().map(item -> {
+            SortSaleItemByBrandName dto = modelMapper.map(item, SortSaleItemByBrandName.class);
+            dto.setBrandName(item.getBrand().getName());
+            return dto;
+        }).toList();
     }
 }
