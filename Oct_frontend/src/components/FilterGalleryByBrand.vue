@@ -8,12 +8,12 @@
         <div
           v-for="brand in modelValue"
           :key="brand"
-          class="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+          class="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm"
         >
           {{ brand }}
           <button
             @click="removeBrand(brand)"
-            class="ml-2 text-blue-600 hover:text-blue-900 font-bold"
+            class="ml-2 text-blue-600  hover:text-blue-900 font-bold"
             aria-label="Remove brand"
           >
             &times;
@@ -27,16 +27,16 @@
     <div class="flex flex-col ml-1">
       <div class="flex gap-1.5">
         <button
-          @click="showDropdown = !showDropdown"
-          class="bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md"
+        @click="showDropdown = !showDropdown"
+        class="bg-gray-200 px-3 py-2 hover:bg-blue-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
         >
-          <span class="inline-block mr-1">Choose</span>
+        <span class="inline-block mr-1">Choose</span>
         </button>
         <button
-          @click="clearAll"
-          class="bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md"
+        @click="clearAll"
+        class="bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
         >
-          Clear All
+        Clear
         </button>
       </div>
 
@@ -47,7 +47,7 @@
           <div
             v-for="brand in availableBrands"
             :key="brand"
-            class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            class="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
             @click="addBrand(brand)"
           >
             {{ brand }}
