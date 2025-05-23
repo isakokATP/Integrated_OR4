@@ -1,14 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { fetchSaleItems } from "../services/saleItemService";
 import { useRouter } from "vue-router";
 
-const items = ref([]);
-const loading = ref(true);
-
-onMounted(async () => {
-  items.value = await fetchSaleItems();
-  loading.value = false;
+const props = defineProps({
+  items: Array,
+  loading: Boolean
 });
 
 const router = useRouter();
@@ -40,14 +35,11 @@ function goToSaleItem(id) {
           @click="goToSaleItem(item.id)"
           class="bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
         >
-          <!-- รูปด้านบน -->
           <img
             src="../assets/iphone.png"
             alt="Product"
             class="w-full h-56 object-cover"
           />
-
-          <!-- ข้อความด้านล่าง -->
           <div class="p-4 text-center" style="background-color: #e3f2fd">
             <strong class="block text-lg">{{ item.brandName }}</strong>
             <p class="text-gray-600">{{ item.model }}</p>
@@ -69,7 +61,6 @@ function goToSaleItem(id) {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.11);
   transition: box-shadow 0.3s ease;
 }
-
 .custom-shadow:hover {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
 }
