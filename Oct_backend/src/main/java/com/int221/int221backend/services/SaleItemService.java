@@ -2,23 +2,24 @@ package com.int221.int221backend.services;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
-import com.int221.int221backend.dto.response.NewSaleItemResponseDto;
-import com.int221.int221backend.dto.response.SaleItemsUpdateResponseDto;
-import com.int221.int221backend.dto.response.SortSaleItemByBrandName;
+import com.int221.int221backend.dto.response.*;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.entities.SaleItem;
-import com.int221.int221backend.enums.SaleItemSortType;
 import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
+import com.int221.int221backend.utils.ListMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,8 @@ public class SaleItemService {
     private BrandRepository brandRepository;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private ListMapper listMapper;
 
 
 
@@ -89,20 +92,25 @@ public class SaleItemService {
         }
     }
 
-//  PBI10 (test)
-    public List<SortSaleItemByBrandName> getAllSaleItemsSortType(SaleItemSortType sortType) {
-        List<SaleItem> saleItems;
-
-        switch (sortType) {
-            case BRAND_ASC -> saleItems = saleItemRepository.findAllByOrderByBrand_NameAsc();
-            case BRAND_DESC -> saleItems = saleItemRepository.findAllByOrderByBrand_NameDesc();
-            default -> saleItems = saleItemRepository.findAllByOrderByCreatedOnAsc();
+    public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, pageSize, sort);
+        List<String> brandList = Arrays.asList(filterBrands);
+        Page<SaleItem> saleItemPage;
+        SaleItemPaginateDto response = new SaleItemPaginateDto();
+        if (brandList.isEmpty()) {
+            saleItemPage = saleItemRepository.findAll(pageable);
+        } else {
+            saleItemPage = saleItemRepository.findAll(pageable, brandList);
         }
-
-        return saleItems.stream().map(item -> {
-            SortSaleItemByBrandName dto = modelMapper.map(item, SortSaleItemByBrandName.class);
-            dto.setBrandName(item.getBrand().getName());
-            return dto;
-        }).toList();
+        response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));
+        response.setLast(saleItemPage.isLast());
+        response.setFirst(saleItemPage.isFirst());
+        response.setTotalPages(saleItemPage.getTotalPages());
+        response.setTotalElements(saleItemPage.getNumberOfElements());
+        response.setSize(saleItemPage.getSize());
+        response.setSort(String.format("%s : %s", sortBy, sortDirection));
+        response.setPage(page);
+        return response;
     }
 }
