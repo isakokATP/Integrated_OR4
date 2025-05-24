@@ -19,7 +19,58 @@ async function fetchSaleItems() {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.error("Fetch sale items error:", error);
+    throw handleApiError(error);
+  }
+}
+
+async function fetchSaleItemsV2(
+  page = 1,
+  size = 10,
+  sortType = "default",
+  selectedBrands = []
+) {
+  try {
+    const filterBrandsQuery = selectedBrands
+      .map((brand) => `filterBrands=${encodeURIComponent(brand)}`)
+      .join("&");
+
+    let sortField = "";
+    let sortDirection = "";
+
+    if (sortType === "asc") {
+      sortField = "brandName";
+      sortDirection = "asc";
+    } else if (sortType === "desc") {
+      sortField = "brandName";
+      sortDirection = "desc";
+    } else {
+      // Default sort
+      sortField = "createdOn"; // Assuming default sort is by createdAt ascending based on previous code
+      sortDirection = "asc";
+    }
+
+    const sortQuery = sortField
+      ? `&sortField=${encodeURIComponent(
+          sortField
+        )}&sortDirection=${encodeURIComponent(sortDirection)}`
+      : "";
+
+    const url = `${URL}/itb-mshop/v2/sale-items?page=${
+      page - 1
+    }&size=${size}${sortQuery}${
+      filterBrandsQuery ? "&" + filterBrandsQuery : "&filterBrands="
+    }`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch sale items");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching sale items:", error);
+    throw error;
   }
 }
 
@@ -152,7 +203,7 @@ async function fetchBrandById(id) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-  const data = await response.json();
+    const data = await response.json();
     return { ...data, httpStatus: response.status };
   } catch (error) {
     return { status: "not_found" };
@@ -222,6 +273,7 @@ async function deleteBrand(id) {
 
 export {
   fetchSaleItems,
+  fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,
   fetchBrands,

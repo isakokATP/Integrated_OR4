@@ -5,7 +5,7 @@ import FilterGalleryByBrand from "../components/FilterGalleryByBrand.vue";
 import Notification from "../components/Notification.vue";
 import { useRouter, useRoute } from "vue-router";
 import { ref, onMounted, watch, computed } from "vue";
-import { fetchSaleItems } from "../services/saleItemService.js";
+import { fetchSaleItems, fetchSaleItemsV2 } from "../services/saleItemService.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -17,9 +17,23 @@ const selectedBrands = ref([]); // สำหรับเก็บแบรนด
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
 const sortType = ref(sessionStorage.getItem("saleListSortType") || "default");
 
+// Pagination state
+const currentPage = ref(1);
+const itemsPerPage = ref(10); // จำนวนรายการต่อหน้า
+const totalPages = ref(0);
+const totalElements = ref(0);
+
+const itemsPerPageOptions = ref([5, 10, 20]);
+
+function setItemsPerPage(option) {
+  itemsPerPage.value = option;
+  loadSaleItems();
+}
+
 function setSort(type) {
   sortType.value = type;
   sessionStorage.setItem("saleListSortType", type);
+  loadSaleItems(); // โหลดข้อมูลใหม่เมื่อมีการเปลี่ยนการเรียงลำดับ
 }
 
 function goToAddSaleItem() {
@@ -41,10 +55,24 @@ watch(
   { immediate: true }
 );
 
+// Watch for changes in selectedBrands and reload items
+watch(selectedBrands, () => {
+  currentPage.value = 1; // Reset to first page when filters change
+  loadSaleItems();
+});
+
 async function loadSaleItems() {
   loading.value = true;
   try {
-    allItems.value = await fetchSaleItems();
+    const response = await fetchSaleItemsV2(
+      currentPage.value,
+      itemsPerPage.value,
+      sortType.value,
+      selectedBrands.value
+    );
+    allItems.value = response.content;
+    totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
   } catch (error) {
     console.error("Failed to load sale items:", error);
   } finally {
@@ -52,43 +80,30 @@ async function loadSaleItems() {
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   // โหลดค่า sortType จาก sessionStorage ทุกครั้งที่ mount
   sortType.value = sessionStorage.getItem("saleListSortType") || "default";
-  loading.value = true;
-  try {
-    allItems.value = await fetchSaleItems();
-    console.log("Loaded items:", allItems.value);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
+  loadSaleItems();
 });
 
 const brands = computed(() => {
+  // Use allItems to extract brands, even if filtered/paginated data is displayed
   const set = new Set(allItems.value.map((item) => item.brandName));
   return [...set];
 });
 
 const filteredItems = computed(() => {
-  let items = allItems.value;
-  if (selectedBrands.value.length > 0) {
-    items = items.filter((item) =>
-      selectedBrands.value.includes(item.brandName)
-    );
-  }
-  if (sortType.value === "asc") {
-    return [...items].sort((a, b) => a.brandName.localeCompare(b.brandName));
-  }
-  if (sortType.value === "desc") {
-    return [...items].sort((a, b) => b.brandName.localeCompare(a.brandName));
-  }
-  // default: sort by created time ascending
-  return [...items].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-  );
+  // With backend filtering, filteredItems just reflects the current allItems
+  return allItems.value;
 });
+
+// ฟังก์ชันสำหรับเปลี่ยนหน้า
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    loadSaleItems(); // โหลดข้อมูลใหม่เมื่อมีการเปลี่ยนหน้า
+  }
+};
 </script>
 
 <template>
@@ -113,6 +128,16 @@ const filteredItems = computed(() => {
       <div class="flex-1">
         <FilterGalleryByBrand v-model="selectedBrands" :brands="brands" />
       </div>
+      
+      <!-- Size -->
+      <div class="flex items-center gap-2 ml-4">
+        Show 
+        <select class="border border-gray-300 rounded-md px-2 py-1" v-model="itemsPerPage" @change="setItemsPerPage(itemsPerPage)">
+          <option v-for="option in itemsPerPageOptions" :key="option" :value="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
       <!-- Sort Buttons -->
       <div class="flex items-center gap-2 ml-4">
         <button
@@ -121,7 +146,7 @@ const filteredItems = computed(() => {
               ? 'bg-blue-500 text-white'
               : 'bg-gray-200 text-gray-700'
           "
-          class="p-2 rounded transition-colors"
+          class="itbms-brand-asc p-2 rounded transition-colors"
           @click="setSort('asc')"
           title="Sort by Brand A-Z"
         >
@@ -146,7 +171,7 @@ const filteredItems = computed(() => {
               ? 'bg-blue-500 text-white'
               : 'bg-gray-200 text-gray-700'
           "
-          class="p-2 rounded transition-colors"
+          class="itbms-brand-desc p-2 rounded transition-colors"
           @click="setSort('desc')"
           title="Sort by Brand Z-A"
         >
@@ -171,7 +196,7 @@ const filteredItems = computed(() => {
               ? 'bg-blue-500 text-white'
               : 'bg-gray-200 text-gray-700'
           "
-          class="p-2 rounded transition-colors"
+          class="itbms-brand-none p-2 rounded transition-colors"
           @click="setSort('default')"
           title="No Sort"
         >
@@ -195,6 +220,55 @@ const filteredItems = computed(() => {
 
     <!-- แสดงรายการสินค้า -->
     <ItemsGallary :items="filteredItems" :loading="loading" />
+
+    
+
+    <!-- Pagination -->
+    <div class="flex justify-center mt-4">
+      <nav class="flex items-center space-x-2">
+        <button
+          @click="goToPage(1)"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+        >
+          First
+        </button>
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <button
+          v-for="pageNumber in totalPages"
+          :key="pageNumber"
+          @click="goToPage(pageNumber)"
+          :class="[
+            'px-3 py-1 rounded',
+            currentPage === pageNumber
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700',
+          ]"
+        >
+          {{ pageNumber }}
+        </button>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+        >
+          Next
+        </button>
+        <button
+          @click="goToPage(totalPages)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+        >
+          Last
+        </button>
+      </nav>
+    </div>
   </div>
 </template>
 
