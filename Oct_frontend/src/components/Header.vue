@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const searchQuery = ref("");
 </script>
 
@@ -14,7 +16,9 @@ const searchQuery = ref("");
   <div class="container mx-auto px-5 py-6 flex items-center justify-between">
     <!-- logo + search -->
     <div class="flex items-center space-x-4 flex-1">
-      <a href="/"><span class="text-3xl font-bold">ITB MShop</span></a>
+      <router-link name="home-page">
+        <span class="text-3xl font-bold">ITB MShop</span>
+      </router-link>
       <div class="w-full max-w-md">
         <input
           type="text"
