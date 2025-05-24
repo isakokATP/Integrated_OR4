@@ -31,7 +31,7 @@ CREATE TABLE sale_items (
                             ram_gb INT DEFAULT NULL CHECK (ram_gb IS NULL OR ram_gb >= 0),
                             screen_size_inch DECIMAL(4,2) DEFAULT NULL,
                             storage_gb INT DEFAULT NULL,
-                            color VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+                            color VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
                             quantity INT NOT NULL DEFAULT 1,
                             created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
