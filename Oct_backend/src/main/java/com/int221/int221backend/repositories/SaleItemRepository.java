@@ -13,15 +13,7 @@ import java.util.List;
 @Repository
 public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
     Integer countSaleItemByBrand_Id(Integer brandId);
-    Integer countByBrand_Id(Integer brandId);
-    List<SaleItem> findAllByOrderByCreatedOnAsc();
-    List<SaleItem> findAllByOrderByCreatedOnDesc();
 
-    List<SaleItem> findAllByOrderByBrand_NameAsc();
-    List<SaleItem> findAllByOrderByBrand_NameDesc();
-
-    List<SaleItem> findAllByOrderByModelAsc();
-    List<SaleItem> findByQuantityGreaterThanOrderByBrand_NameAsc(Integer quantity);
     @Query("select st from SaleItem st where st.brand.name IN :brandList ")
-    Page<SaleItem> findAll(Pageable pageable, @Param("brandList") List<String> brandList);
+    Page<SaleItem> findByBrand_NameIn(@Param("brandList") List<String> brandList, Pageable pageable);
 }

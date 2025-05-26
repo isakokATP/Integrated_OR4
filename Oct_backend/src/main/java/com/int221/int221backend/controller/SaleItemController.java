@@ -80,7 +80,11 @@ public class SaleItemController {
 
     //  PBI 10
     @GetMapping("/v2/sale-items")
-    public ResponseEntity<SaleItemPaginateDto> getAllItems(@RequestParam("filterBrands") String[] filterBrands, @RequestParam("page") Integer page, @RequestParam(value = "size", defaultValue = "10") Integer size, @RequestParam("sortField") String sortField, @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+    public ResponseEntity<SaleItemPaginateDto> getAllItems(@RequestParam("filterBrands") String[] filterBrands,
+                                                           @RequestParam("page") Integer page,
+                                                           @RequestParam(value = "size", defaultValue = "10") Integer size,
+                                                           @RequestParam("sortField") String sortField,
+                                                           @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
         return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands));
     }
 }

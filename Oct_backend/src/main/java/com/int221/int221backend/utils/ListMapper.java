@@ -11,10 +11,4 @@ public class ListMapper {
                 .map(entity -> mapper.map(entity, targetClass))
                 .collect(Collectors.toList());
     }
-
-//    public <S, T> List<T> mapList(List<S> source, Class<T> targetClass, ModelMapper mapper) {
-//        return source.stream()
-//                .map(entity -> mapper.map(entity, targetClass))
-//                .collect(Collectors.toList());
-//    }
 }
