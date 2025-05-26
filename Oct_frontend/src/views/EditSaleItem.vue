@@ -224,7 +224,7 @@ const handleDelete = async () => {
       <!-- Right: Form -->
       <div>
         <div class="mb-3">
-          <label class="block mb-1">Brand</label>
+          <label class="block mb-1">Brand<span class="text-red-500"> *</span></label>
           <select
             v-model="form.brandId"
             class="itbms-brand w-full border rounded px-2 py-1"
@@ -236,7 +236,7 @@ const handleDelete = async () => {
           </select>
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Model</label>
+          <label class="block mb-1">Model<span class="text-red-500"> *</span></label>
           <input
             v-model="form.model"
             v-trim
@@ -244,7 +244,7 @@ const handleDelete = async () => {
           />
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Price (Baht)</label>
+          <label class="block mb-1">Price (Baht)<span class="text-red-500"> *</span></label>
           <input
             v-model="form.price"
             type="number"
@@ -252,7 +252,7 @@ const handleDelete = async () => {
           />
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Description</label>
+          <label class="block mb-1">Description<span class="text-red-500"> *</span></label>
           <textarea
             v-model="form.description"
             v-trim
@@ -293,7 +293,7 @@ const handleDelete = async () => {
           />
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Quantity</label>
+          <label class="block mb-1">Quantity<span class="text-red-500"> *</span></label>
           <input
             v-model="form.quantity"
             type="number"

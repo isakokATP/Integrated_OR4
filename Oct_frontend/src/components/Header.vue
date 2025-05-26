@@ -16,7 +16,7 @@ const searchQuery = ref("");
   <div class="container mx-auto px-5 py-6 flex items-center justify-between">
     <!-- logo + search -->
     <div class="flex items-center space-x-4 flex-1">
-      <router-link name="home-page">
+      <router-link to="/">
         <span class="text-3xl font-bold">ITB MShop</span>
       </router-link>
       <div class="w-full max-w-md">

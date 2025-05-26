@@ -20,7 +20,7 @@
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label class="block mb-1 font-medium" for="name"
-            >Name<span class="text-red-500">*</span></label
+            >Name<span class="text-red-500"> *</span></label
           >
           <input
             v-model="form.name"
