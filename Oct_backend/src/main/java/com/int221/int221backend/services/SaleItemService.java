@@ -93,16 +93,24 @@ public class SaleItemService {
     }
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+//        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
+
         Pageable pageable = PageRequest.of(page, pageSize, sort);
+
+
         List<String> brandList = Arrays.asList(filterBrands);
         Page<SaleItem> saleItemPage;
-        SaleItemPaginateDto response = new SaleItemPaginateDto();
+
+
         if (brandList.isEmpty()) {
             saleItemPage = saleItemRepository.findAll(pageable);
         } else {
-            saleItemPage = saleItemRepository.findAll(pageable, brandList);
+            saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, pageable);
         }
+
+        SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));
         response.setLast(saleItemPage.isLast());
         response.setFirst(saleItemPage.isFirst());
