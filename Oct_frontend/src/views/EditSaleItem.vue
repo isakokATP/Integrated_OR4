@@ -4,20 +4,21 @@ import {
   fetchSaleItemById,
   updateSaleItem,
   deleteSaleItem,
+  fetchBrands,
 } from "@/services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
-import { fetchBrands } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
 import Notification from "@/components/Notification.vue";
+
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
+
 const isLoading = ref(true);
 const errorMsg = ref("");
 const message = ref("");
-const originalData = ref(null); // Store original data for comparison
-// เพิ่มตัวแปร brands
 const brands = ref([]);
+const originalData = ref(null);
 
 const form = ref({
   brandId: "",
@@ -28,7 +29,66 @@ const form = ref({
   screenSizeInch: "",
   storageGb: "",
   color: "",
-  quantity: "",
+  quantity: "1",
+});
+
+const touched = ref({
+  brandId: false,
+  model: false,
+  price: false,
+  description: false,
+  ramGb: false,
+  screenSizeInch: false,
+  storageGb: false,
+  color: false,
+  quantity: false,
+});
+
+const errors = computed(() => {
+  const e = {};
+  if (touched.value.brandId && !form.value.brandId)
+    e.brandId = "* Brand must be selected.";
+  if (
+    touched.value.model &&
+    (form.value.model.trim().length < 1 || form.value.model.length > 60)
+  )
+    e.model = "* Model must be 1-60 characters long.";
+  if (
+    touched.value.description &&
+    (form.value.description.trim().length < 1 ||
+      form.value.description.length > 65535)
+  )
+    e.description = "* Description must be 1-65,535 characters long.";
+  if (
+    touched.value.price &&
+    (!/^[0-9]+$/.test(form.value.price) || parseInt(form.value.price) < 1)
+  )
+    e.price = "* Price must be a positive integer.";
+  if (
+    touched.value.quantity &&
+    (!/^[0-9]+$/.test(form.value.quantity) || parseInt(form.value.quantity) < 1)
+  )
+    e.quantity = "* Quantity must be a positive integer.";
+  if (
+    touched.value.ramGb &&
+    form.value.ramGb !== "" &&
+    (!/^[0-9]+$/.test(form.value.ramGb) || parseInt(form.value.ramGb) <= 0)
+  )
+    e.ramGb = "* RAM size must be positive integer or not specified.";
+  return e;
+});
+
+const mandatoryValid = computed(() => {
+  return (
+    form.value.brandId &&
+    form.value.model.trim() &&
+    form.value.description.trim() &&
+    /^[0-9]+$/.test(form.value.price)
+  );
+});
+
+const isFormValid = computed(() => {
+  return Object.keys(errors.value).length === 0 && mandatoryValid.value;
 });
 
 const hasChanges = computed(() => {
@@ -46,24 +106,18 @@ const hasChanges = computed(() => {
   );
 });
 
-const isFormValid = computed(() => {
-  return (
-    form.value.brandId && // ต้องมี id
-    form.value.model.trim() &&
-    form.value.description.trim() &&
-    form.value.price
-  );
-});
+const updateError = () => {
+  touched.value = { ...touched.value };
+};
 
 onMounted(async () => {
   try {
     brands.value = await fetchBrands();
-    console.log(brands.value);
     const item = await fetchSaleItemById(id);
 
     if (item.status === "not_found") {
       errorMsg.value = "The requested sale item does not exist.";
-      alert("The requested sale item does not exist.");
+      alert(errorMsg.value);
       router.push({ name: "sale-items-page" });
       return;
     }
@@ -71,7 +125,7 @@ onMounted(async () => {
     const brand = brands.value.find((b) => b.name === item.brandName);
 
     form.value = {
-      brandId: brand.id,
+      brandId: brand?.id || "",
       model: item.model,
       price: item.price,
       description: item.description,
@@ -82,21 +136,7 @@ onMounted(async () => {
       quantity: item.quantity,
     };
 
-    // Store original data for comparison
-    originalData.value = {
-      brand: {
-        id: brand ? brand.id : "",
-        name: brand ? brand.name : "",
-      },
-      model: item.model,
-      price: item.price,
-      description: item.description,
-      ramGb: item.ramGb,
-      screenSizeInch: item.screenSizeInch,
-      storageGb: item.storageGb,
-      color: item.color,
-      quantity: item.quantity,
-    };
+    originalData.value = { ...form.value };
   } catch (error) {
     errorMsg.value = "Error loading item: " + error.message;
   } finally {
@@ -104,16 +144,13 @@ onMounted(async () => {
   }
 });
 
-// Watch for route changes to get message from query params
 watch(
   () => route.query.message,
   (newMessage) => {
     if (newMessage) {
       message.value = newMessage;
-      // Clear message after 3 seconds
       setTimeout(() => {
         message.value = "";
-        // Remove message from URL without refreshing
         router.replace({ query: {} });
       }, 3000);
     }
@@ -123,11 +160,18 @@ watch(
 
 const handleSave = async () => {
   try {
+    if (!isFormValid.value) {
+      alert("Please correct validation errors.");
+      return;
+    }
+
     const dataToSend = {
       model: form.value.model.trim(),
       brand: {
-        id: parseInt(form.value.brand.id),
-        name: form.value.brand.name,
+        id: parseInt(form.value.brandId),
+        name:
+          brands.value.find((b) => b.id === parseInt(form.value.brandId))
+            ?.name || "",
       },
       description: form.value.description.trim(),
       price: parseInt(form.value.price),
@@ -139,15 +183,6 @@ const handleSave = async () => {
       color: form.value.color.trim() || null,
       quantity: parseInt(form.value.quantity) || 1,
     };
-
-    if (
-      !dataToSend.model ||
-      !dataToSend.description ||
-      !dataToSend.price ||
-      !dataToSend.brand.id
-    ) {
-      throw new Error("Please fill in all required fields");
-    }
 
     await updateSaleItem(id, dataToSend);
     router.push({
@@ -161,14 +196,14 @@ const handleSave = async () => {
 };
 
 const handleCancel = () => {
-  confirm("Are you sure you want to cancel?") &&
+  if (confirm("Are you sure you want to cancel?")) {
     router.push({ name: "sale-items-page" });
+  }
 };
 
 const handleDelete = async () => {
   if (confirm("Are you sure you want to delete this item?")) {
     try {
-      // เรียก service เพื่อลบ
       await deleteSaleItem(id);
       router.push({
         name: "sale-items-page",
@@ -203,7 +238,6 @@ const handleDelete = async () => {
       @submit.prevent="handleSave"
       class="grid grid-cols-1 md:grid-cols-2 gap-8"
     >
-      <!-- Left: Picture -->
       <div class="mt-2">
         <div
           class="w-70 h-70 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-2 border border-gray-300 rounded"
@@ -221,12 +255,17 @@ const handleDelete = async () => {
         </div>
       </div>
 
-      <!-- Right: Form -->
       <div>
         <div class="mb-3">
-          <label class="block mb-1">Brand<span class="text-red-500"> *</span></label>
+          <label class="block mb-1">
+            Brand<span class="text-red-500"> *</span>
+          </label>
           <select
             v-model="form.brandId"
+            @blur="
+              touched.brandId = true;
+              updateError();
+            "
             class="itbms-brand w-full border rounded px-2 py-1"
           >
             <option value="">Select Brand</option>
@@ -234,45 +273,87 @@ const handleDelete = async () => {
               {{ brand.name }}
             </option>
           </select>
+          <div v-if="errors.brandId" class="text-red-600 text-sm mt-1">
+            {{ errors.brandId }}
+          </div>
         </div>
+
         <div class="mb-3">
-          <label class="block mb-1">Model<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Model<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.model"
-            v-trim
+            @focus="() => (touched.model = true)"
+            @blur="
+              touched.model = true;
+              form.model = form.model.trim();
+              updateError();
+            "
             class="w-full border rounded px-2 py-1"
           />
+          <div v-if="errors.model" class="text-red-600 text-sm mt-1">
+            {{ errors.model }}
+          </div>
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Price (Baht)<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Price (Baht)<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.price"
+            @focus="() => (touched.price = true)"
+            step="1"
+            @blur="
+              touched.price = true;
+              updateError();
+            "
             type="number"
             class="w-full border rounded px-2 py-1"
           />
+          <div v-if="errors.price" class="text-red-600 text-sm mt-1">
+            {{ errors.price }}
+          </div>
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Description<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Description<span class="text-red-500"> *</span></label
+          >
           <textarea
             v-model="form.description"
-            v-trim
+            @focus="() => (touched.description = true)"
+            @blur="
+              touched.description = true;
+              form.description = form.description.trim();
+              updateError();
+            "
             class="w-full border rounded px-2 py-1"
           ></textarea>
+          <div v-if="errors.description" class="text-red-600 text-sm mt-1">
+            {{ errors.description }}
+          </div>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Ram (GB)</label>
           <input
             v-model="form.ramGb"
+            @focus="() => (touched.ramGb = true)"
+            @blur="touched.ramGb = true"
+            @input="touched.ramGb = true"
             type="number"
             class="w-full border rounded px-2 py-1"
           />
+          <span v-if="errors.ramGb" class="text-red-500 text-sm">{{
+            errors.ramGb
+          }}</span>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Screen Size (Inches)</label>
           <input
             v-model="form.screenSizeInch"
+            @focus="() => (touched.screenSizeInch = true)"
             type="number"
-            step="0.1"
+            step="0.01"
             class="w-full border rounded px-2 py-1"
           />
         </div>
@@ -280,6 +361,7 @@ const handleDelete = async () => {
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
+            @focus="() => (touched.storageGb = true)"
             type="number"
             class="w-full border rounded px-2 py-1"
           />
@@ -288,17 +370,28 @@ const handleDelete = async () => {
           <label class="block mb-1">Color</label>
           <input
             v-model="form.color"
-            v-trim
+            @focus="() => (touched.color = true)"
+            @blur="form.color = form.color.trim()"
             class="w-full border rounded px-2 py-1"
           />
         </div>
         <div class="mb-3">
-          <label class="block mb-1">Quantity<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Quantity<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.quantity"
+            @focus="() => (touched.quantity = true)"
+            @blur="
+              touched.quantity = true;
+              updateError();
+            "
             type="number"
             class="w-full border rounded px-2 py-1"
           />
+          <div v-if="errors.quantity" class="text-red-600 text-sm mt-1">
+            {{ errors.quantity }}
+          </div>
         </div>
         <div class="flex gap-4 mt-6">
           <button
@@ -322,7 +415,7 @@ const handleDelete = async () => {
     </form>
 
     <button
-      class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
+      class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500 mt-6"
       @click="handleDelete"
     >
       Delete

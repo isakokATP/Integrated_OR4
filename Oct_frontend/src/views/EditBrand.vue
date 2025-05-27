@@ -28,7 +28,15 @@
             type="text"
             class="itbms-name input input-bordered w-full"
             required
+            @blur="
+              form.name = true;
+              form.name = form.name.trim();
+              updateError();
+            "
           />
+          <div v-if="errors.name" class="text-red-600 text-sm mt-1">
+            {{ errors.name }}
+          </div>
         </div>
         <div>
           <label class="block mb-1 font-medium" for="websiteUrl"
@@ -125,6 +133,18 @@ const loadBrandData = async () => {
     error.value = "Cannot load brand data";
     console.error(err);
   }
+};
+
+const errors = computed(() => {
+  const e = {};
+  if (typeof form.value.name !== "string" || !form.value.name.trim()) {
+    e.name = "* name must be selected.";
+  }
+  return e;
+});
+
+const updateError = () => {
+  form.value = { ...form.value };
 };
 
 const handleSubmit = async () => {

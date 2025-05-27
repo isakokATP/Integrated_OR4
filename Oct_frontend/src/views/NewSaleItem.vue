@@ -37,7 +37,9 @@
       <!-- Right: Form -->
       <div>
         <div class="mb-3">
-          <label class="block mb-1">Brand<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Brand<span class="text-red-500"> *</span></label
+          >
           <select
             v-model="form.brandId"
             @blur="touched.brandId = true"
@@ -55,7 +57,9 @@
         </div>
 
         <div class="mb-3">
-          <label class="block mb-1">Model<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Model<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.model"
             class="itbms-model w-full border rounded px-2 py-1"
@@ -74,12 +78,15 @@
         </div>
 
         <div class="mb-3">
-          <label class="block mb-1">Price (Baht)<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Price (Baht)<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.price"
             type="number"
             @blur="touched.price = true"
             @input="touched.price = true"
+            step="1"
             class="w-full border rounded px-2 py-1"
           />
           <span v-if="errors.price" class="text-red-500 text-sm">{{
@@ -88,7 +95,9 @@
         </div>
 
         <div class="mb-3">
-          <label class="block mb-1">Description<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Description<span class="text-red-500"> *</span></label
+          >
           <textarea
             v-model="form.description"
             v-trim
@@ -120,7 +129,7 @@
           <input
             v-model="form.screenSizeInch"
             type="number"
-            step="0.1"
+            step="0.01"
             @blur="touched.screenSizeInch = true"
             @input="touched.screenSizeInch = true"
             class="w-full border rounded px-2 py-1"
@@ -134,7 +143,7 @@
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
-            type="number"
+            type="float"
             @blur="touched.storageGb = true"
             @input="touched.storageGb = true"
             class="w-full border rounded px-2 py-1"
@@ -159,7 +168,9 @@
         </div>
 
         <div class="mb-3">
-          <label class="block mb-1">Quantity<span class="text-red-500"> *</span></label>
+          <label class="block mb-1"
+            >Quantity<span class="text-red-500"> *</span></label
+          >
           <input
             v-model="form.quantity"
             type="number"
@@ -313,17 +324,21 @@ function handleCancel() {
 }
 
 const mandatoryValid = computed(() => {
+  const { brandId, model, price, description, quantity } = form.value;
+  const m = model.trim();
+  const d = description.trim();
+
   return (
-    form.value.brandId &&
-    form.value.model.trim().length >= 1 &&
-    form.value.model.length <= 60 &&
-    /^[0-9]+$/.test(form.value.price) &&
-    parseInt(form.value.price) >= 0 &&
-    form.value.description.trim().length >= 1 &&
-    form.value.description.length <= 65535 &&
-    form.value.quantity !== "" &&
-    /^[0-9]+$/.test(form.value.quantity) &&
-    parseInt(form.value.quantity) >= 0
+    brandId &&
+    m.length >= 1 &&
+    m.length <= 60 &&
+    /^[0-9]+$/.test(price) &&
+    +price >= 0 &&
+    d.length >= 1 &&
+    d.length <= 65535 &&
+    quantity !== "" &&
+    /^[0-9]+$/.test(quantity) &&
+    +quantity >= 0
   );
 });
 
