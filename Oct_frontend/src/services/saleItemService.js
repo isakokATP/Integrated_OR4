@@ -39,10 +39,10 @@ async function fetchSaleItemsV2(
     let sortDirection = "";
 
     if (sortType === "asc") {
-      sortField = "brandName";
+      sortField = "brand.name";
       sortDirection = "asc";
     } else if (sortType === "desc") {
-      sortField = "brandName";
+      sortField = "brand.name";
       sortDirection = "desc";
     } else {
       // Default sort

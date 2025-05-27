@@ -63,7 +63,6 @@ onMounted(async () => {
 
     if (item.status === "not_found") {
       errorMsg.value = "The requested sale item does not exist.";
-      alert("The requested sale item does not exist.");
       router.push({ name: "sale-items-page" });
       return;
     }
@@ -320,12 +319,6 @@ const handleDelete = async () => {
         </div>
       </div>
     </form>
-
-    <button
-      class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
-      @click="handleDelete"
-    >
-      Delete
-    </button>
+    
   </div>
 </template>

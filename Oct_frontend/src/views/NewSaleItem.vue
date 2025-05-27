@@ -209,9 +209,9 @@ async function handleSave() {
     };
 
     await createSaleItem(dataToSend);
-    alert("สร้างรายการขายสำเร็จ!");
+    setTimeout(1000);
     router.push({
-      name: "sale-items-list-page",
+      name: "sale-items-page",
       query: { message: "The sale item has been successfully added." },
     });
   } catch (err) {

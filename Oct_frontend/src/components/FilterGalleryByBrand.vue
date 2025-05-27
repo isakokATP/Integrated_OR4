@@ -2,18 +2,19 @@
   <div class="flex items-start gap-0.5">
     <!-- กล่องแสดงแบรนด์ -->
     <div
-      class="w-102.5 border border-gray-300 rounded-md px-4 py-2 flex flex-wrap gap-2 items-start min-h-[40px]"
+      class="itbms-brand-filter w-102.5 border border-gray-300 rounded-md px-4 py-2 flex flex-wrap gap-2 items-start min-h-[40px]"
+      @click="showDropdown = !showDropdown"
     >
       <template v-if="modelValue.length">
         <div
           v-for="brand in modelValue"
           :key="brand"
-          class="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm"
+          class="itbms-filter-item flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm"
         >
           {{ brand }}
           <button
             @click="removeBrand(brand)"
-            class="ml-2 text-blue-600  hover:text-blue-900 font-bold"
+            class="itbms-filter-item-clear ml-2 text-blue-600 hover:text-blue-900 font-bold"
             aria-label="Remove brand"
           >
             &times;
@@ -27,16 +28,16 @@
     <div class="flex flex-col ml-1">
       <div class="flex gap-1.5">
         <button
-        @click="showDropdown = !showDropdown"
-        class="bg-gray-200 px-3 py-2 hover:bg-blue-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
+          @click="showDropdown = !showDropdown"
+          class="itbms-brand-filter-button bg-gray-200 px-3 py-2 hover:bg-blue-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
         >
-        <span class="inline-block mr-1">Choose</span>
+          <span class="inline-block mr-1">Choose</span>
         </button>
         <button
-        @click="clearAll"
-        class="bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
+          @click="clearAll"
+          class="itbms-brand-filter-clear bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
         >
-        Clear
+          Clear
         </button>
       </div>
 
@@ -47,7 +48,7 @@
           <div
             v-for="brand in availableBrands"
             :key="brand"
-            class="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
+            class="itbms-filter-item px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
             @click="addBrand(brand)"
           >
             {{ brand }}
@@ -60,7 +61,7 @@
 
 <script setup>
 import { ref, computed, onMounted, defineEmits, defineProps } from "vue";
-import { fetchBrands } from "@/services/saleItemService"; // <-- ดึง API มาใช้
+import { fetchBrands } from "@/services/saleItemService";
 
 const props = defineProps({
   modelValue: Array,
@@ -70,26 +71,29 @@ const emit = defineEmits(["update:modelValue"]);
 const showDropdown = ref(false);
 const allBrands = ref([]);
 
-// ดึงแบรนด์จาก service
-onMounted(async () => {
-  const result = await fetchBrands();
-  allBrands.value = result.map(b => b.name); // ดึงแค่ชื่อ
-});
-
 const availableBrands = computed(() =>
-  allBrands.value.filter((b) => !props.modelValue.includes(b))
+  allBrands.value
+    .filter((b) => !props.modelValue.includes(b))
+    .sort((a, b) => a.localeCompare(b))
 );
 
 function addBrand(brand) {
   emit("update:modelValue", [...props.modelValue, brand]);
-  showDropdown.value = false;
 }
 
 function removeBrand(brand) {
-  emit("update:modelValue", props.modelValue.filter((b) => b !== brand));
+  emit(
+    "update:modelValue",
+    props.modelValue.filter((b) => b !== brand)
+  );
 }
 
 function clearAll() {
   emit("update:modelValue", []);
 }
+
+onMounted(async () => {
+  const result = await fetchBrands();
+  allBrands.value = result.map((b) => b.name);
+});
 </script>
