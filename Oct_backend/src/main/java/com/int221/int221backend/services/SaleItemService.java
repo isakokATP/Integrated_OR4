@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -93,14 +94,13 @@ public class SaleItemService {
     }
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands) {
-//        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
 
 
-        List<String> brandList = Arrays.asList(filterBrands);
+        List<String> brandList = filterBrands == null ? new ArrayList<>() : Arrays.asList(filterBrands);
         Page<SaleItem> saleItemPage;
 
 
