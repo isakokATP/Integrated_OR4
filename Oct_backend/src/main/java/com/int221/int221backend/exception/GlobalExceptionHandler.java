@@ -3,6 +3,7 @@ package com.int221.int221backend.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
@@ -68,5 +69,12 @@ public class GlobalExceptionHandler {
         errorBody.put("status", ex.getStatusCode().value());
         errorBody.put("message", ex.getReason());
         return ResponseEntity.status(ex.getStatusCode()).body(errorBody);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingParams(MissingServletRequestParameterException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Missing required query parameter: " + ex.getParameterName());
+        return ResponseEntity.badRequest().body(error);
     }
 }
