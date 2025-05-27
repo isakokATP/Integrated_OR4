@@ -4,14 +4,16 @@
     <nav class="text-sm mb-4 flex items-center space-x-2">
       <router-link
         to="/sale-items/list"
-        class="itbms-sale-items-list text-blue-600 hover:underline font-medium"
-        >Sale Items</router-link
+        class="text-blue-600 hover:underline font-medium"
+        data-testid="itbms-item-list"
+        >Sale Item List</router-link
       >
       <span class="mx-1">›</span>
       <router-link
         to="/brands"
-        class="itbms-brands-list text-blue-600 hover:underline font-medium"
-        >Brands List</router-link
+        class="text-blue-600 hover:underline font-medium"
+        data-testid="itbms-manage-brand"
+        >Brand List</router-link
       >
       <span class="mx-1">›</span>
       <span class="font-semibold">Edit Brand</span>
@@ -23,35 +25,44 @@
             >Name<span class="text-red-500"> *</span></label
           >
           <input
+            id="name"
             v-model="form.name"
             v-trim
             type="text"
             class="itbms-name input input-bordered w-full"
-            required
-            @blur="
-              form.name = true;
-              form.name = form.name.trim();
-              updateError();
+            @blur="touched.name = true"
+            @input="
+              () => {
+                touched.name = true;
+                updateErrors();
+              }
             "
           />
-          <div v-if="errors.name" class="text-red-600 text-sm mt-1">
-            {{ errors.name }}
-          </div>
+          <span v-if="errors.name" class="text-red-500 text-sm">{{
+            errors.name
+          }}</span>
         </div>
         <div>
           <label class="block mb-1 font-medium" for="websiteUrl"
             >Website URL</label
           >
           <input
+            id="websiteUrl"
             v-model="form.websiteUrl"
             v-trim
             type="url"
             class="itbms-websiteUrl input input-bordered w-full"
+            @blur="touched.websiteUrl = true"
+            @input="updateErrors"
           />
+          <span v-if="errors.websiteUrl" class="text-red-500 text-sm">{{
+            errors.websiteUrl
+          }}</span>
         </div>
         <div class="flex items-center gap-2">
           <label class="font-medium" for="isActive">Active</label>
           <input
+            id="isActive"
             v-model="form.isActive"
             type="checkbox"
             class="itbms-isActive toggle"
@@ -62,17 +73,26 @@
             >Country of Origin</label
           >
           <input
+            id="countryOfOrigin"
             v-model="form.countryOfOrigin"
             v-trim
             type="text"
             class="itbms-countryOfOrigin input input-bordered w-full"
+            @blur="touched.countryOfOrigin = true"
+            @input="updateErrors"
           />
+          <span v-if="errors.countryOfOrigin" class="text-red-500 text-sm">{{
+            errors.countryOfOrigin
+          }}</span>
         </div>
-        <div class="flex gap-2 mt-4">
+        <div class="flex gap-2 space-y-4">
           <button
             type="submit"
             class="itbms-save-button btn text-white bg-blue-900 hover:bg-blue-500"
-            :disabled="!hasChanges || !form.name.trim()"
+            :disabled="!mandatoryValid || !hasChanges"
+            :class="{
+              'opacity-50 cursor-not-allowed': !mandatoryValid || !hasChanges,
+            }"
           >
             Save
           </button>
@@ -91,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { fetchBrandById, updateBrand } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
@@ -100,11 +120,95 @@ const router = useRouter();
 const route = useRoute();
 const error = ref("");
 
-const form = ref({
+const form = reactive({
   name: "",
   websiteUrl: "",
   isActive: true,
   countryOfOrigin: "",
+});
+
+const originalData = ref({
+  name: "",
+  websiteUrl: "",
+  isActive: false,
+  countryOfOrigin: "",
+});
+
+const touched = reactive({
+  name: false,
+  websiteUrl: false,
+  countryOfOrigin: false,
+});
+
+function isValidUrl(url) {
+  if (!url) return true;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const errors = reactive({});
+
+function updateErrors() {
+  if (touched.name) {
+    if (form.name.trim().length < 1 || form.name.trim().length > 30) {
+      errors.name = "Brand name must be 1-30 characters long.";
+    } else {
+      delete errors.name;
+    }
+  }
+
+  if (touched.websiteUrl) {
+    if (
+      form.websiteUrl.trim().length > 40 ||
+      !isValidUrl(form.websiteUrl.trim())
+    ) {
+      errors.websiteUrl = "Brand URL must be a valid URL or not specified.";
+    } else {
+      delete errors.websiteUrl;
+    }
+  }
+
+  if (touched.countryOfOrigin) {
+    if (
+      form.countryOfOrigin.trim().length > 0 &&
+      (form.countryOfOrigin.trim().length < 1 ||
+        form.countryOfOrigin.trim().length > 80)
+    ) {
+      errors.countryOfOrigin =
+        "Brand country of origin must be 1-80 characters long or not specified.";
+    } else {
+      delete errors.countryOfOrigin;
+    }
+  }
+}
+
+const mandatoryValid = computed(() => {
+  return (
+    form.name.trim().length >= 1 &&
+    form.name.trim().length <= 30 &&
+    (form.websiteUrl.trim() === "" ||
+      (form.websiteUrl.trim().length <= 40 &&
+        isValidUrl(form.websiteUrl.trim()))) &&
+    (form.countryOfOrigin.trim() === "" ||
+      (form.countryOfOrigin.trim().length >= 1 &&
+        form.countryOfOrigin.trim().length <= 80)) &&
+    Object.keys(errors).length === 0
+  );
+});
+
+const hasChanges = computed(() => {
+  return (
+    form.name !== originalData.value.name ||
+    (form.websiteUrl?.trim() || "") !==
+      (originalData.value.websiteUrl?.trim() || "") ||
+    form.isActive !== originalData.value.isActive ||
+    (form.countryOfOrigin?.trim() || "") !==
+      (originalData.value.countryOfOrigin?.trim() || "")
+  );
 });
 
 const loadBrandData = async () => {
@@ -118,16 +222,17 @@ const loadBrandData = async () => {
       });
       return;
     }
-    console.log("brandData", brandData);
-    form.value = {
-      ...brandData,
-      isActive: brandData.isActive,
-      countryOfOrigin: brandData.countryOfOrigin,
-    };
+
+    form.name = brandData.name || "";
+    form.websiteUrl = brandData.websiteUrl || "";
+    form.isActive = brandData.isActive ?? true;
+    form.countryOfOrigin = brandData.countryOfOrigin || "";
+
     originalData.value = {
-      ...brandData,
-      isActive: brandData.isActive,
-      countryOfOrigin: brandData.countryOfOrigin,
+      name: form.name,
+      websiteUrl: form.websiteUrl,
+      isActive: form.isActive,
+      countryOfOrigin: form.countryOfOrigin,
     };
   } catch (err) {
     error.value = "Cannot load brand data";
@@ -135,29 +240,22 @@ const loadBrandData = async () => {
   }
 };
 
-const errors = computed(() => {
-  const e = {};
-  if (typeof form.value.name !== "string" || !form.value.name.trim()) {
-    e.name = "* name must be selected.";
-  }
-  return e;
-});
-
-const updateError = () => {
-  form.value = { ...form.value };
-};
-
 const handleSubmit = async () => {
+  touched.name = true;
+  touched.websiteUrl = true;
+  touched.countryOfOrigin = true;
+  updateErrors();
+
+  if (!mandatoryValid.value) return;
+
   error.value = "";
   try {
     const brandId = route.params.id;
     await updateBrand(brandId, {
-      name: form.value.name,
-      websiteUrl: form.value.websiteUrl ? form.value.websiteUrl.trim() : null,
-      isActive: form.value.isActive,
-      countryOfOrigin: form.value.countryOfOrigin
-        ? form.value.countryOfOrigin.trim()
-        : null,
+      name: form.name.trim(),
+      websiteUrl: form.websiteUrl.trim() || null,
+      countryOfOrigin: form.countryOfOrigin.trim() || null,
+      isActive: form.isActive,
     });
 
     router.push({
@@ -168,26 +266,6 @@ const handleSubmit = async () => {
     error.value = err.message || "Cannot update brand data";
   }
 };
-const originalData = ref({
-  name: "",
-  websiteUrl: "",
-  isActive: false,
-  countryOfOrigin: "",
-});
-const hasChanges = computed(() => {
-  return (
-    form.value.name !== originalData.value.name ||
-    (form.value.websiteUrl ? form.value.websiteUrl.trim() : null) !==
-      (originalData.value.websiteUrl
-        ? originalData.value.websiteUrl.trim()
-        : null) ||
-    form.value.isActive !== originalData.value.isActive ||
-    (form.value.countryOfOrigin ? form.value.countryOfOrigin.trim() : null) !==
-      (originalData.value.countryOfOrigin
-        ? originalData.value.countryOfOrigin.trim()
-        : null)
-  );
-});
 
 const goBack = () => {
   router.push({ name: "brands-list-page" });
@@ -199,5 +277,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* TailwindCSS is used, but you can add custom styles here if needed */
+/* TailwindCSS is used */
 </style>

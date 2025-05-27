@@ -57,9 +57,7 @@
         </div>
 
         <div class="mb-3">
-          <label class="block mb-1"
-            >Model<span class="text-red-500"> *</span></label
-          >
+          <label class="block mb-1">Model<span class="text-red-500"> *</span></label>
           <input
             v-model="form.model"
             class="itbms-model w-full border rounded px-2 py-1"
@@ -117,6 +115,7 @@
             type="number"
             @blur="touched.ramGb = true"
             @input="touched.ramGb = true"
+            step="1"
             class="w-full border rounded px-2 py-1"
           />
           <span v-if="errors.ramGb" class="text-red-500 text-sm">{{
@@ -143,9 +142,10 @@
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
-            type="float"
+            type="number"
             @blur="touched.storageGb = true"
             @input="touched.storageGb = true"
+            step="1"
             class="w-full border rounded px-2 py-1"
           />
           <span v-if="errors.storageGb" class="text-red-500 text-sm">{{
@@ -258,9 +258,9 @@ const errors = computed(() => {
   if (
     touched.value.description &&
     (form.value.description.trim().length < 1 ||
-      form.value.description.length > 65535)
+      form.value.description.length > 16384)
   )
-    e.description = "* Description must be 1-65,535 characters long.";
+    e.description = "* Description must be 1-16,384 characters long.";
   if (
     touched.value.price &&
     (!/^[0-9]+$/.test(form.value.price) || parseInt(form.value.price) < 0)
@@ -281,7 +281,7 @@ const errors = computed(() => {
       !/^\d+(\.\d{1,2})?$/.test(form.value.screenSizeInch)
     ) {
       e.screenSizeInch =
-        "* Screen size must be in tens with at most 2 decimal points or not specified.";
+        "* Screen size must be in the range of units to tens with at most 2 decimal points or not specified.";
     }
   }
   if (
@@ -335,7 +335,7 @@ const mandatoryValid = computed(() => {
     /^[0-9]+$/.test(price) &&
     +price >= 0 &&
     d.length >= 1 &&
-    d.length <= 65535 &&
+    d.length <= 16384 &&
     quantity !== "" &&
     /^[0-9]+$/.test(quantity) &&
     +quantity >= 0

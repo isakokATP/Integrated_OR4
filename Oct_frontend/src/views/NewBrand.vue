@@ -31,9 +31,16 @@
             type="text"
             class="itbms-name input input-bordered w-full"
             @blur="touched.name = true"
-            @input="updateErrors"
+            @input="
+              () => {
+                touched.name = true;
+                updateErrors();
+              }
+            "
           />
-          <span v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</span>
+          <span v-if="errors.name" class="text-red-500 text-sm">{{
+            errors.name
+          }}</span>
         </div>
         <div>
           <label class="block mb-1 font-medium" for="websiteUrl"
@@ -48,7 +55,9 @@
             @blur="touched.websiteUrl = true"
             @input="updateErrors"
           />
-          <span v-if="errors.websiteUrl" class="text-red-500 text-sm">{{ errors.websiteUrl }}</span>
+          <span v-if="errors.websiteUrl" class="text-red-500 text-sm">{{
+            errors.websiteUrl
+          }}</span>
         </div>
         <div class="flex items-center gap-2">
           <label class="font-medium" for="isActive">Active</label>
@@ -72,7 +81,9 @@
             @blur="touched.countryOfOrigin = true"
             @input="updateErrors"
           />
-          <span v-if="errors.countryOfOrigin" class="text-red-500 text-sm">{{ errors.countryOfOrigin }}</span>
+          <span v-if="errors.countryOfOrigin" class="text-red-500 text-sm">{{
+            errors.countryOfOrigin
+          }}</span>
         </div>
         <div class="flex gap-2 space-y-4">
           <button
@@ -173,8 +184,12 @@ const mandatoryValid = computed(() => {
   return (
     form.name.trim().length >= 1 &&
     form.name.trim().length <= 30 &&
-    (form.websiteUrl.trim() === "" || (form.websiteUrl.trim().length <= 40 && isValidUrl(form.websiteUrl.trim()))) &&
-    (form.countryOfOrigin.trim() === "" || (form.countryOfOrigin.trim().length >= 1 && form.countryOfOrigin.trim().length <= 80)) &&
+    (form.websiteUrl.trim() === "" ||
+      (form.websiteUrl.trim().length <= 40 &&
+        isValidUrl(form.websiteUrl.trim()))) &&
+    (form.countryOfOrigin.trim() === "" ||
+      (form.countryOfOrigin.trim().length >= 1 &&
+        form.countryOfOrigin.trim().length <= 80)) &&
     Object.keys(errors).length === 0
   );
 });

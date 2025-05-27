@@ -29,7 +29,7 @@ const form = ref({
   screenSizeInch: "",
   storageGb: "",
   color: "",
-  quantity: "1",
+  quantity: "",
 });
 
 const touched = ref({
@@ -56,9 +56,9 @@ const errors = computed(() => {
   if (
     touched.value.description &&
     (form.value.description.trim().length < 1 ||
-      form.value.description.length > 65535)
+      form.value.description.length > 16384)
   )
-    e.description = "* Description must be 1-65,535 characters long.";
+    e.description = "* Description must be 1-16,384 characters long.";
   if (
     touched.value.price &&
     (!/^[0-9]+$/.test(form.value.price) || parseInt(form.value.price) < 1)
@@ -66,15 +66,41 @@ const errors = computed(() => {
     e.price = "* Price must be a positive integer.";
   if (
     touched.value.quantity &&
-    (!/^[0-9]+$/.test(form.value.quantity) || parseInt(form.value.quantity) < 1)
+    form.value.quantity !== "" &&
+    (!/^[0-9]+$/.test(form.value.quantity) || parseInt(form.value.quantity) < 0)
   )
-    e.quantity = "* Quantity must be a positive integer.";
+    e.quantity = "* Quantity must be non-negative integer.";
   if (
     touched.value.ramGb &&
     form.value.ramGb !== "" &&
     (!/^[0-9]+$/.test(form.value.ramGb) || parseInt(form.value.ramGb) <= 0)
   )
     e.ramGb = "* RAM size must be positive integer or not specified.";
+  if (touched.value.screenSizeInch && form.value.screenSizeInch !== "") {
+    const val = parseFloat(form.value.screenSizeInch);
+    if (
+      isNaN(val) ||
+      val <= 0 ||
+      val >= 100 ||
+      !/^\d+(\.\d{1,2})?$/.test(form.value.screenSizeInch)
+    ) {
+      e.screenSizeInch =
+        "* Screen size must be in the range of units to tens with at most 2 decimal points or not specified.";
+    }
+  }
+  if (
+    touched.value.storageGb &&
+    form.value.storageGb !== "" &&
+    (!/^[0-9]+$/.test(form.value.storageGb) ||
+      parseInt(form.value.storageGb) <= 0)
+  )
+    e.storageGb = "* Storage size must be positive integer or not specified.";
+  if (
+    touched.value.color &&
+    form.value.color &&
+    (form.value.color.length < 1 || form.value.color.length > 40)
+  )
+    e.color = "* Color must be 1-40 characters long or not specified.";
   return e;
 });
 
@@ -354,26 +380,40 @@ const handleDelete = async () => {
             @focus="() => (touched.screenSizeInch = true)"
             type="number"
             step="0.01"
+            @blur="touched.screenSizeInch = true"
+            @input="touched.screenSizeInch = true"
             class="w-full border rounded px-2 py-1"
           />
+          <span v-if="errors.screenSizeInch" class="text-red-500 text-sm">{{
+            errors.screenSizeInch
+          }}</span>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Storage (GB)</label>
           <input
             v-model="form.storageGb"
-            @focus="() => (touched.storageGb = true)"
             type="number"
+            @blur="touched.storageGb = true"
+            @input="touched.storageGb = true"
+            step="1"
             class="w-full border rounded px-2 py-1"
           />
+          <span v-if="errors.storageGb" class="text-red-500 text-sm">{{
+            errors.storageGb
+          }}</span>
         </div>
         <div class="mb-3">
           <label class="block mb-1">Color</label>
           <input
             v-model="form.color"
-            @focus="() => (touched.color = true)"
-            @blur="form.color = form.color.trim()"
+            v-trim
+            @blur="touched.color = true"
+            @input="touched.color = true"
             class="w-full border rounded px-2 py-1"
           />
+          <span v-if="errors.color" class="text-red-500 text-sm">{{
+            errors.color
+          }}</span>
         </div>
         <div class="mb-3">
           <label class="block mb-1"
@@ -381,17 +421,14 @@ const handleDelete = async () => {
           >
           <input
             v-model="form.quantity"
-            @focus="() => (touched.quantity = true)"
-            @blur="
-              touched.quantity = true;
-              updateError();
-            "
             type="number"
+            @blur="touched.quantity = true"
+            @input="touched.quantity = true"
             class="w-full border rounded px-2 py-1"
           />
-          <div v-if="errors.quantity" class="text-red-600 text-sm mt-1">
-            {{ errors.quantity }}
-          </div>
+          <span v-if="errors.quantity" class="text-red-500 text-sm">{{
+            errors.quantity
+          }}</span>
         </div>
         <div class="flex gap-4 mt-6">
           <button
