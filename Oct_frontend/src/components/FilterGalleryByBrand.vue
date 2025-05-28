@@ -78,22 +78,48 @@ const availableBrands = computed(() =>
 );
 
 function addBrand(brand) {
-  emit("update:modelValue", [...props.modelValue, brand]);
+  const newSelectedBrands = [...props.modelValue, brand];
+  emit("update:modelValue", newSelectedBrands);
+  // Save to session storage
+  sessionStorage.setItem("selectedBrands", JSON.stringify(newSelectedBrands));
 }
 
 function removeBrand(brand) {
-  emit(
-    "update:modelValue",
-    props.modelValue.filter((b) => b !== brand)
-  );
+  const newSelectedBrands = props.modelValue.filter((b) => b !== brand);
+  emit("update:modelValue", newSelectedBrands);
+  // Save to session storage
+  sessionStorage.setItem("selectedBrands", JSON.stringify(newSelectedBrands));
 }
 
 function clearAll() {
   emit("update:modelValue", []);
+  // Clear from session storage
+  sessionStorage.removeItem("selectedBrands");
 }
 
 onMounted(async () => {
+  // Load brands from the API
   const result = await fetchBrands();
   allBrands.value = result.map((b) => b.name);
+
+  // Load selected brands from session storage
+  const savedSelectedBrands = sessionStorage.getItem("selectedBrands");
+  if (savedSelectedBrands) {
+    try {
+      const parsedBrands = JSON.parse(savedSelectedBrands);
+      // Check if parsed data is an array before emitting
+      if (Array.isArray(parsedBrands)) {
+        emit("update:modelValue", parsedBrands);
+      } else {
+        console.error("Invalid data in session storage for selectedBrands.");
+        // Optionally clear invalid data
+        sessionStorage.removeItem("selectedBrands");
+      }
+    } catch (e) {
+      console.error("Failed to parse selectedBrands from session storage:", e);
+      // Clear invalid data
+      sessionStorage.removeItem("selectedBrands");
+    }
+  }
 });
 </script>

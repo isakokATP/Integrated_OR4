@@ -15,7 +15,8 @@ const router = useRouter();
 const route = useRoute();
 const message = ref("");
 const allItems = ref([]);
-const selectedBrands = ref([]); // สำหรับเก็บแบรนด์ที่ถูกเลือก
+// Remove the selectedBrands ref as it will be initialized from session storage
+// const selectedBrands = ref([]); // สำหรับเก็บแบรนด์ที่ถูกเลือก
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
 const sortType = ref(sessionStorage.getItem("saleListSortType") || "default");
@@ -30,14 +31,15 @@ const itemsPerPageOptions = ref([5, 10, 20]);
 
 function setItemsPerPage(option) {
   itemsPerPage.value = option;
-
+  // Save itemsPerPage to session storage
+  sessionStorage.setItem("itemsPerPage", option);
+  currentPage.value = 1;
   loadSaleItems();
 }
 
 function setSort(type) {
   sortType.value = type;
   sessionStorage.setItem("saleListSortType", type); // เก็บค่าใน sessionStorage
-  loadSaleItems();
   goToPage(1);
 }
 
@@ -60,24 +62,80 @@ watch(
   { immediate: true }
 );
 
-// Watch for changes in selectedBrands and reload items
-watch(selectedBrands, () => {
-  currentPage.value = 1; // Reset to first page when filters change
+// Handle selectedBrands updates from FilterGalleryByBrand and save to session storage
+function handleSelectedBrandsUpdate(newSelectedBrands) {
+  selectedBrands.value = newSelectedBrands;
+  // Save to session storage
+  sessionStorage.setItem("selectedBrands", JSON.stringify(newSelectedBrands));
+  // Reset to first page when filters change
+
   loadSaleItems();
-});
+}
 
 // เพิ่ม onMounted hook เพื่อโหลดค่า sortType จาก sessionStorage
-onMounted(() => {
+onMounted(async () => {
   // โหลดค่า sortType จาก sessionStorage ทุกครั้งที่ mount
   sortType.value = sessionStorage.getItem("saleListSortType") || "default";
 
+  // Load itemsPerPage from session storage
+  const savedItemsPerPage = sessionStorage.getItem("itemsPerPage");
+  if (savedItemsPerPage) {
+    const parsedItemsPerPage = parseInt(savedItemsPerPage);
+    if (
+      !isNaN(parsedItemsPerPage) &&
+      itemsPerPageOptions.value.includes(parsedItemsPerPage)
+    ) {
+      itemsPerPage.value = parsedItemsPerPage;
+    } else {
+      // Clear invalid data from session storage
+      sessionStorage.removeItem("itemsPerPage");
+    }
+  }
+
+  // Load currentPage from session storage
+  const savedCurrentPage = sessionStorage.getItem("currentPage");
+  if (savedCurrentPage) {
+    const parsedCurrentPage = parseInt(savedCurrentPage);
+    // Check if it's a valid positive integer
+    if (!isNaN(parsedCurrentPage) && parsedCurrentPage >= 1) {
+      currentPage.value = parsedCurrentPage;
+    } else {
+      // Clear invalid data from session storage
+      sessionStorage.removeItem("currentPage");
+    }
+  }
+
+  // Load selectedBrands from session storage
+  const savedSelectedBrands = sessionStorage.getItem("selectedBrands");
+  if (savedSelectedBrands) {
+    try {
+      const parsedBrands = JSON.parse(savedSelectedBrands);
+      if (Array.isArray(parsedBrands)) {
+        selectedBrands.value = parsedBrands; // Initialize selectedBrands with loaded value
+      } else {
+        sessionStorage.removeItem("selectedBrands");
+      }
+    } catch (e) {
+      console.error("Failed to parse selectedBrands from session storage:", e);
+      sessionStorage.removeItem("selectedBrands");
+    }
+  } else {
+    selectedBrands.value = []; // Initialize with empty array if nothing in storage
+  }
+
   loadSaleItems();
 });
 
+// Initialize selectedBrands ref before onMounted
+const selectedBrands = ref([]);
+
 async function loadSaleItems() {
   try {
+    // Temporarily store the requested page before fetching
+    const requestedPage = currentPage.value;
+
     const response = await fetchSaleItemsV2(
-      currentPage.value,
+      requestedPage, // Use the potentially loaded page
       itemsPerPage.value,
       sortType.value,
       selectedBrands.value
@@ -85,6 +143,25 @@ async function loadSaleItems() {
     allItems.value = response.content;
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
+
+    // After fetching totalPages, check if the requested page is still valid
+    if (requestedPage > totalPages.value && totalPages.value > 0) {
+      // If the requested page is now invalid, revert to the last valid page (totalPages)
+      currentPage.value = totalPages.value;
+      // Optionally save this change back to session storage
+      sessionStorage.setItem("currentPage", totalPages.value);
+      // Re-fetch data for the corrected page
+      await loadSaleItems(); // Recursive call to fetch the correct page
+      return; // Exit the current loadSaleItems call
+    } else if (totalPages.value === 0) {
+      // If there are no pages, set currentPage to 1 and clear from session storage
+      currentPage.value = 1;
+      sessionStorage.removeItem("currentPage");
+    } else if (requestedPage !== currentPage.value) {
+      // If for some other reason currentPage changed during fetch (unlikely but defensive)
+      // Ensure session storage is updated with the final valid page
+      sessionStorage.setItem("currentPage", currentPage.value);
+    }
 
     displayedPages();
   } catch (error) {
@@ -161,6 +238,8 @@ function displayedPages() {
 function goToPage(page) {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
+    // Save currentPage to session storage
+    sessionStorage.setItem("currentPage", page);
     loadSaleItems();
   }
 }
@@ -199,7 +278,11 @@ function goToPrevPage() {
     <div class="flex items-center justify-between mb-6">
       <!-- Filter -->
       <div class="flex-1">
-        <FilterGalleryByBrand v-model="selectedBrands" :brands="brands" />
+        <FilterGalleryByBrand
+          :modelValue="selectedBrands"
+          :brands="brands"
+          @update:modelValue="handleSelectedBrandsUpdate"
+        />
       </div>
 
       <!-- Size -->
@@ -303,7 +386,7 @@ function goToPrevPage() {
     <ItemsGallary :items="filteredItems" />
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="flex justify-center mt-4 px-3 py-1">
+    <div v-show="totalPages > 1" class="flex justify-center mt-4 px-3 py-1">
       <nav class="bg-gray-200 flex items-center space-x-2">
         <button
           @click="goToPage(1)"
