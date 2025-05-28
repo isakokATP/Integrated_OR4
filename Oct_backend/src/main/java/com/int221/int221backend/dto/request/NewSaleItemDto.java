@@ -16,14 +16,17 @@ public class NewSaleItemDto {
 
     @NotNull(message = "Brand is required")
     private BrandDto brand;
+
     private String description;
+
     private Integer price;
     private Integer ramGb;
 
     @DecimalMin(value = "0.00", message = "Screen size must not be negative")
     private BigDecimal screenSizeInch;
 
-    private Integer quantity;
+    @Min(value = 0, message = "Quantity must not be negative")
+    private Long quantity;
 
     private Integer storageGb;
 
@@ -42,9 +45,9 @@ public class NewSaleItemDto {
         this.color = color == null ? null : color.trim();
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(Long quantity) {
         if (quantity == null || quantity < 0) {
-            this.quantity = 1;
+            this.quantity = 1L; // Default เป็น 1 ถ้าไม่ส่งหรือส่งค่าติดลบ
         } else {
             this.quantity = quantity;
         }

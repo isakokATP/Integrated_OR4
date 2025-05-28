@@ -54,9 +54,10 @@ public class SaleItemService {
             saleItem.setColor(null);
         }
 
-        if (saleItem.getQuantity() < 0) {
+        if (saleItem.getQuantity() != null && saleItem.getQuantity() < 0L) {
             throw new IllegalArgumentException("Quantity cannot be negative.");
         }
+
         SaleItem savedItem = saleItemRepository.save(saleItem);
         SaleItem reloadedItem = saleItemRepository.findById(savedItem.getId())
                 .orElseThrow(() -> new RuntimeException("Saved item not found."));
@@ -65,8 +66,8 @@ public class SaleItemService {
 
     @Transactional
     public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
-        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0 || saleItemsUpdateDto.getQuantity().toString().isEmpty()) {
-            saleItemsUpdateDto.setQuantity(1);
+        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
+            saleItemsUpdateDto.setQuantity(1L);
         }
         if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
             saleItemsUpdateDto.setColor(null);
