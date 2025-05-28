@@ -3,7 +3,6 @@ import { useRouter } from "vue-router";
 
 const props = defineProps({
   items: Array,
-  loading: Boolean,
 });
 
 const router = useRouter();
@@ -15,14 +14,12 @@ function goToSaleItem(id) {
 
 <template>
   <div class="max-w-6xl mx-auto mt-8">
-    <div v-if="loading" class="text-center text-gray-400">Loading...</div>
-
-    <div v-else>
+    <div>
       <div
         v-if="Array.isArray(items) && items.length === 0"
         class="flex justify-center w-full"
       >
-        No sale item
+        no sale item
       </div>
 
       <div

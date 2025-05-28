@@ -12,7 +12,6 @@ import Notification from "@/components/Notification.vue";
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
-const isLoading = ref(true);
 const errorMsg = ref("");
 const message = ref("");
 const originalData = ref(null); // Store original data for comparison
@@ -98,8 +97,6 @@ onMounted(async () => {
     };
   } catch (error) {
     errorMsg.value = "Error loading item: " + error.message;
-  } finally {
-    isLoading.value = false;
   }
 });
 
@@ -183,8 +180,7 @@ const handleDelete = async () => {
 <template>
   <Header />
   <Notification :message="message" />
-  <div v-if="isLoading">Loading...</div>
-  <div v-else-if="errorMsg" class="text-red-600 text-center mt-8">
+  <div v-if="errorMsg" class="text-red-600 text-center mt-8">
     {{ errorMsg }}
   </div>
   <div v-else class="max-w-4xl mx-auto p-6">
@@ -319,6 +315,5 @@ const handleDelete = async () => {
         </div>
       </div>
     </form>
-    
   </div>
 </template>

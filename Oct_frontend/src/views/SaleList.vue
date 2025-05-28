@@ -15,7 +15,6 @@ const router = useRouter();
 const route = useRoute();
 const message = ref("");
 const allItems = ref([]);
-const loading = ref(false);
 const selectedBrands = ref([]); // สำหรับเก็บแบรนด์ที่ถูกเลือก
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
@@ -76,7 +75,6 @@ onMounted(() => {
 });
 
 async function loadSaleItems() {
-  loading.value = true;
   try {
     const response = await fetchSaleItemsV2(
       currentPage.value,
@@ -91,8 +89,6 @@ async function loadSaleItems() {
     displayedPages();
   } catch (error) {
     console.error("Failed to load sale items:", error);
-  } finally {
-    loading.value = false;
   }
 }
 
@@ -304,7 +300,7 @@ function goToPrevPage() {
     </div>
 
     <!-- แสดงรายการสินค้า -->
-    <ItemsGallary :items="filteredItems" :loading="loading" />
+    <ItemsGallary :items="filteredItems" />
 
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="flex justify-center mt-4 px-3 py-1">
