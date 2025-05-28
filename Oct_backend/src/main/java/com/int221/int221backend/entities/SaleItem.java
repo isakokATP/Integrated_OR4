@@ -1,6 +1,7 @@
 package com.int221.int221backend.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,8 +38,9 @@ public class SaleItem {
     @Column(name = "color", length = 40, nullable = true)
     private String color;
 
-    @Column(name = "quantity",nullable = false)
-    private Integer quantity = 1;
+    @Column(name = "quantity", nullable = false)
+    @Min(0)
+    private Long quantity = 1L;
 
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdOn;

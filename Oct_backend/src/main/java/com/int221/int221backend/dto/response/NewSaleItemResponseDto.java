@@ -16,7 +16,7 @@ public class NewSaleItemResponseDto {
     private Integer price;
     private Integer ramGb;
     private BigDecimal screenSizeInch;
-    private Integer quantity;
+    private Long quantity;
     private Integer storageGb;
     private String color;
     private ZonedDateTime createdOn;
