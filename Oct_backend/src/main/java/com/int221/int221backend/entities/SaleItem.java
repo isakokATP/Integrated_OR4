@@ -34,7 +34,7 @@ public class SaleItem {
     @Column(name = "storage_gb")
     private Integer storageGb;
 
-    @Column(name = "color", length = 30, nullable = true)
+    @Column(name = "color", length = 40, nullable = true)
     private String color;
 
     @Column(name = "quantity",nullable = false)
