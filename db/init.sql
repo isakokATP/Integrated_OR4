@@ -32,7 +32,7 @@ CREATE TABLE sale_items (
                             screen_size_inch DECIMAL(4,2) DEFAULT NULL,
                             storage_gb INT DEFAULT NULL,
                             color VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-                            quantity INT NOT NULL DEFAULT 1,
+                            quantity BIGINT NOT NULL DEFAULT 1,
                             created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             FOREIGN KEY (brand_id) REFERENCES brands(id)
