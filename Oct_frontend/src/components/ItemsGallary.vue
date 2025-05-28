@@ -3,7 +3,6 @@ import { useRouter } from "vue-router";
 
 const props = defineProps({
   items: Array,
-  loading: Boolean
 });
 
 const router = useRouter();
@@ -15,14 +14,12 @@ function goToSaleItem(id) {
 
 <template>
   <div class="max-w-6xl mx-auto mt-8">
-    <div v-if="loading" class="text-center text-gray-400">Loading...</div>
-
-    <div v-else>
+    <div>
       <div
         v-if="Array.isArray(items) && items.length === 0"
         class="flex justify-center w-full"
       >
-        No sale item
+        no sale item
       </div>
 
       <div
@@ -33,7 +30,7 @@ function goToSaleItem(id) {
           v-for="item in items"
           :key="item.id"
           @click="goToSaleItem(item.id)"
-          class="bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
+          class="itbms-row bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
         >
           <img
             src="../assets/iphone.png"
@@ -41,12 +38,18 @@ function goToSaleItem(id) {
             class="w-full h-56 object-cover"
           />
           <div class="p-4 text-center" style="background-color: #e3f2fd">
-            <strong class="block text-lg">{{ item.brandName }}</strong>
-            <p class="text-gray-600">{{ item.model }}</p>
-            <p class="text-sm text-gray-500">
-              {{ item.ramGb ?? "-" }}/{{ item.storageGb ?? "-" }} GB
-            </p>
-            <div class="text-blue-800 font-bold mt-2">
+            <strong class="itbms-brand lock text-lg">{{
+              item.brandName
+            }}</strong>
+            <p class="itbms-model text-gray-600">{{ item.model }}</p>
+            <span class="itbms-ramGb text-sm text-gray-500">
+              {{ item.ramGb ?? "-" }}
+            </span>
+            <span class="itbms-storageGb text-sm text-gray-500">
+              / {{ item.storageGb ?? "-" }}
+            </span>
+            <span class="itbms-storageGb-unit text-sm text-gray-500"> GB </span>
+            <div class="itbms-price text-blue-800 font-bold mt-2">
               Baht {{ item.price.toLocaleString() }}
             </div>
           </div>

@@ -45,25 +45,56 @@ const handleEdit = () => {
 };
 
 const handleDelete = async () => {
-  if (confirm("Are you sure you want to delete this item?")) {
-    try {
-      const response = await deleteSaleItem(id);
-      if (response.ok || response.status === 200) {
-        router.push({
-          name: "sale-items-page",
-          query: { message: "Item deleted successfully" },
-        });
-      } else {
-        throw new Error("Failed to delete item");
-      }
-    } catch (error) {
-      console.error("Error:", error);
+  // Replace browser confirm with custom dialog
+  openDeleteDialog();
+};
+
+// เพิ่ม state สำหรับ dialog
+const showConfirm = ref(false);
+const itemToDelete = ref(null); // ใช้ item.value ที่โหลดมา
+
+// Function เพื่อเปิด dialog
+const openDeleteDialog = () => {
+  // item.value ถูกโหลดมาแล้วใน onMounted
+  itemToDelete.value = item.value; // กำหนด item ที่จะลบให้ dialog
+  showConfirm.value = true; // แสดง dialog
+};
+
+// Function เมื่อกด Confirm
+const confirmDelete = async () => {
+  if (!itemToDelete.value) return; // ป้องกันถ้าไม่มี item ให้ลบ
+
+  try {
+    const response = await deleteSaleItem(itemToDelete.value.id);
+    if (response.ok || response.status === 200) {
+      // หากลบสำเร็จ ให้ไปที่หน้ารายการและแสดงข้อความ
       router.push({
         name: "sale-items-page",
-        query: { message: "Item has been deleted" },
+        query: { message: "Item deleted successfully" },
       });
+    } else {
+      // หากลบไม่สำเร็จ (เช่น server error อื่นๆ)
+      // สามารถจัดการ error message ตรงนี้ได้ ถ้าต้องการแสดงใน dialog
+      throw new Error("Failed to delete item");
     }
+  } catch (error) {
+    console.error("Error deleting item:", error);
+    // หากมี error จาก API (เช่น 404)
+    router.push({
+      name: "sale-items-page",
+      query: { message: "Item has been deleted or not found" }, // หรือข้อความ error อื่นๆ
+    });
+  } finally {
+    // ไม่ว่าจะสำเร็จหรือไม่ ให้ปิด dialog
+    showConfirm.value = false;
+    itemToDelete.value = null; // เคลียร์ข้อมูล itemToDelete
   }
+};
+
+// Function เมื่อกด Cancel
+const cancelDelete = () => {
+  showConfirm.value = false; // ปิด dialog
+  itemToDelete.value = null; // เคลียร์ข้อมูล itemToDelete
 };
 </script>
 
@@ -166,15 +197,39 @@ const handleDelete = async () => {
         <div class="flex gap-4 mt-6">
           <button
             @click="handleEdit"
-            class="w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"
+            class="itbms-edit-button w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"
           >
             Edit
           </button>
           <button
             @click="handleDelete"
-            class="w-24 bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
+            class="itbms-delete-button w-24 bg-red-700 text-white px-4 py-2 rounded hover:bg-red-500"
           >
             Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div
+      v-if="showConfirm"
+      class="itbms-message fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
+    >
+      <div class="bg-white p-6 rounded shadow-lg text-center">
+        <div class="mb-4">Do you want to delete this sale item?</div>
+        <div class="flex justify-center space-x-2">
+          <button
+            class="itbms-confirm-button btn bg-red-700 hover:bg-red-500 text-white px-4 py-2 rounded"
+            @click="confirmDelete"
+          >
+            Confirm
+          </button>
+          <button
+            class="itbms-cancel-button btn bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+            @click="cancelDelete"
+          >
+            Cancel
           </button>
         </div>
       </div>

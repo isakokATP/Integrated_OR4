@@ -9,14 +9,22 @@ const searchQuery = ref("");
 <template>
   <!-- แถบบน -->
   <div class="w-full bg-blue-900 h-12 flex items-center justify-end px-8">
-    <a href="#signin" class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition">Signin</a>
-    <a href="#register" class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition">Register</a>
+    <a
+      href="#signin"
+      class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
+      >Signin</a
+    >
+    <a
+      href="#register"
+      class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
+      >Register</a
+    >
   </div>
   <!-- ส่วน header หลัก -->
   <div class="container mx-auto px-5 py-6 flex items-center justify-between">
     <!-- logo + search -->
     <div class="flex items-center space-x-4 flex-1">
-      <router-link name="home-page">
+      <router-link to="/">
         <span class="text-3xl font-bold">ITB MShop</span>
       </router-link>
       <div class="w-full max-w-md">

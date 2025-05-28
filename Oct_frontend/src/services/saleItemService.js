@@ -39,10 +39,10 @@ async function fetchSaleItemsV2(
     let sortDirection = "";
 
     if (sortType === "asc") {
-      sortField = "brandName";
+      sortField = "brand.name";
       sortDirection = "asc";
     } else if (sortType === "desc") {
-      sortField = "brandName";
+      sortField = "brand.name";
       sortDirection = "desc";
     } else {
       // Default sort
@@ -97,10 +97,6 @@ async function createSaleItem(saleItemData) {
   try {
     console.log("API URL:", URL);
     console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items`);
-    console.log(
-      "Sending data to server:",
-      JSON.stringify(saleItemData, null, 2)
-    );
 
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
