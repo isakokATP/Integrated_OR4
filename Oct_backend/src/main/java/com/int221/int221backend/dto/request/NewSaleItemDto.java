@@ -26,6 +26,8 @@ public class NewSaleItemDto {
     private Integer quantity;
 
     private Integer storageGb;
+
+    @Size(max = 40, message = "Color must not exceed 40 characters")
     private String color;
 
     public void setModel(String model) {
