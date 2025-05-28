@@ -9,6 +9,7 @@ import {
   fetchSaleItems,
   fetchSaleItemsV2,
 } from "../services/saleItemService.js";
+import { onBeforeMount } from "vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -70,103 +71,10 @@ watch(selectedBrands, () => {
 onMounted(() => {
   // โหลดค่า sortType จาก sessionStorage ทุกครั้งที่ mount
   sortType.value = sessionStorage.getItem("saleListSortType") || "default";
+
   loadSaleItems();
 });
 
-const startPage = ref(1);
-const endPage = ref(10);
-
-const displayedPages = computed(() => {
-  // ใช้ค่า startPage และ endPage ในการสร้าง array ของหน้า
-  const pages = [];
-  const actualStart = Math.max(1, startPage.value);
-  const actualEnd = Math.min(totalPages.value, endPage.value);
-
-  if (actualStart > actualEnd) {
-    // กรณี totalPages น้อยมาก หรือไม่มีหน้าเลย
-    if (totalPages.value >= 1) return [1];
-    return []; // หรือ [] ถ้าไม่มีหน้าเลย
-  }
-
-  for (let i = actualStart; i <= actualEnd; i++) {
-    pages.push(i);
-  }
-
-  // กรณี totalPages เป็น 0 หรือ 1 และ window ไม่ได้แสดง 1
-  if (totalPages.value >= 1 && pages.length === 0 && currentPage.value >= 1) {
-    return [1];
-  }
-
-  return pages;
-});
-
-const goToNextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    const windowSize = 10;
-    // ถ้าหน้าปัจจุบันเกิน endPage และ endPage ยังไม่ถึงหน้าสุดท้าย ให้เลื่อน window
-    if (currentPage.value > endPage.value && endPage.value < totalPages.value) {
-      let newStart = currentPage.value - Math.floor(windowSize / 2);
-      newStart = Math.max(1, newStart); // ตรวจสอบไม่ให้ start น้อยกว่า 1
-      let newEnd = newStart + windowSize - 1;
-      newEnd = Math.min(totalPages.value, newEnd); // ตรวจสอบไม่ให้ end เกิน totalPages
-
-      // ปรับ start อีกครั้งเผื่อ end ชนขอบ totalPages
-      if (newEnd === totalPages.value) {
-        newStart = Math.max(1, newEnd - windowSize + 1);
-      }
-      startPage.value = newStart;
-      endPage.value = newEnd;
-    }
-    // ถ้าหน้าปัจจุบันชน endPage และ endPage ยังไม่ถึงหน้าสุดท้าย ให้ขยับ window
-    else if (
-      currentPage.value === endPage.value &&
-      endPage.value < totalPages.value
-    ) {
-      startPage.value++;
-      endPage.value++;
-    }
-
-    loadSaleItems();
-  }
-};
-
-const goToPrevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    const windowSize = 10;
-    // ถ้าหน้าปัจจุบันน้อยกว่า startPage และ startPage ยังไม่ถึงหน้าแรก ให้เลื่อน window
-    if (currentPage.value < startPage.value && startPage.value > 1) {
-      let newEnd = currentPage.value + Math.floor(windowSize / 2);
-      newEnd = Math.min(totalPages.value, newEnd); // ตรวจสอบไม่ให้ end เกิน totalPages
-      let newStart = newEnd - windowSize + 1;
-      newStart = Math.max(1, newStart); // ตรวจสอบไม่ให้ start น้อยกว่า 1
-
-      // ปรับ end อีกครั้งเผื่อ start ชนขอบ 1
-      if (newStart === 1) {
-        newEnd = Math.min(totalPages.value, newStart + windowSize - 1);
-      }
-      startPage.value = newStart;
-      endPage.value = newEnd;
-    }
-    // ถ้าหน้าปัจจุบันชน startPage และ startPage ยังไม่ถึงหน้าแรก ให้ขยับ window
-    else if (currentPage.value === startPage.value && startPage.value > 1) {
-      startPage.value--;
-      endPage.value--;
-    }
-
-    loadSaleItems();
-  }
-};
-
-const goToPage = (page) => {
-  // การกดปุ่มหมายเลขหน้าโดยตรง ไม่ทำให้ window เลื่อน
-  // แค่เปลี่ยนหน้าปัจจุบันและโหลดข้อมูล
-  currentPage.value = page;
-  loadSaleItems();
-};
-
-// ปรับ loadSaleItems เพื่อกำหนดค่า startPage และ endPage เริ่มต้นและเมื่อ totalPages เปลี่ยน
 async function loadSaleItems() {
   loading.value = true;
   try {
@@ -177,49 +85,10 @@ async function loadSaleItems() {
       selectedBrands.value
     );
     allItems.value = response.content;
-    const oldTotalPages = totalPages.value; // เก็บค่า totalPages เก่า
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
 
-    const windowSize = 10;
-
-    // ตรวจสอบว่าต้องปรับ window displayedPages หรือไม่
-    // 1. ถ้า totalPages เปลี่ยน หรือ
-    // 2. ถ้า currentPage อยู่นอก window ปัจจุบัน หรือ
-    // 3. นี่คือการโหลดครั้งแรก (totalElements.value ก่อนหน้านี้เป็น 0 หรือยังไม่ได้โหลด)
-    const shouldAdjustWindow =
-      oldTotalPages !== totalPages.value ||
-      currentPage.value < startPage.value ||
-      currentPage.value > endPage.value ||
-      totalElements.value === 0;
-
-    if (shouldAdjustWindow) {
-      if (totalPages.value <= windowSize) {
-        // ถ้าจำนวนหน้าน้อยกว่าหรือเท่ากับ windowSize ให้แสดงทั้งหมด
-        startPage.value = 1;
-        endPage.value = totalPages.value > 0 ? totalPages.value : 1; // กำหนดให้เป็น 1 ถ้า totalPages เป็น 0
-      } else {
-        // ถ้าจำนวนหน้ามากกว่า windowSize ให้คำนวณ window ที่มี currentPage อยู่ตรงกลาง
-        const middleOfWindow = Math.floor(windowSize / 2);
-        let newStart = Math.max(1, currentPage.value - middleOfWindow);
-        let newEnd = newStart + windowSize - 1;
-
-        // ปรับ end ถ้าเกิน totalPages
-        if (newEnd > totalPages.value) {
-          newEnd = totalPages.value;
-          newStart = Math.max(1, newEnd - windowSize + 1); // ปรับ start กลับ
-        }
-
-        // ปรับ start ถ้าน้อยกว่า 1 (เกิดจาก newEnd ไปชน totalPages)
-        if (newStart < 1) {
-          newStart = 1;
-          newEnd = Math.min(totalPages.value, newStart + windowSize - 1);
-        }
-
-        startPage.value = newStart;
-        endPage.value = newEnd;
-      }
-    }
+    displayedPages();
   } catch (error) {
     console.error("Failed to load sale items:", error);
   } finally {
@@ -262,6 +131,57 @@ const filteredItems = computed(() => {
 
   return sortedItems;
 });
+
+const startPage = ref(1);
+const windowsize = ref(10); // กำหนดให้แสดง 10 หน้า
+const element = ref([]);
+
+function displayedPages() {
+  element.value = [];
+
+  if (totalPages.value <= 10) {
+    // ถ้าจำนวนหน้าน้อยกว่าหรือเท่ากับ 10 แสดงทุกหน้า
+    for (let i = 1; i <= totalPages.value; i++) {
+      element.value.push(i);
+    }
+  } else {
+    // ถ้าจำนวนหน้ามากกว่า 10
+    let start = Math.max(1, currentPage.value - 4); // ให้หน้าปัจจุบันอยู่ตรงกลาง
+    let end = start + 9; // แสดง 10 หน้า (start + 9)
+
+    // ปรับค่าให้ไม่เกินจำนวนหน้าทั้งหมด
+    if (end > totalPages.value) {
+      end = totalPages.value;
+      start = Math.max(1, end - 9);
+    }
+
+    for (let i = start; i <= end; i++) {
+      element.value.push(i);
+    }
+  }
+  return element.value;
+}
+
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    loadSaleItems();
+  }
+}
+
+function goToNextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    loadSaleItems();
+  }
+}
+
+function goToPrevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    loadSaleItems();
+  }
+}
 </script>
 
 <template>
@@ -387,10 +307,7 @@ const filteredItems = computed(() => {
     <ItemsGallary :items="filteredItems" :loading="loading" />
 
     <!-- Pagination -->
-    <div
-      v-if="totalPages > 1"
-      class="flex justify-center mt-4 px-3 py-1"
-    >
+    <div v-if="totalPages > 1" class="flex justify-center mt-4 px-3 py-1">
       <nav class="bg-gray-200 flex items-center space-x-2">
         <button
           @click="goToPage(1)"
@@ -406,7 +323,7 @@ const filteredItems = computed(() => {
         >
           Prev
         </button>
-        <template v-for="pageNumber in displayedPages" :key="pageNumber">
+        <template v-for="pageNumber in element" :key="pageNumber">
           <button
             @click="goToPage(pageNumber)"
             :disabled="currentPage === pageNumber"
