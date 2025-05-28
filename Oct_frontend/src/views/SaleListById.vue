@@ -197,7 +197,7 @@ const cancelDelete = () => {
         <div class="flex gap-4 mt-6">
           <button
             @click="handleEdit"
-            class="w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"
+            class="itbms-edit-button w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"
           >
             Edit
           </button>

@@ -42,8 +42,8 @@
           >
           <select
             v-model="form.brandId"
-            @blur="touched.brandId = true"
-            @change="touched.brandId = true"
+            @blur="handleBlur('brandId')"
+            @change="handleBlur('brandId')"
             class="itbms-brand w-full border rounded px-2 py-1"
           >
             <option value="">Select Brand</option>
@@ -51,9 +51,11 @@
               {{ brand.name }}
             </option>
           </select>
-          <span v-if="errors.brandId" class="text-red-500 text-sm">{{
-            errors.brandId
-          }}</span>
+          <span
+            v-if="fieldErrors.brandId"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.brandId }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -63,17 +65,14 @@
           <input
             v-model="form.model"
             class="itbms-model w-full border rounded px-2 py-1"
-            @focus="() => (touched.model = true)"
-            @blur="
-              () => {
-                form.model = form.model.trim();
-                updateError();
-              }
-            "
-            @input="updateError"
+            @blur="handleBlur('model')"
+            @input="handleBlur('model')"
           />
-          <span v-if="errors.model" class="text-red-600 text-sm">
-            {{ errors.model }}
+          <span
+            v-if="fieldErrors.model"
+            class="itbms-message text-red-600 text-sm"
+          >
+            {{ fieldErrors.model }}
           </span>
         </div>
 
@@ -84,15 +83,17 @@
           <input
             v-model="form.price"
             type="number"
-            @blur="touched.price = true"
-            @input="touched.price = true"
+            @blur="handleBlur('price')"
+            @input="handleBlur('price')"
             step="1"
             class="itbms-price w-full border rounded px-2 py-1"
           />
 
-          <span v-if="errors.price" class="text-red-500 text-sm">{{
-            errors.price
-          }}</span>
+          <span
+            v-if="fieldErrors.price"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.price }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -102,13 +103,15 @@
           <textarea
             v-model="form.description"
             v-trim
-            @blur="touched.description = true"
-            @input="touched.description = true"
+            @blur="handleBlur('description')"
+            @input="handleBlur('description')"
             class="w-full border rounded px-2 py-1 itbms-description"
           ></textarea>
-          <span v-if="errors.description" class="text-red-500 text-sm">{{
-            errors.description
-          }}</span>
+          <span
+            v-if="fieldErrors.description"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.description }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -116,14 +119,16 @@
           <input
             v-model="form.ramGb"
             type="number"
-            @blur="touched.ramGb = true"
-            @input="touched.ramGb = true"
+            @blur="handleBlur('ramGb')"
+            @input="handleBlur('ramGb')"
             step="1"
             class="w-full border rounded px-2 py-1 itbms-ramGb"
           />
-          <span v-if="errors.ramGb" class="text-red-500 text-sm">{{
-            errors.ramGb
-          }}</span>
+          <span
+            v-if="fieldErrors.ramGb"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.ramGb }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -132,13 +137,15 @@
             v-model="form.screenSizeInch"
             type="number"
             step="0.01"
-            @blur="touched.screenSizeInch = true"
-            @input="touched.screenSizeInch = true"
+            @blur="handleBlur('screenSizeInch')"
+            @input="handleBlur('screenSizeInch')"
             class="w-full border rounded px-2 py-1 itbms-screenSizeInch"
           />
-          <span v-if="errors.screenSizeInch" class="text-red-500 text-sm">{{
-            errors.screenSizeInch
-          }}</span>
+          <span
+            v-if="fieldErrors.screenSizeInch"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.screenSizeInch }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -146,14 +153,16 @@
           <input
             v-model="form.storageGb"
             type="number"
-            @blur="touched.storageGb = true"
-            @input="touched.storageGb = true"
+            @blur="handleBlur('storageGb')"
+            @input="handleBlur('storageGb')"
             step="1"
             class="w-full border rounded px-2 py-1 itbms-storageGb"
           />
-          <span v-if="errors.storageGb" class="text-red-500 text-sm">{{
-            errors.storageGb
-          }}</span>
+          <span
+            v-if="fieldErrors.storageGb"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.storageGb }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -161,13 +170,15 @@
           <input
             v-model="form.color"
             v-trim
-            @blur="touched.color = true"
-            @input="touched.color = true"
+            @blur="handleBlur('color')"
+            @input="handleBlur('color')"
             class="w-full border rounded px-2 py-1 itbms-color"
           />
-          <span v-if="errors.color" class="text-red-500 text-sm">{{
-            errors.color
-          }}</span>
+          <span
+            v-if="fieldErrors.color"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.color }}</span
+          >
         </div>
 
         <div class="mb-3">
@@ -177,20 +188,22 @@
           <input
             v-model="form.quantity"
             type="number"
-            @blur="touched.quantity = true"
-            @input="touched.quantity = true"
+            @blur="handleBlur('quantity')"
+            @input="handleBlur('quantity')"
             class="w-full border rounded px-2 py-1 itbms-quantity"
           />
-          <span v-if="errors.quantity" class="text-red-500 text-sm">{{
-            errors.quantity
-          }}</span>
+          <span
+            v-if="fieldErrors.quantity"
+            class="itbms-message text-red-500 text-sm"
+            >{{ fieldErrors.quantity }}</span
+          >
         </div>
 
         <div class="flex gap-4 mt-6">
           <button
             type="submit"
             class="itbms-save-button bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            :disabled="!mandatoryValid"
+            :disabled="!isFormValid"
           >
             Save
           </button>
@@ -209,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, reactive } from "vue";
 import { createSaleItem, fetchBrands } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import { useRouter } from "vue-router";
@@ -235,88 +248,98 @@ const form = ref({
   screenSizeInch: "",
   storageGb: "",
   color: "",
-  quantity: "1",
+  quantity: "",
 });
 
-const touched = ref({
-  brandId: false,
-  model: false,
-  price: false,
-  description: false,
-  ramGb: false,
-  screenSizeInch: false,
-  storageGb: false,
-  color: false,
-  quantity: false,
-});
+const fieldErrors = reactive({});
 
-function updateError(field) {
-  if (field && touched.value.hasOwnProperty(field)) {
-    touched.value[field] = true;
+const validateField = (field) => {
+  let error = null;
+  const value = form.value[field];
+
+  switch (field) {
+    case "brandId":
+      if (!value) error = "Brand must be selected.";
+      break;
+    case "model":
+      const trimmedModel = value ? value.trim() : "";
+      if (!trimmedModel || trimmedModel.length > 60)
+        error = "Model must be 1-60 characters long.";
+      break;
+    case "price":
+      if (!/^[0-9]+$/.test(value) || parseInt(value) < 0)
+        error = "Price must be non-negative integer.";
+      break;
+    case "description":
+      const trimmedDescription = value ? value.trim() : "";
+      if (!trimmedDescription || trimmedDescription.length > 16384)
+        error = "Description must be 1-16,384 characters long.";
+      break;
+    case "ramGb":
+      if (value !== "" && (!/^[0-9]+$/.test(value) || parseInt(value) <= 0))
+        error = "RAM size must be positive integer or not specified.";
+      break;
+    case "screenSizeInch":
+      if (value !== "") {
+        const val = parseFloat(value);
+        if (isNaN(val) || val <= 0 || !/^\d+(\.\d{1,2})?$/.test(value)) {
+          error =
+            "Screen size must be positive number with at most 2 decimal points or not specified.";
+        }
+      }
+      break;
+    case "storageGb":
+      if (value !== "" && (!/^[0-9]+$/.test(value) || parseInt(value) <= 0))
+        error = "Storage size must be positive integer or not specified.";
+      break;
+    case "color":
+      if (value && value.length > 40)
+        error = "Color must be 1-40 characters long or not specified.";
+      break;
+    case "quantity":
+      if (!/^[0-9]+$/.test(value) || parseInt(value) < 0)
+        error = "Quantity must be non-negative integer.";
+      break;
   }
-}
 
-const errors = computed(() => {
-  const e = {};
-  if (touched.value.brandId && !form.value.brandId)
-    e.brandId = "* Brand must be selected.";
-  if (
-    touched.value.model &&
-    (form.value.model.trim().length < 1 || form.value.model.length > 60)
-  )
-    e.model = "* Model must be 1-60 characters long.";
-  if (
-    touched.value.description &&
-    (form.value.description.trim().length < 1 ||
-      form.value.description.length > 16384)
-  )
-    e.description = "* Description must be 1-16,384 characters long.";
-  if (
-    touched.value.price &&
-    (!/^[0-9]+$/.test(form.value.price) || parseInt(form.value.price) < 0)
-  )
-    e.price = "* Price must be non-negative integer.";
-  if (
-    touched.value.ramGb &&
-    form.value.ramGb !== "" &&
-    (!/^[0-9]+$/.test(form.value.ramGb) || parseInt(form.value.ramGb) <= 0)
-  )
-    e.ramGb = "* RAM size must be positive integer or not specified.";
-  if (touched.value.screenSizeInch && form.value.screenSizeInch !== "") {
-    const val = parseFloat(form.value.screenSizeInch);
-    if (
-      isNaN(val) ||
-      val <= 0 ||
-      val >= 100 ||
-      !/^\d+(\.\d{1,2})?$/.test(form.value.screenSizeInch)
-    ) {
-      e.screenSizeInch =
-        "* Screen size must be in the range of units to tens with at most 2 decimal points or not specified.";
+  fieldErrors[field] = error;
+  return !error;
+};
+
+const validateAllFields = () => {
+  let allValid = true;
+  const fieldsToValidate = [
+    "brandId",
+    "model",
+    "price",
+    "description",
+    "ramGb",
+    "screenSizeInch",
+    "storageGb",
+    "color",
+    "quantity",
+  ];
+  fieldsToValidate.forEach((field) => {
+    if (!validateField(field)) {
+      allValid = false;
     }
-  }
-  if (
-    touched.value.storageGb &&
-    form.value.storageGb !== "" &&
-    (!/^[0-9]+$/.test(form.value.storageGb) ||
-      parseInt(form.value.storageGb) <= 0)
-  )
-    e.storageGb = "* Storage size must be positive integer or not specified.";
-  if (
-    touched.value.color &&
-    form.value.color &&
-    (form.value.color.length < 1 || form.value.color.length > 40)
-  )
-    e.color = "* Color must be 1-40 characters long or not specified.";
-  if (
-    touched.value.quantity &&
-    form.value.quantity !== "" &&
-    (!/^[0-9]+$/.test(form.value.quantity) || parseInt(form.value.quantity) < 0)
-  )
-    e.quantity = "* Quantity must be non-negative integer.";
-  return e;
-});
+  });
+  return allValid;
+};
 
-const isFormValid = computed(() => Object.keys(errors.value).length === 0);
+const isFormValid = computed(() => {
+  const hasValidationErrors = Object.values(fieldErrors).some(
+    (error) => error !== null && error !== ""
+  );
+  return (
+    !hasValidationErrors &&
+    form.value.brandId &&
+    form.value.model.trim() &&
+    form.value.price !== "" &&
+    form.value.description.trim() &&
+    form.value.quantity !== ""
+  );
+});
 
 function handleCancel() {
   form.value = {
@@ -330,36 +353,13 @@ function handleCancel() {
     color: "",
     quantity: "",
   };
-  router.push({ name: "sale-items-page" });
+  router.push({ name: "sale-items-list-page" });
 }
 
-const mandatoryValid = computed(() => {
-  const { brandId, model, price, description, quantity } = form.value;
-  const m = model.trim();
-  const d = description.trim();
-
-  return (
-    brandId &&
-    m.length >= 1 &&
-    m.length <= 60 &&
-    /^[0-9]+$/.test(price) &&
-    +price >= 0 &&
-    d.length >= 1 &&
-    d.length <= 16384 &&
-    quantity !== "" &&
-    /^[0-9]+$/.test(quantity) &&
-    +quantity >= 0
-  );
-});
-
 async function handleSave() {
-  // Mark all fields as touched
-  Object.keys(touched.value).forEach((key) => {
-    touched.value[key] = true;
-  });
-
-  // Block save if mandatory fields are invalid
-  if (!mandatoryValid.value) return;
+  if (!validateAllFields()) {
+    return;
+  }
 
   const brandObj = brands.value.find(
     (b) => b.id === parseInt(form.value.brandId)
@@ -373,7 +373,7 @@ async function handleSave() {
     screenSizeInch: form.value.screenSizeInch
       ? parseFloat(form.value.screenSizeInch)
       : null,
-    quantity: form.value.quantity === "" ? 1 : parseInt(form.value.quantity),
+    quantity: parseInt(form.value.quantity),
     storageGb: form.value.storageGb ? parseInt(form.value.storageGb) : null,
     color: form.value.color.trim() || null,
   };
@@ -389,6 +389,10 @@ async function handleSave() {
     alert("เกิดข้อผิดพลาด: " + err);
   }
 }
+
+const handleBlur = (field) => {
+  validateField(field);
+};
 </script>
 
 <style scoped>

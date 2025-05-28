@@ -30,8 +30,15 @@
             v-trim
             type="text"
             class="itbms-name input input-bordered w-full"
+            @blur="handleBlur('name')"
             required
           />
+          <div
+            v-if="fieldErrors.name"
+            class="itbms-message text-red-500 text-sm mt-1"
+          >
+            {{ fieldErrors.name }}
+          </div>
         </div>
         <div>
           <label class="lock mb-1 font-medium" for="websiteUrl"
@@ -43,7 +50,14 @@
             v-trim
             type="url"
             class="itbms-websiteUrl input input-bordered w-full"
+            @blur="handleBlur('websiteUrl')"
           />
+          <div
+            v-if="fieldErrors.websiteUrl"
+            class="itbms-message text-red-500 text-sm mt-1"
+          >
+            {{ fieldErrors.websiteUrl }}
+          </div>
         </div>
         <div class="flex items-center gap-2">
           <label class="font-medium" for="isActive">Active</label>
@@ -64,13 +78,20 @@
             v-trim
             type="text"
             class="itbms-countryOfOrigin input input-bordered w-full"
+            @blur="handleBlur('countryOfOrigin')"
           />
+          <div
+            v-if="fieldErrors.countryOfOrigin"
+            class="itbms-message text-red-500 text-sm mt-1"
+          >
+            {{ fieldErrors.countryOfOrigin }}
+          </div>
         </div>
         <div class="flex gap-2 mt-4">
           <button
             type="submit"
             class="itbms-save-button btn text-white bg-blue-900 hover:bg-blue-500"
-            :disabled="!isFormValid || !form.name.trim()"
+            :disabled="!isFormValid"
             :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
           >
             Save
@@ -90,13 +111,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { createBrand } from "@/services/saleItemService";
 import Header from "@/components/Header.vue";
 
 const router = useRouter();
 const error = ref("");
+const fieldErrors = reactive({});
 
 const form = ref({
   name: "",
@@ -105,12 +127,71 @@ const form = ref({
   countryOfOrigin: "",
 });
 
+const validateField = (field) => {
+  let error = null;
+  const value = form.value[field];
+
+  switch (field) {
+    case "name":
+      const trimmedName = value ? value.trim() : "";
+      if (!trimmedName) error = "Brand name must be 1-30 characters long.";
+      else if (trimmedName.length > 30)
+        error = "Brand name must be 1-30 characters long.";
+      break;
+    case "countryOfOrigin":
+      if (value) {
+        const trimmedCountry = value.trim();
+        if (!trimmedCountry)
+          error =
+            "Brand country of origin must be 1-80 characters long or not specified.";
+        else if (trimmedCountry.length > 80)
+          error =
+            "Brand country of origin must be 1-80 characters long or not specified.";
+      }
+      break;
+    case "websiteUrl":
+      if (value) {
+        const trimmedUrl = value.trim();
+        if (!trimmedUrl)
+          error = "Brand URL must be a valid URL or not specified.";
+        else {
+          try {
+            new URL(trimmedUrl);
+          } catch {
+            error = "Brand URL must be a valid URL or not specified.";
+          }
+        }
+      }
+      break;
+  }
+
+  fieldErrors[field] = error;
+  return !error;
+};
+
+const validateAllFields = () => {
+  let allValid = true;
+  for (const field in form.value) {
+    if (!validateField(field)) {
+      allValid = false;
+    }
+  }
+  return allValid;
+};
+
 const isFormValid = computed(() => {
-  return form.value.name.trim() !== "";
+  const hasValidationErrors = Object.values(fieldErrors).some(
+    (error) => error !== null && error !== ""
+  );
+  return !hasValidationErrors && form.value.name.trim() !== "";
 });
 
 const handleSubmit = async () => {
   error.value = "";
+  if (!validateAllFields()) {
+    return;
+  }
+
   try {
     await createBrand({
       name: form.value.name.trim(),
@@ -127,6 +208,10 @@ const handleSubmit = async () => {
   } catch (err) {
     error.value = err.message || "Failed to add brand";
   }
+};
+
+const handleBlur = (field) => {
+  validateField(field);
 };
 
 const goBack = () => {
