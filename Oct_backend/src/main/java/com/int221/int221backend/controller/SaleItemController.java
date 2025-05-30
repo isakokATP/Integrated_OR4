@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/itb-mshop")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class SaleItemController {
     @Autowired
     private SaleItemService saleItemService;
