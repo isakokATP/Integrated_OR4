@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 // import java.util.Optional;
@@ -82,11 +83,15 @@ public class SaleItemController {
     @GetMapping("/v2/sale-items")
     public ResponseEntity<SaleItemPaginateDto> getAllItems(@RequestParam(value = "filterBrands", required = false) String[] filterBrands,
                                                            @RequestParam(value = "storageSize", required = false) Integer[] storageSize,
+                                                           @RequestParam(value = "filterPriceLower", required = false) Integer filterPriceLower,
+                                                           @RequestParam(value = "filterPriceUpper", required = false) Integer filterPriceUpper,
                                                            @RequestParam("page") Integer page,
                                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                                            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize));
+        if (filterPriceLower >= filterPriceUpper) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price lower than filterPriceUpper");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
     }
-
 }
