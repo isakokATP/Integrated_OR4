@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -94,22 +95,26 @@ public class SaleItemService {
         }
     }
 
-    public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands) {
+    public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands, Integer[] storageSize) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
 
 
-        List<String> brandList = filterBrands == null ? new ArrayList<>() : Arrays.asList(filterBrands);
+        List<String> brandList = filterBrands == null ? null :  Arrays.asList(filterBrands);
+        List<Integer> storageList = storageSize == null ? null : Arrays.asList(storageSize);
+
         Page<SaleItem> saleItemPage;
 
 
-        if (brandList.isEmpty()) {
-            saleItemPage = saleItemRepository.findAll(pageable);
-        } else {
-            saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, pageable);
-        }
+//        if (brandList.isEmpty()) {
+//            saleItemPage = saleItemRepository.findAll(pageable);
+//        } else {
+//            saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, storageList, pageable);
+//        }
+
+        saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, storageList, pageable);
 
         SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));
@@ -122,4 +127,6 @@ public class SaleItemService {
         response.setPage(page);
         return response;
     }
+
+
 }
