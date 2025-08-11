@@ -96,7 +96,6 @@ public class SaleItemController {
                         "Price lower must be less than filterPriceUpper");
             }
         }
-
         return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
     }
 }
