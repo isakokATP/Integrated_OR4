@@ -95,9 +95,8 @@ public class SaleItemService {
         }
     }
 
-    public SaleItemPaginateDto getAllSaleItem(
-            String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
-            Integer[] storageSize, Integer filterPriceLower, Integer filterPriceUpper) {
+    public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
+                                              Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
@@ -123,6 +122,4 @@ public class SaleItemService {
         response.setPage(page);
         return response;
     }
-
-
 }
