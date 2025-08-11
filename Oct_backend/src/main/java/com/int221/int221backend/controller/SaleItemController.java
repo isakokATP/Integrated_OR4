@@ -89,9 +89,14 @@ public class SaleItemController {
                                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                                            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        if (filterPriceLower >= filterPriceUpper) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price lower than filterPriceUpper");
+        if (filterPriceLower != null && filterPriceUpper != null) {
+            if (!(filterPriceLower == 0 && filterPriceUpper == 0)
+                    && filterPriceLower >= filterPriceUpper) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Price lower must be less than filterPriceUpper");
+            }
         }
+
         return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
     }
 }
