@@ -21,4 +21,5 @@ public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
                                       @Param("storageList") List<Integer> storageList, Pageable pageable,
                                       @Param("priceLower") Integer priceLower,
                                       @Param("priceUpper") Integer priceUpper);
+
 }
