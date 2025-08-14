@@ -17,13 +17,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 @Service
 public class SaleItemService {
@@ -37,8 +39,6 @@ public class SaleItemService {
     private EntityManager entityManager;
     @Autowired
     private ListMapper listMapper;
-
-
 
     public List<SaleItem> getAllSaleItem(){
         return saleItemRepository.findAll();
@@ -101,7 +101,6 @@ public class SaleItemService {
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
-
 
         List<String> brandList = filterBrands == null ? null :  Arrays.asList(filterBrands);
         List<Integer> storageList = storageSize == null ? null : Arrays.asList(storageSize);
