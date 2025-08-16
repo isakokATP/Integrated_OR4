@@ -7,14 +7,17 @@ import com.int221.int221backend.dto.response.*;
 import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.services.SaleItemService;
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
