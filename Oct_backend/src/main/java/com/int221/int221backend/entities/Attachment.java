@@ -7,6 +7,7 @@ import lombok.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.ColumnTransformer;
 
 
 import java.sql.Timestamp;
@@ -38,7 +39,9 @@ public class Attachment {
     @Column(name = "file_path", length = 255, nullable = false)
     private String filePath;
 
+
     @Enumerated(EnumType.STRING)
+    @ColumnTransformer(read = "UPPER(file_type)")
     @Column(name = "file_type", nullable = false)
     private FileType fileType; // ENUM('jpg', 'jpeg', 'png')
 

@@ -47,8 +47,7 @@ public class AttachmentService {
         String extLower = extension.toLowerCase();
         FileType fileType;
         switch (extLower) {
-            case "jpg": fileType = FileType.JPG; break;
-            case "jpeg": fileType = FileType.JPEG; break;
+            case "jpg": fileType = FileType.JPEG; break;
             case "png": fileType = FileType.PNG; break;
             default: throw new IllegalArgumentException("Invalid file type");
         }
