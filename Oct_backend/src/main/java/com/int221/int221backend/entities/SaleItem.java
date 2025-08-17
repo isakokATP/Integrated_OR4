@@ -44,7 +44,7 @@ public class SaleItem {
     @Min(0)
     private Long quantity = 1L;
 
-    @OneToMany(mappedBy = "saleItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "saleItem")
     private List<Attachment> attachments = new ArrayList<>();
 
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
