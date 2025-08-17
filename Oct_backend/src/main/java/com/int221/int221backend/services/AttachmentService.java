@@ -7,8 +7,10 @@ import com.int221.int221backend.repositories.AttachmentRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,6 +36,9 @@ public class AttachmentService {
         // ตรวจสอบ SaleItem
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new RuntimeException("SaleItem not found with id " + saleItemId));
+        if (attachmentRepository.countAttachmentBySaleItem(saleItem) >= 4) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot upload more than 4 attachments");
+        }
 
         // ตรวจสอบนามสกุลไฟล์
         String originalFilename = file.getOriginalFilename();
@@ -68,13 +73,14 @@ public class AttachmentService {
         // สร้าง Attachment และเซ็ตข้อมูล
         Attachment attachment = new Attachment();
         attachment.setSaleItem(saleItem);
-        attachment.setFilename(originalFilename);
+        attachment.setFilename(newFilename);
         attachment.setFilePath(filePath.toString());
         attachment.setFileSize((int) file.getSize());
         attachment.setFileType(fileType);
 
         // บันทึกลง DB
         return attachmentRepository.save(attachment);
+
     }
 
     public Attachment getAttachmentById(Integer id) {
