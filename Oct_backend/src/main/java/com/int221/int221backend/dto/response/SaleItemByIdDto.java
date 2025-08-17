@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 
 @Getter
@@ -20,6 +21,7 @@ public class SaleItemByIdDto {
     private Long quantity;
     private Integer storageGb;
     private String color;
+    private List<AttachmentDto> saleItemImages;
     private ZonedDateTime createdOn;
     private ZonedDateTime updatedOn;
 }

@@ -1,10 +1,12 @@
 package com.int221.int221backend.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class SaleItemPaginateDto {
