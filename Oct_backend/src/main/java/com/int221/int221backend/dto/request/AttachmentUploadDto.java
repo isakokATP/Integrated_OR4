@@ -8,4 +8,3 @@ public class AttachmentUploadDto {
     private Integer saleItemId;
     private MultipartFile file;
 }
-

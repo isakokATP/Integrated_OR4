@@ -70,6 +70,12 @@ public class AttachmentService {
         Path filePath = Paths.get(uploadDir, newFilename);
         Files.write(filePath, file.getBytes());
 
+        // หาลำดับสูงสุดของรูปที่มีอยู่แล้วใน saleItem
+        Integer maxOrder = attachmentRepository.findMaxImageViewOrderBySaleItem(saleItem);
+
+        // ถ้ายังไม่มีรูปเลย เริ่มที่ 1, ถ้ามีแล้ว +1
+        int newOrder = (maxOrder == null ? 1 : maxOrder + 1);
+
         // สร้าง Attachment และเซ็ตข้อมูล
         Attachment attachment = new Attachment();
         attachment.setSaleItem(saleItem);
@@ -77,10 +83,11 @@ public class AttachmentService {
         attachment.setFilePath(filePath.toString());
         attachment.setFileSize((int) file.getSize());
         attachment.setFileType(fileType);
+        attachment.setImageViewOrder(newOrder);
+
 
         // บันทึกลง DB
         return attachmentRepository.save(attachment);
-
     }
 
     public Attachment getAttachmentById(Integer id) {

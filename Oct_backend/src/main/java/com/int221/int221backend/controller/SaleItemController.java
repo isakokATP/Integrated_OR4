@@ -4,8 +4,10 @@ import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.*;
 
+import com.int221.int221backend.entities.Attachment;
 import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.repositories.BrandRepository;
+import com.int221.int221backend.repositories.SaleItemRepository;
 import com.int221.int221backend.services.SaleItemService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,8 @@ public class SaleItemController {
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private SaleItemRepository saleItemRepository;
 
     @GetMapping("/v1/sale-items")
     public List<SaleItemDto> getAllSaleItem() {
@@ -99,5 +104,22 @@ public class SaleItemController {
             }
         }
         return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
+    }
+
+    //pbi15
+    @GetMapping("/v2/sale-items/{id}")
+    public SaleItemByIdDto getSaleItemById(@PathVariable Integer id) {
+        SaleItem saleItem = saleItemRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SaleItem not found"));
+
+        // map attachments → AttachmentDto
+        List<AttachmentDto> images = saleItem.getAttachments().stream()
+                .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
+                .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
+                .collect(Collectors.toList());
+
+        SaleItemByIdDto saleItemByIdDto = modelMapper.map(saleItem, SaleItemByIdDto.class);
+        saleItemByIdDto.setSaleItemImages(images);
+        return saleItemByIdDto;
     }
 }

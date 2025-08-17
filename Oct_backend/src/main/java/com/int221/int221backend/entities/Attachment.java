@@ -49,6 +49,10 @@ public class Attachment {
     @Column(name = "file_size")
     private Integer fileSize;
 
+    @NotNull
+    @Column(name = "image_view_order")
+    private Integer imageViewOrder;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     @Column(name = "created_on", insertable = false, updatable = false, nullable = false)
     private Timestamp createdOn;

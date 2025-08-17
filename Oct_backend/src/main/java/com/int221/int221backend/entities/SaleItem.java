@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Setter
@@ -41,6 +43,9 @@ public class SaleItem {
     @Column(name = "quantity", nullable = false)
     @Min(0)
     private Long quantity = 1L;
+
+    @OneToMany(mappedBy = "saleItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attachment> attachments = new ArrayList<>();
 
     @Column(name = "created_on", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdOn;
