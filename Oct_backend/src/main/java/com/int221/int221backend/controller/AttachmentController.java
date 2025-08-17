@@ -1,6 +1,7 @@
 package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.AttachmentUploadDto;
+import com.int221.int221backend.dto.response.AttachmentDto;
 import com.int221.int221backend.entities.Attachment;
 import com.int221.int221backend.services.AttachmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class AttachmentController {
     private AttachmentService attachmentService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Attachment> uploadFile(@ModelAttribute AttachmentUploadDto dto) throws IOException {
+    public ResponseEntity<AttachmentDto> uploadFile(@ModelAttribute AttachmentUploadDto dto) throws IOException {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(attachmentService.saveAttachment(dto.getSaleItemId(), dto.getFile()));
     }

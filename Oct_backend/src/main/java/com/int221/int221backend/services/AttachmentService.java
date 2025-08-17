@@ -1,10 +1,12 @@
 package com.int221.int221backend.services;
 
+import com.int221.int221backend.dto.response.AttachmentDto;
 import com.int221.int221backend.entities.Attachment;
 import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.enums.FileType;
 import com.int221.int221backend.repositories.AttachmentRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -27,12 +29,15 @@ public class AttachmentService {
     @Autowired
     private SaleItemRepository saleItemRepository;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @Value("${file.upload-dir}")
     private String uploadDir; // รับค่าจาก application.properties
 
     private final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
-    public Attachment saveAttachment(Integer saleItemId, MultipartFile file) throws IOException {
+    public AttachmentDto saveAttachment(Integer saleItemId, MultipartFile file) throws IOException {
         // ตรวจสอบ SaleItem
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new RuntimeException("SaleItem not found with id " + saleItemId));
@@ -87,7 +92,8 @@ public class AttachmentService {
 
 
         // บันทึกลง DB
-        return attachmentRepository.save(attachment);
+//        return attachmentRepository.save(attachment);
+        return modelMapper.map(attachmentRepository.save(attachment), AttachmentDto.class);
     }
 
     public Attachment getAttachmentById(Integer id) {
