@@ -116,9 +116,9 @@ import {
   deleteBrand,
   fetchSaleItems,
   fetchBrandById,
-} from "@/services/saleItemService";
-import Header from "@/components/Header.vue";
-import Notification from "@/components/Notification.vue";
+} from "../services/saleItemService";
+import Header from "../components/Header.vue";
+import Notification from "../components/Notification.vue";
 
 const brands = ref([]);
 const saleItems = ref([]);

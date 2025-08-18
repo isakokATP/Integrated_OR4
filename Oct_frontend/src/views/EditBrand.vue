@@ -111,8 +111,8 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { fetchBrandById, updateBrand } from "@/services/saleItemService";
-import Header from "@/components/Header.vue";
+import { fetchBrandById, updateBrand } from "../services/saleItemService";
+import Header from "../components/Header.vue";
 
 const router = useRouter();
 const route = useRoute();

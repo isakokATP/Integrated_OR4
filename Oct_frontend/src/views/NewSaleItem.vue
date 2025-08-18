@@ -12,26 +12,147 @@
         <span class="font-semibold">New Sale Item</span>
       </nav>
     </div>
-    <form
-      @submit.prevent="handleSave"
-      class="grid grid-cols-1 md:grid-cols-2 gap-8"
-    >
-      <!-- Left: Picture -->
-      <div class="mt-2">
-        <div
-          class="w-70 h-70 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-2 border border-gray-300 rounded"
-        >
-          No Picture
-        </div>
-        <div class="flex gap-2 mb-4">
-          <div
-            v-for="n in 4"
-            :key="n"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded"
-          >
-            No Picture
-          </div>
-        </div>
+         <form
+       @submit.prevent="handleSave"
+       class="grid grid-cols-1 md:grid-cols-2 gap-8"
+     >
+       <!-- Left: Picture -->
+       <div class="mt-2">
+         <div
+           class="w-70 h-70 bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mb-2 border border-gray-300 rounded"
+         >
+           <div v-if="selectedFiles.length === 0" class="text-center">
+             <div class="text-2xl text-gray-400 mb-2">No Picture</div>
+             <button
+               type="button"
+               @click="openFileInput"
+               class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+             >
+               Upload Pictures
+             </button>
+           </div>
+           <div v-else class="w-full h-full relative">
+             <img
+               :src="getImagePreview(selectedFiles[0])"
+               alt="Main preview"
+               class="w-full h-full object-cover rounded"
+             />
+           </div>
+         </div>
+         
+         <!-- Thumbnail previews -->
+         <div class="flex gap-2 mb-4">
+           <div
+             v-for="(file, index) in selectedFiles.slice(0, 4)"
+             :key="index"
+             class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
+           >
+             <img
+               :src="getImagePreview(file)"
+               alt="Thumbnail"
+               class="w-full h-full object-cover"
+             />
+           </div>
+           <div
+             v-for="n in Math.max(0, 4 - selectedFiles.length)"
+             :key="`empty-${n}`"
+             class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded"
+           >
+             No Picture
+           </div>
+         </div>
+
+         <!-- Upload button -->
+         <div class="mb-4">
+           <button
+             type="button"
+             @click="openFileInput"
+             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+           >
+             Upload Pictures
+           </button>
+           <span class="text-sm text-gray-500 ml-2">
+             (Max 4 pictures, 2MB each)
+           </span>
+         </div>
+
+         <!-- Hidden file input -->
+         <input
+           ref="fileInput"
+           type="file"
+           multiple
+           accept="image/*"
+           @change="handleFileSelect"
+           class="hidden"
+         />
+
+         <!-- File list with reorder controls -->
+         <div v-if="selectedFiles.length > 0" class="mb-4">
+           <h4 class="text-sm font-medium mb-2">Selected Files:</h4>
+           <div class="space-y-2">
+             <div
+               v-for="(file, index) in selectedFiles"
+               :key="`file-${index}-${file.name}`"
+               class="flex items-center justify-between bg-gray-50 p-2 rounded"
+             >
+               <div class="flex items-center space-x-2">
+                 <span class="text-sm font-medium">{{ index + 1 }}.</span>
+                 <span class="text-sm">{{ file.name }}</span>
+                 <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <!-- Move up button -->
+                 <button
+                   v-if="index > 0"
+                   type="button"
+                   @click="moveFileUp(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move up"
+                 >
+                   ↑
+                 </button>
+                 <!-- Move down button -->
+                 <button
+                   v-if="index < selectedFiles.length - 1"
+                   type="button"
+                   @click="moveFileDown(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move down"
+                 >
+                   ↓
+                 </button>
+                 <!-- Remove button -->
+                 <button
+                   type="button"
+                   @click="removeFile(index)"
+                   class="text-red-500 hover:text-red-700 p-1"
+                   title="Remove file"
+                 >
+                   ×
+                 </button>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Warning for too many files -->
+           <div v-if="selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
+             <p class="text-sm text-yellow-800">
+               ⚠️ Maximum 4 pictures reached. First image will be used as thumbnail.
+             </p>
+           </div>
+         </div>
+
+         <!-- Error messages -->
+         <div v-if="fileErrors.length > 0" class="mb-4">
+           <div
+             v-for="error in fileErrors"
+             :key="error"
+             class="text-red-500 text-sm mb-1"
+           >
+             {{ error }}
+           </div>
+         </div>
+        
       </div>
 
       <!-- Right: Form -->
@@ -223,12 +344,17 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { createSaleItem, fetchBrands } from "../services/saleItemService";
+import { createSaleItem, fetchBrands, uploadAttachment } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const brands = ref([]);
+
+// File upload related refs
+const fileInput = ref(null);
+const selectedFiles = ref([]);
+const fileErrors = ref([]);
 
 const loadBrands = async () => {
   try {
@@ -327,6 +453,88 @@ const validateAllFields = () => {
   return allValid;
 };
 
+// File upload functions
+function openFileInput() {
+  fileInput.value.click();
+}
+
+function handleFileSelect(event) {
+  const files = Array.from(event.target.files);
+  fileErrors.value = [];
+  
+  // Validate file count
+  if (selectedFiles.value.length + files.length > 4) {
+    fileErrors.value.push("Maximum 4 pictures are allowed.");
+    return;
+  }
+  
+  // Validate each file and check for duplicates
+  files.forEach(file => {
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      fileErrors.value.push(`${file.name} is not an image file.`);
+      return;
+    }
+    
+    // Check file size (2MB = 2 * 1024 * 1024 bytes)
+    if (file.size > 2 * 1024 * 1024) {
+      fileErrors.value.push(`${file.name} is larger than 2MB.`);
+      return;
+    }
+    
+    // Check for duplicate file names
+    const existingFile = selectedFiles.value.find(f => f.name === file.name);
+    if (existingFile) {
+      fileErrors.value.push(`${file.name} already exists. Please choose a different file.`);
+      return;
+    }
+  });
+  
+  // If there are errors, don't add files
+  if (fileErrors.value.length > 0) {
+    return;
+  }
+  
+  // Add valid files
+  selectedFiles.value.push(...files);
+  
+  // Clear the input
+  event.target.value = '';
+}
+
+function removeFile(index) {
+  selectedFiles.value.splice(index, 1);
+  fileErrors.value = [];
+}
+
+function getImagePreview(file) {
+  return URL.createObjectURL(file);
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function moveFileUp(index) {
+  if (index > 0) {
+    const files = [...selectedFiles.value];
+    [files[index], files[index - 1]] = [files[index - 1], files[index]];
+    selectedFiles.value = files;
+  }
+}
+
+function moveFileDown(index) {
+  if (index < selectedFiles.value.length - 1) {
+    const files = [...selectedFiles.value];
+    [files[index], files[index + 1]] = [files[index + 1], files[index]];
+    selectedFiles.value = files;
+  }
+}
+
 const isFormValid = computed(() => {
   const hasValidationErrors = Object.values(fieldErrors).some(
     (error) => error !== null && error !== ""
@@ -353,7 +561,29 @@ function handleCancel() {
     color: "",
     quantity: "",
   };
+  // Clear selected files
+  selectedFiles.value = [];
+  fileErrors.value = [];
   router.push({ name: "sale-items-list-page" });
+}
+
+async function uploadFiles(saleItemId) {
+  for (let i = 0; i < selectedFiles.value.length; i++) {
+    const file = selectedFiles.value[i];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('saleItemId', saleItemId);
+    
+    try {
+      await uploadAttachment(formData);
+      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
+      if (i < selectedFiles.value.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      console.error(`Failed to upload file ${file.name}:`, error);
+    }
+  }
 }
 
 async function handleSave() {
@@ -379,7 +609,14 @@ async function handleSave() {
   };
 
   try {
-    await createSaleItem(dataToSend);
+    // First create the sale item
+    const createdItem = await createSaleItem(dataToSend);
+    
+    // Then upload files if any
+    if (selectedFiles.value.length > 0) {
+      await uploadFiles(createdItem.id);
+    }
+    
     alert("สร้างรายการขายสำเร็จ!");
     router.push({
       name: "sale-items-list-page",

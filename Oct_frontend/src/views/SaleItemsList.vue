@@ -113,9 +113,9 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { fetchSaleItems, deleteSaleItem } from "@/services/saleItemService";
-import Header from "@/components/Header.vue";
-import Notification from "@/components/Notification.vue";
+import { fetchSaleItems, deleteSaleItem } from "../services/saleItemService";
+import Header from "../components/Header.vue";
+import Notification from "../components/Notification.vue";
 
 const saleItems = ref([]);
 const router = useRouter();

@@ -113,8 +113,8 @@
 <script setup>
 import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { createBrand } from "@/services/saleItemService";
-import Header from "@/components/Header.vue";
+import { createBrand } from "../services/saleItemService";
+import Header from "../components/Header.vue";
 
 const router = useRouter();
 const error = ref("");

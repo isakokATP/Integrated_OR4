@@ -6,17 +6,21 @@ import Notification from "../components/Notification.vue";
 import { useRouter, useRoute } from "vue-router";
 import { ref, onMounted, watch, computed } from "vue";
 import {
-  fetchSaleItems,
   fetchSaleItemsV2,
 } from "../services/saleItemService.js";
-import { onBeforeMount } from "vue";
 
 const router = useRouter();
 const route = useRoute();
 const message = ref("");
 const allItems = ref([]);
-// Remove the selectedBrands ref as it will be initialized from session storage
-// const selectedBrands = ref([]); // สำหรับเก็บแบรนด์ที่ถูกเลือก
+
+// Filter settings state - เปลี่ยนจาก selectedBrands เป็น filterSettings
+const filterSettings = ref({
+  brands: [],
+  priceMin: null,
+  priceMax: null,
+  storageSizes: []
+});
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
 const sortType = ref(sessionStorage.getItem("saleListSortType") || "default");
@@ -62,13 +66,12 @@ watch(
   { immediate: true }
 );
 
-// Handle selectedBrands updates from FilterGalleryByBrand and save to session storage
-function handleSelectedBrandsUpdate(newSelectedBrands) {
-  selectedBrands.value = newSelectedBrands;
-  // Save to session storage
-  sessionStorage.setItem("selectedBrands", JSON.stringify(newSelectedBrands));
+// Handle filter updates from FilterGalleryByBrand
+function handleFilterUpdate(newFilters) {
+  filterSettings.value = newFilters;
   // Reset to first page when filters change
-
+  currentPage.value = 1;
+  sessionStorage.setItem("currentPage", 1);
   loadSaleItems();
 }
 
@@ -105,29 +108,35 @@ onMounted(async () => {
     }
   }
 
-  // Load selectedBrands from session storage
-  const savedSelectedBrands = sessionStorage.getItem("selectedBrands");
-  if (savedSelectedBrands) {
+  // Load filter settings from session storage
+  const savedFilterSettings = sessionStorage.getItem("filterSettings");
+  if (savedFilterSettings) {
     try {
-      const parsedBrands = JSON.parse(savedSelectedBrands);
-      if (Array.isArray(parsedBrands)) {
-        selectedBrands.value = parsedBrands; // Initialize selectedBrands with loaded value
+      const parsedSettings = JSON.parse(savedFilterSettings);
+      if (parsedSettings && typeof parsedSettings === 'object') {
+        // Ensure all required properties exist
+        const defaultSettings = {
+          brands: [],
+          priceMin: null,
+          priceMax: null,
+          storageSizes: []
+        };
+        const mergedSettings = { ...defaultSettings, ...parsedSettings };
+        filterSettings.value = mergedSettings;
       } else {
-        sessionStorage.removeItem("selectedBrands");
+        console.error("Invalid data in session storage for filterSettings.");
+        sessionStorage.removeItem("filterSettings");
       }
     } catch (e) {
-      console.error("Failed to parse selectedBrands from session storage:", e);
-      sessionStorage.removeItem("selectedBrands");
+      console.error("Failed to parse filterSettings from session storage:", e);
+      sessionStorage.removeItem("filterSettings");
     }
-  } else {
-    selectedBrands.value = []; // Initialize with empty array if nothing in storage
   }
 
   loadSaleItems();
 });
 
-// Initialize selectedBrands ref before onMounted
-const selectedBrands = ref([]);
+// Filter settings are now properly defined above
 
 async function loadSaleItems() {
   try {
@@ -138,7 +147,7 @@ async function loadSaleItems() {
       requestedPage, // Use the potentially loaded page
       itemsPerPage.value,
       sortType.value,
-      selectedBrands.value
+      filterSettings.value  // ส่ง filter ทั้งหมดไป Backend
     );
     allItems.value = response.content;
     totalPages.value = response.totalPages;
@@ -169,16 +178,14 @@ async function loadSaleItems() {
   }
 }
 
-const brands = computed(() => {
-  // Use allItems to extract brands, even if filtered/paginated data is displayed
-  const set = new Set(allItems.value.map((item) => item.brandName));
-  return [...set];
-});
+// Removed unused computed property - brands are now loaded from API
 
 const filteredItems = computed(() => {
+  // ใช้ข้อมูลที่ได้จาก API โดยตรง (Backend filter แล้ว)
+  // ไม่ต้อง filter ที่ Frontend อีกต่อไป
   let sortedItems = [...allItems.value];
-
-  // เรียงตาม sortType
+  
+  // Sort items according to sortType
   switch (sortType.value) {
     case "asc":
       // เรียงแบรนด์ A-Z แล้วเรียง id ในแต่ละแบรนด์
@@ -186,7 +193,6 @@ const filteredItems = computed(() => {
         const brandCompare = a.brandName.localeCompare(b.brandName);
         return brandCompare !== 0 ? brandCompare : a.id - b.id;
       });
-
       break;
     case "desc":
       // เรียงแบรนด์ Z-A แล้วเรียง id ในแต่ละแบรนด์
@@ -194,9 +200,7 @@ const filteredItems = computed(() => {
         const brandCompare = b.brandName.localeCompare(a.brandName);
         return brandCompare !== 0 ? brandCompare : a.id - b.id;
       });
-
       break;
-
     default:
       // default เรียงตาม id
       sortedItems.sort((a, b) => a.id - b.id);
@@ -205,8 +209,6 @@ const filteredItems = computed(() => {
   return sortedItems;
 });
 
-const startPage = ref(1);
-const windowsize = ref(10); // กำหนดให้แสดง 10 หน้า
 const element = ref([]);
 
 function displayedPages() {
@@ -279,9 +281,8 @@ function goToPrevPage() {
       <!-- Filter -->
       <div class="flex-1">
         <FilterGalleryByBrand
-          :modelValue="selectedBrands"
-          :brands="brands"
-          @update:modelValue="handleSelectedBrandsUpdate"
+          :modelValue="filterSettings"
+          @update:modelValue="handleFilterUpdate"
         />
       </div>
 
@@ -435,19 +436,4 @@ function goToPrevPage() {
   </div>
 </template>
 
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
+<!-- Removed unused CSS animations -->
