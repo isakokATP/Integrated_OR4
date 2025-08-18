@@ -181,32 +181,7 @@ async function loadSaleItems() {
 // Removed unused computed property - brands are now loaded from API
 
 const filteredItems = computed(() => {
-  // ใช้ข้อมูลที่ได้จาก API โดยตรง (Backend filter แล้ว)
-  // ไม่ต้อง filter ที่ Frontend อีกต่อไป
-  let sortedItems = [...allItems.value];
-  
-  // Sort items according to sortType
-  switch (sortType.value) {
-    case "asc":
-      // เรียงแบรนด์ A-Z แล้วเรียง id ในแต่ละแบรนด์
-      sortedItems.sort((a, b) => {
-        const brandCompare = a.brandName.localeCompare(b.brandName);
-        return brandCompare !== 0 ? brandCompare : a.id - b.id;
-      });
-      break;
-    case "desc":
-      // เรียงแบรนด์ Z-A แล้วเรียง id ในแต่ละแบรนด์
-      sortedItems.sort((a, b) => {
-        const brandCompare = b.brandName.localeCompare(a.brandName);
-        return brandCompare !== 0 ? brandCompare : a.id - b.id;
-      });
-      break;
-    default:
-      // default เรียงตาม id
-      sortedItems.sort((a, b) => a.id - b.id);
-  }
-
-  return sortedItems;
+  return allItems.value;
 });
 
 const element = ref([]);
