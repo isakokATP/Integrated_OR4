@@ -312,7 +312,7 @@ async function deleteBrand(id) {
 
 async function uploadAttachment(formData) {
   try {
-    const response = await fetch(`${URL}/attachments/upload`, {
+    const response = await fetch(`${URL}/api/attachments/upload`, {
       method: "POST",
       body: formData, // Don't set Content-Type header for FormData
     });

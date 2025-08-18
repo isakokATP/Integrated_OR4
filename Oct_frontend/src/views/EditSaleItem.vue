@@ -362,7 +362,7 @@ function getImagePreview(file) {
 function getImageUrl(fileName) {
   // Backend exposes GET /attachments/{id}; current BE expects filename here.
   // Adjusted to use filename directly per BE.
-  return `${import.meta.env.VITE_API_URL_PROD}/attachments/${encodeURIComponent(fileName)}`;
+  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {

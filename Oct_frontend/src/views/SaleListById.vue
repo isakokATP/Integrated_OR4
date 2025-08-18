@@ -21,7 +21,7 @@ const hasImages = computed(() => images.value.length > 0);
 
 function getImageUrl(fileNameOrFilename) {
   const name = fileNameOrFilename ?? "";
-  return `${import.meta.env.VITE_API_URL_PROD}/attachments/${encodeURIComponent(name)}`;
+  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(name)}`;
 }
 
 const mainImageUrl = computed(() => {
