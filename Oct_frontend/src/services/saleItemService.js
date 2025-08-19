@@ -3,26 +3,6 @@ import { handleApiError } from "../api/client";
 const URL = import.meta.env.VITE_API_URL_PROD;
 
 // API URL loaded from environment variables
-// Basic fetch for all sale items (used by admin list page)
-async function fetchSaleItems() {
-  try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Fetch sale items error:", error);
-    throw handleApiError(error);
-  }
-}
 
 async function fetchSaleItemsV2(
   page = 1,
@@ -328,7 +308,6 @@ async function uploadAttachment(formData) {
 }
 
 export {
-  fetchSaleItems,
   fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,

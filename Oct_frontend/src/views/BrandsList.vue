@@ -114,7 +114,7 @@ import { useRouter, useRoute } from "vue-router";
 import {
   fetchBrands,
   deleteBrand,
-  fetchSaleItems,
+  fetchSaleItemsV2,
   fetchBrandById,
 } from "../services/saleItemService";
 import Header from "../components/Header.vue";
@@ -137,7 +137,13 @@ const loadBrands = async () => {
   console.log(brands.value);
 };
 const loadSaleItems = async () => {
-  saleItems.value = await fetchSaleItems();
+  const response = await fetchSaleItemsV2(1, 1000, "default", {
+    brands: [],
+    priceMin: null,
+    priceMax: null,
+    storageSizes: []
+  });
+  saleItems.value = response.content;
 };
 
 const goToSaleItemList = () => {
