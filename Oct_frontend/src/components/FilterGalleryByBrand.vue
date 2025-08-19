@@ -59,32 +59,56 @@
     </div>
 
     <!-- Price Range Filter -->
-    <div class="flex items-center gap-4">
-      <label class="text-sm font-medium text-gray-700 min-w-[80px]">Price Range:</label>
-      <div class="flex items-center gap-2">
-        <input
-          v-model.number="modelValue.priceMin"
-          type="number"
-          placeholder="Min"
-          class="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm"
-          min="0"
-          @input="updatePriceFilter"
-        />
-        <span class="text-gray-500">-</span>
-        <input
-          v-model.number="modelValue.priceMax"
-          type="number"
-          placeholder="Max"
-          class="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm"
-          min="0"
-          @input="updatePriceFilter"
-        />
-        <button
-          @click="clearPriceFilter"
-          class="bg-gray-200 px-3 py-2 hover:bg-gray-300 text-sm border border-gray-300 rounded-md font-semibold"
-        >
-          Clear
-        </button>
+    <div class="flex items-start gap-0.5">
+      <div
+        class="itbms-price-filter w-102.5 border border-gray-300 rounded-md px-4 py-2 flex flex-wrap gap-2 items-start min-h-[40px]"
+        @click="showPriceDropdown = !showPriceDropdown"
+      >
+        <template v-if="selectedPriceRange">
+          <div class="itbms-filter-item flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm">
+            {{ selectedPriceRange }}
+            <button
+              @click="clearPriceFilter"
+              class="itbms-filter-item-clear ml-2 text-blue-600 hover:text-blue-900 font-bold"
+              aria-label="Remove price range"
+            >
+              &times;
+            </button>
+          </div>
+        </template>
+        <div v-else class="text-gray-500 text-sm">Filter by price range</div>
+      </div>
+
+      <div class="flex flex-col ml-1">
+        <div class="flex gap-1.5">
+          <button
+            @click="showPriceDropdown = !showPriceDropdown"
+            class="itbms-price-filter-button bg-gray-200 px-3 py-2 hover:bg-blue-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
+          >
+            <span class="inline-block mr-1">Choose</span>
+          </button>
+          <button
+            @click="clearPriceFilter"
+            class="itbms-price-filter-clear bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div v-if="showPriceDropdown" class="relative mt-2">
+          <div
+            class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto w-48"
+          >
+            <div
+              v-for="range in priceRanges"
+              :key="range.label"
+              class="itbms-filter-item px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
+              @click="selectPriceRange(range)"
+            >
+              {{ range.label }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -184,9 +208,31 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const showBrandDropdown = ref(false);
+const showPriceDropdown = ref(false);
 const showStorageDropdown = ref(false);
 const allBrands = ref([]);
 const allStorageSizes = ref([]);
+
+// Price ranges ตามที่เห็นในภาพ
+const priceRanges = ref([
+  { label: '0 - 5,000 Baht', min: 0, max: 5000 },
+  { label: '5,001-10,000 Baht', min: 5001, max: 10000 },
+  { label: '10,001-20,000 Baht', min: 10001, max: 20000 },
+  { label: '20,001-30,000 Baht', min: 20001, max: 30000 },
+  { label: '30,001-40,000 Baht', min: 30001, max: 40000 },
+  { label: '40,001-50,000 Baht', min: 40001, max: 50000 }
+]);
+
+// Computed property สำหรับแสดง price range ที่เลือก
+const selectedPriceRange = computed(() => {
+  if (!props.modelValue.priceMin && !props.modelValue.priceMax) return null;
+  
+  const selectedRange = priceRanges.value.find(range => 
+    range.min === props.modelValue.priceMin && range.max === props.modelValue.priceMax
+  );
+  
+  return selectedRange ? selectedRange.label : `${props.modelValue.priceMin?.toLocaleString()} - ${props.modelValue.priceMax?.toLocaleString()} Baht`;
+});
 
 const availableBrands = computed(() =>
   allBrands.value
@@ -220,15 +266,22 @@ function clearBrands() {
   saveToSessionStorage(newValue);
 }
 
-function updatePriceFilter() {
-  emit("update:modelValue", props.modelValue);
-  saveToSessionStorage(props.modelValue);
+function selectPriceRange(range) {
+  const newValue = { 
+    ...props.modelValue, 
+    priceMin: range.min, 
+    priceMax: range.max 
+  };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showPriceDropdown.value = false;
 }
 
 function clearPriceFilter() {
   const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
   emit("update:modelValue", newValue);
   saveToSessionStorage(newValue);
+  showPriceDropdown.value = false;
 }
 
 function addStorage(storage) {
@@ -315,5 +368,19 @@ onMounted(async () => {
       sessionStorage.removeItem("filterSettings");
     }
   }
+
+  // Add click outside handler to close dropdowns
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!target.closest('.itbms-price-filter') && !target.closest('.itbms-price-filter-button')) {
+      showPriceDropdown.value = false;
+    }
+    if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-brand-filter-button')) {
+      showBrandDropdown.value = false;
+    }
+    if (!target.closest('.itbms-storage-filter') && !target.closest('.itbms-storage-filter-button')) {
+      showStorageDropdown.value = false;
+    }
+  });
 });
 </script>
