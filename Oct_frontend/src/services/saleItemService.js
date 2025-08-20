@@ -192,7 +192,8 @@ async function fetchBrands() {
 
 async function fetchStorageSizes() {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/storage-sizes`, {
+    // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -202,11 +203,22 @@ async function fetchStorageSizes() {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = await response.json();
-    return data;
+    
+    const result = await response.json();
+    const saleItems = result.content || result; // V2 API returns paginated result
+    
+    // ดึง storage sizes ที่ไม่ซ้ำกันและไม่เป็น null
+    const storageSizes = [...new Set(
+      saleItems
+        .map(item => item.storageGb)
+        .filter(storage => storage !== null && storage !== undefined)
+    )].sort((a, b) => a - b);
+    
+    return storageSizes;
   } catch (error) {
     console.error("Fetch storage sizes error:", error);
-    throw handleApiError(error);
+    // Fallback to hardcoded values if API fails
+    return [32, 64, 128, 256, 512, 1024, 2048];
   }
 }
 

@@ -95,20 +95,62 @@
           </button>
         </div>
 
-        <div v-if="showPriceDropdown" class="relative mt-2">
-          <div
-            class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto w-48"
-          >
-            <div
-              v-for="range in priceRanges"
-              :key="range.label"
-              class="itbms-filter-item px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
-              @click="selectPriceRange(range)"
-            >
-              {{ range.label }}
-            </div>
-          </div>
-        </div>
+                 <div v-if="showPriceDropdown" class="relative mt-2">
+           <div
+             class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto w-48"
+           >
+             <div
+               v-for="range in priceRanges"
+               :key="range.label"
+               class="itbms-filter-item px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
+               @click="selectPriceRange(range)"
+             >
+               {{ range.label }}
+             </div>
+           </div>
+         </div>
+
+         <!-- Custom Price Range Input -->
+         <div v-if="showCustomPriceInput" class="relative mt-2">
+           <div
+             class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md p-4 w-64"
+           >
+             <div class="mb-3">
+               <label class="block text-sm font-medium mb-1">Min Price (Baht)</label>
+               <input
+                 v-model="customMinPrice"
+                 type="number"
+                 min="0"
+                 placeholder="0"
+                 class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+               />
+             </div>
+             <div class="mb-3">
+               <label class="block text-sm font-medium mb-1">Max Price (Baht)</label>
+               <input
+                 v-model="customMaxPrice"
+                 type="number"
+                 min="0"
+                 placeholder="50000"
+                 class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+               />
+             </div>
+             <div class="flex gap-2">
+               <button
+                 @click="applyCustomPriceRange"
+                 class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+               >
+                 Apply
+               </button>
+               <button
+                 @click="cancelCustomPriceRange"
+                 class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+               >
+                 Cancel
+               </button>
+             </div>
+           </div>
+         </div>
       </div>
     </div>
 
@@ -210,25 +252,45 @@ const emit = defineEmits(["update:modelValue"]);
 const showBrandDropdown = ref(false);
 const showPriceDropdown = ref(false);
 const showStorageDropdown = ref(false);
+const showCustomPriceInput = ref(false);
 const allBrands = ref([]);
 const allStorageSizes = ref([]);
+const customMinPrice = ref('');
+const customMaxPrice = ref('');
 
 const priceRanges = [
-  { label: "Under 10,000", min: 0, max: 10000 },
-  { label: "10,000 - 20,000", min: 10000, max: 20000 },
-  { label: "20,000 - 30,000", min: 20000, max: 30000 },
-  { label: "30,000 - 40,000", min: 30000, max: 40000 },
-  { label: "40,000 - 50,000", min: 40000, max: 50000 },
-  { label: "Over 50,000", min: 50000, max: null }
+  { label: "0 - 5,000 Baht", min: 0, max: 5000 },
+  { label: "5,001-10,000 Baht", min: 5001, max: 10000 },
+  { label: "10,001-20,000 Baht", min: 10001, max: 20000 },
+  { label: "20,001-30,000 Baht", min: 20001, max: 30000 },
+  { label: "30,001-40,000 Baht", min: 30001, max: 40000 },
+  { label: "40,001-50,000 Baht", min: 40001, max: 50000 },
+  { label: "Custom Range", min: null, max: null, isCustom: true }
 ];
 
 const selectedPriceRange = computed(() => {
   if (props.modelValue.priceMin === null && props.modelValue.priceMax === null) {
     return null;
   }
-  return priceRanges.find(range => 
+  
+  // Check if it matches any predefined range
+  const predefinedRange = priceRanges.find(range => 
     range.min === props.modelValue.priceMin && range.max === props.modelValue.priceMax
   );
+  
+  if (predefinedRange) {
+    return predefinedRange;
+  }
+  
+  // If no predefined range matches, it's a custom range
+  const minDisplay = props.modelValue.priceMin !== null ? props.modelValue.priceMin : '0';
+  const maxDisplay = props.modelValue.priceMax !== null ? props.modelValue.priceMax : '∞';
+  return {
+    label: `Custom: ${minDisplay} - ${maxDisplay} Baht`,
+    min: props.modelValue.priceMin,
+    max: props.modelValue.priceMax,
+    isCustom: true
+  };
 });
 
 const availableBrands = computed(() =>
@@ -264,6 +326,12 @@ function clearBrands() {
 }
 
 function selectPriceRange(range) {
+  if (range.isCustom) {
+    showPriceDropdown.value = false;
+    showCustomPriceInput.value = true;
+    return;
+  }
+  
   const newValue = { 
     ...props.modelValue, 
     priceMin: range.min, 
@@ -272,6 +340,44 @@ function selectPriceRange(range) {
   emit("update:modelValue", newValue);
   saveToSessionStorage(newValue);
   showPriceDropdown.value = false;
+}
+
+function applyCustomPriceRange() {
+  const min = customMinPrice.value ? parseInt(customMinPrice.value) : null;
+  const max = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
+  
+  // Validation
+  if (min !== null && max !== null && min > max) {
+    alert('Min price cannot be greater than max price');
+    return;
+  }
+  
+  if (min !== null && min < 0) {
+    alert('Min price cannot be negative');
+    return;
+  }
+  
+  if (max !== null && max < 0) {
+    alert('Max price cannot be negative');
+    return;
+  }
+  
+  const newValue = { 
+    ...props.modelValue, 
+    priceMin: min, 
+    priceMax: max 
+  };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
+}
+
+function cancelCustomPriceRange() {
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
 }
 
 function clearPriceFilter() {
@@ -348,15 +454,16 @@ onMounted(async () => {
       const parsedSettings = JSON.parse(savedFilterSettings);
       if (parsedSettings && typeof parsedSettings === 'object') {
         
-        // Add click outside handler for dropdowns
-        document.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
-            showBrandDropdown.value = false;
-            showPriceDropdown.value = false;
-            showStorageDropdown.value = false;
-          }
-        });
+                 // Add click outside handler for dropdowns
+         document.addEventListener('click', (event) => {
+           const target = event.target;
+           if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
+             showBrandDropdown.value = false;
+             showPriceDropdown.value = false;
+             showStorageDropdown.value = false;
+             showCustomPriceInput.value = false;
+           }
+         });
         // Ensure all required properties exist
         const defaultSettings = {
           brands: [],
