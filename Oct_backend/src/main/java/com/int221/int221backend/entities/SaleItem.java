@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
+@ToString
 @Table(name = "sale_items", schema = "pbi1")
 public class SaleItem {
     @Id
