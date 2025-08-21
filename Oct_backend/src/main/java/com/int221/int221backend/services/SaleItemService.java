@@ -97,13 +97,17 @@ public class SaleItemService {
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
                                               Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper) {
-        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
 
         List<String> brandList = filterBrands == null ? null :  Arrays.asList(filterBrands);
-        List<Integer> storageList = storageSize == null ? null : Arrays.asList(storageSize);
+        List<Integer> storageList = storageSize == null ? null : new ArrayList<>(Arrays.asList(storageSize));
+        if (storageList != null && storageList.isEmpty()) {
+            storageList.add(null);
+            System.out.println(storageList.size());
+        }
 
         Page<SaleItem> saleItemPage;
 

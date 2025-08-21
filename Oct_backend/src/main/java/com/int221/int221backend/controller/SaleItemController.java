@@ -89,20 +89,20 @@ public class SaleItemController {
     //  PBI 10
     @GetMapping("/v2/sale-items")
     public ResponseEntity<SaleItemPaginateDto> getAllItems(@RequestParam(value = "filterBrands", required = false) String[] filterBrands,
-                                                           @RequestParam(value = "storageSize", required = false) Integer[] storageSize,
+                                                           @RequestParam(value = "filterStorages", required = false) Integer[] storageSize,
                                                            @RequestParam(value = "filterPriceLower", required = false) Integer filterPriceLower,
                                                            @RequestParam(value = "filterPriceUpper", required = false) Integer filterPriceUpper,
                                                            @RequestParam("page") Integer page,
                                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                                            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
                                                            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        if (filterPriceLower != null && filterPriceUpper != null) {
-            if (!(filterPriceLower == 0 && filterPriceUpper == 0)
-                    && filterPriceLower >= filterPriceUpper) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Price lower must be less than filterPriceUpper");
-            }
-        }
+//        if (filterPriceLower != null && filterPriceUpper != null) {
+//            if (!(filterPriceLower == 0 && filterPriceUpper == 0)
+//                    && filterPriceLower >= filterPriceUpper) {
+//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                        "Price lower must be less than filterPriceUpper");
+//            }
+//        }
         return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
     }
 
