@@ -15,11 +15,13 @@ import java.util.List;
 public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
     Integer countSaleItemByBrand_Id(Integer brandId);
 
-    @Query("select st from SaleItem st where (:brandList is null or st.brand.name IN :brandList) and (:storageList is null or st.storageGb IN :storageList) " +
-            "and (:priceLower is null or st.price >= :priceLower) and (:priceUpper is null or st.price <= :priceUpper)")
+    @Query("select st from SaleItem st " +
+            "where (:brandList is null or st.brand.name IN :brandList) " +
+            "and (:storageList is null or st.storageGb IN :storageList or (-1 in (:storageList) and st.storageGb is null)) " +
+            "and (:priceLower is null or st.price >= :priceLower) " +
+            "and (:priceUpper is null or st.price <= :priceUpper)")
     Page<SaleItem> findByBrand_NameIn(@Param("brandList") List<String> brandList,
                                       @Param("storageList") List<Integer> storageList, Pageable pageable,
                                       @Param("priceLower") Integer priceLower,
                                       @Param("priceUpper") Integer priceUpper);
-
 }
