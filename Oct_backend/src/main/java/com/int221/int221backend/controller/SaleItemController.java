@@ -9,8 +9,6 @@ import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
 import com.int221.int221backend.services.SaleItemService;
-import jakarta.annotation.Resource;
-import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +34,7 @@ public class SaleItemController {
 
     @Autowired
     private ModelMapper modelMapper;
+
     @Autowired
     private SaleItemRepository saleItemRepository;
 
@@ -63,12 +61,12 @@ public class SaleItemController {
         return saleItemByIdDto;
     }
 
-    //  PBI3
-    @PostMapping("/v1/sale-items")
-    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
-        NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
-    }
+//    //  PBI3
+//    @PostMapping("/v1/sale-items")
+//    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
+//        NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
+//    }
 
     //  PBI4
     @PutMapping("/v1/sale-items/{id}")
@@ -122,4 +120,36 @@ public class SaleItemController {
         saleItemByIdDto.setSaleItemImages(images);
         return saleItemByIdDto;
     }
+
+//  pbi15
+//    @PostMapping("/v2/sale-items")
+//    public ResponseEntity<AttachmentUploadDto> createProduct(@ModelAttribute AttachmentUploadDto dto,
+//                                                             @RequestParam List<MultipartFile> images) {
+//        NewSaleItemResponseDto response = saleItemService.createSaleItem(dto, images);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//    }
+
+    // pbi15
+    @PostMapping("/v2/sale-items")
+    public ResponseEntity<NewSaleItemResponseDto> createProduct(
+            @ModelAttribute NewSaleItemDto newSaleItem,
+            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
+    ) {
+        try {
+            // 1. เรียก Service เพื่อสร้าง SaleItem และบันทึกรูป
+            NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, images);
+
+            // 2. Return response
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (IllegalArgumentException e) {
+            // กรณีไฟล์ไม่ผ่าน validation (ขนาดไฟล์ / file type)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+
+        } catch (Exception e) {
+            // กรณีอื่น ๆ
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create SaleItem", e);
+        }
+    }
+
 }

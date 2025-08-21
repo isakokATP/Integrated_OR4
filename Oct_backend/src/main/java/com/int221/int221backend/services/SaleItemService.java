@@ -3,9 +3,12 @@ package com.int221.int221backend.services;
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.*;
+import com.int221.int221backend.entities.Attachment;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.entities.SaleItem;
+import com.int221.int221backend.enums.FileType;
 import com.int221.int221backend.exception.NotFoundException;
+import com.int221.int221backend.repositories.AttachmentRepository;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
 import com.int221.int221backend.utils.ListMapper;
@@ -13,18 +16,19 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Service
@@ -39,6 +43,10 @@ public class SaleItemService {
     private EntityManager entityManager;
     @Autowired
     private ListMapper listMapper;
+    @Autowired
+    private AttachmentRepository attachmentRepository;
+    @Value("${file.upload-dir}")
+    private String uploadDir; // รับค่าจาก application.properties
 
     public List<SaleItem> getAllSaleItem(){
         return saleItemRepository.findAll();
@@ -49,8 +57,32 @@ public class SaleItemService {
         .orElseThrow(() -> new NotFoundException("No Item id = " + id));   
     }
 
-    public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
+//    public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
+//        SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
+//        if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
+//            saleItem.setColor(null);
+//        }
+//
+//        if (saleItem.getQuantity() != null && saleItem.getQuantity() < 0L) {
+//            throw new IllegalArgumentException("Quantity cannot be negative.");
+//        }
+//
+//        SaleItem savedItem = saleItemRepository.save(saleItem);
+//        SaleItem reloadedItem = saleItemRepository.findById(savedItem.getId())
+//                .orElseThrow(() -> new RuntimeException("Saved item not found."));
+//        return modelMapper.map(reloadedItem, NewSaleItemResponseDto.class);
+//    }
+
+//    pbi15 upload picture
+    @Transactional
+    public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto, List<MultipartFile> images) {
+
+        if (images != null && images.size() > 4) {
+            throw new IllegalArgumentException("You can upload maximum 4 images.");
+        }
+        // Map DTO -> Entity
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
+
         if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
             saleItem.setColor(null);
         }
@@ -59,11 +91,92 @@ public class SaleItemService {
             throw new IllegalArgumentException("Quantity cannot be negative.");
         }
 
+
+        // บันทึก SaleItem
         SaleItem savedItem = saleItemRepository.save(saleItem);
-        SaleItem reloadedItem = saleItemRepository.findById(savedItem.getId())
-                .orElseThrow(() -> new RuntimeException("Saved item not found."));
-        return modelMapper.map(reloadedItem, NewSaleItemResponseDto.class);
+
+        // ตรวจสอบและบันทึกไฟล์รูป
+        if (images != null && !images.isEmpty()) {
+            int order = 1;
+            for (MultipartFile file : images) {
+
+                // 1. ตรวจสอบขนาดไฟล์ ≤ 2MB
+                long maxSize = 2 * 1024 * 1024; // 2MB
+                if (file.getSize() > maxSize) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
+                }
+
+                // 2. ตรวจสอบ FileType JPEG / PNG (ignore case)
+                String extension = getFileExtension(file.getOriginalFilename());
+                if (!extension.equalsIgnoreCase("jpg") &&
+                        !extension.equalsIgnoreCase("jpeg") &&
+                        !extension.equalsIgnoreCase("png")) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " must be JPEG or PNG");
+                }
+
+                // สร้าง Path จาก uploadDir
+                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                Path path = Path.of(uploadDir, fileName);
+                try {
+                    Files.createDirectories(path.getParent());
+                    Files.write(path, file.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
+                }
+
+                // สร้าง Attachment Entity
+                Attachment attachment = Attachment.builder()
+                        .saleItem(savedItem)
+                        .filename(fileName)
+                        .filePath(path.toString())
+                        .fileType(getFileType(extension))
+                        .fileSize((int) file.getSize())
+                        .imageViewOrder(order++)
+                        .build();
+
+                attachmentRepository.save(attachment);
+            }
+        }
+
+        // โหลด SaleItem พร้อม Attachment
+        SaleItem reload = saleItemRepository.saveAndFlush(saleItem);
+        entityManager.refresh(reload);
+        modelMapper.map(reload, NewSaleItemResponseDto.class);
+
+        List<AttachmentDto> imageDtos = reload.getAttachments().stream()
+                .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
+                .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
+                .toList();
+
+      // Map SaleItem → DTO
+        NewSaleItemResponseDto responseDto = modelMapper.map(reload, NewSaleItemResponseDto.class);
+        responseDto.setSaleItemImages(imageDtos);
+
+        return responseDto;
     }
+
+    // Helper ดึงนามสกุลไฟล์
+    private String getFileExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            throw new IllegalArgumentException("Invalid file name: " + fileName);
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
+    }
+
+    // Helper แปลง extension เป็น FileType enum
+    private FileType getFileType(String extension) {
+        switch (extension.toLowerCase()) {
+            case "jpg": return FileType.JPG;
+            case "jpeg": return FileType.JPEG;
+            case "png": return FileType.PNG;
+            default: throw new IllegalArgumentException("Unsupported file type: " + extension);
+        }
+    }
+
+
+
 
     @Transactional
     public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
