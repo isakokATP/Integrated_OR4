@@ -21,10 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,6 +44,7 @@ public class SaleItemService {
     private ListMapper listMapper;
     @Autowired
     private AttachmentRepository attachmentRepository;
+
     @Value("${file.upload-dir}")
     private String uploadDir; // รับค่าจาก application.properties
 
@@ -56,22 +56,6 @@ public class SaleItemService {
         return saleItemRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("No Item id = " + id));   
     }
-
-//    public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto) {
-//        SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
-//        if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
-//            saleItem.setColor(null);
-//        }
-//
-//        if (saleItem.getQuantity() != null && saleItem.getQuantity() < 0L) {
-//            throw new IllegalArgumentException("Quantity cannot be negative.");
-//        }
-//
-//        SaleItem savedItem = saleItemRepository.save(saleItem);
-//        SaleItem reloadedItem = saleItemRepository.findById(savedItem.getId())
-//                .orElseThrow(() -> new RuntimeException("Saved item not found."));
-//        return modelMapper.map(reloadedItem, NewSaleItemResponseDto.class);
-//    }
 
 //    pbi15 upload picture
     @Transactional
@@ -175,9 +159,6 @@ public class SaleItemService {
         }
     }
 
-
-
-
     @Transactional
     public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
         if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
@@ -198,6 +179,106 @@ public class SaleItemService {
         SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(updatedItem);
         return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
+    }
+
+    @Transactional
+    public SaleItemUpdateResponseDto updateSaleItemWithImages(
+            Integer id,
+            SaleItemsUpdateDto saleItemsUpdateDto,
+            List<MultipartFile> images
+    ) {
+        // 1. หา SaleItem เก่าจาก DB
+        SaleItem existingItem = saleItemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No SaleItem id = " + id));
+
+        // 2. อัปเดต field พื้นฐาน
+        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
+            saleItemsUpdateDto.setQuantity(1L);
+        }
+        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
+            saleItemsUpdateDto.setColor(null);
+        }
+
+        existingItem.setModel(saleItemsUpdateDto.getModel());
+        existingItem.setDescription(saleItemsUpdateDto.getDescription());
+        existingItem.setPrice(saleItemsUpdateDto.getPrice());
+        existingItem.setQuantity(saleItemsUpdateDto.getQuantity());
+        existingItem.setColor(saleItemsUpdateDto.getColor());
+        existingItem.setRamGb(saleItemsUpdateDto.getRamGb());
+        existingItem.setScreenSizeInch(saleItemsUpdateDto.getScreenSizeInch());
+        existingItem.setStorageGb(saleItemsUpdateDto.getStorageGb());
+
+        // 3. อัปเดต Brand
+        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
+        if (brand.isPresent()) {
+            existingItem.setBrand(brand.get());
+        } else {
+            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
+        }
+
+        // 4. อัปโหลดรูปภาพใหม่ถ้ามี
+        if (images != null && !images.isEmpty()) {
+            if (images.size() > 4) {
+                throw new IllegalArgumentException("You can upload maximum 4 images.");
+            }
+
+            // ลบรูปเก่าออกก่อน (ถ้าต้องการ replace)
+            attachmentRepository.deleteAll(existingItem.getAttachments());
+            existingItem.getAttachments().clear();
+
+            int order = 1;
+            for (MultipartFile file : images) {
+                long maxSize = 2 * 1024 * 1024; // 2MB
+                if (file.getSize() > maxSize) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
+                }
+
+                String extension = getFileExtension(file.getOriginalFilename());
+                if (!extension.equalsIgnoreCase("jpg") &&
+                        !extension.equalsIgnoreCase("jpeg") &&
+                        !extension.equalsIgnoreCase("png")) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " must be JPEG or PNG");
+                }
+
+                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                Path path = Path.of(uploadDir, fileName);
+                try {
+                    Files.createDirectories(path.getParent());
+                    Files.write(path, file.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
+                }
+
+                Attachment attachment = Attachment.builder()
+                        .saleItem(existingItem)
+                        .filename(fileName)
+                        .filePath(path.toString())
+                        .fileType(getFileType(extension))
+                        .fileSize((int) file.getSize())
+                        .imageViewOrder(order++)
+                        .build();
+
+                attachmentRepository.save(attachment);
+                existingItem.getAttachments().add(attachment);
+            }
+        }
+
+        // 5. Save & refresh
+        SaleItem updatedItem = saleItemRepository.saveAndFlush(existingItem);
+        entityManager.refresh(updatedItem);
+
+        // 6. Map เป็น DTO
+        List<AttachmentDto> imageDtos = updatedItem.getAttachments().stream()
+                .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
+                .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
+                .toList();
+
+        SaleItemUpdateResponseDto responseDto = modelMapper.map(updatedItem, SaleItemUpdateResponseDto.class);
+        responseDto.setSaleItemImages(imageDtos);
+
+        return responseDto;
     }
 
     public void deleteSaleItemById(Integer id) {

@@ -2,13 +2,15 @@ package com.int221.int221backend.dto.request;
 
 import com.int221.int221backend.dto.response.BrandDto;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
+@Data
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SaleItemsUpdateDto {
     private Integer id;
     private String model;
