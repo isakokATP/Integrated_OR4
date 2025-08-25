@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { fetchSaleItemById, deleteSaleItem } from "@/services/saleItemService";
+import { ref, onMounted, watch, computed } from "vue";
+import { fetchSaleItemById, deleteSaleItem } from "../services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
-import Header from "@/components/Header.vue";
-import Notification from "@/components/Notification.vue";
+import Header from "../components/Header.vue";
+import Notification from "../components/Notification.vue";
 
 const item = ref({});
 const errorMsg = ref("");
@@ -12,6 +12,23 @@ const id = route.params.id;
 const router = useRouter();
 const isLoading = ref(true);
 const message = ref("");
+
+// images from DB
+const images = computed(() => (item.value?.saleItemImages ?? []));
+const selectedIndex = ref(0);
+
+const hasImages = computed(() => images.value.length > 0);
+
+function getImageUrl(fileNameOrFilename) {
+  const name = fileNameOrFilename ?? "";
+  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(name)}`;
+}
+
+const mainImageUrl = computed(() => {
+  if (!hasImages.value) return null;
+  const first = images.value[selectedIndex.value] || images.value[0];
+  return getImageUrl(first.fileName || first.filename);
+});
 
 // Watch for route changes to get message from query params
 watch(
@@ -32,6 +49,10 @@ watch(
 
 onMounted(async () => {
   item.value = await fetchSaleItemById(id);
+  // Default selected index when images exist
+  if (item.value?.saleItemImages?.length) {
+    selectedIndex.value = 0;
+  }
   isLoading.value = false;
   if (item.value.status === "not_found") {
     errorMsg.value = "The requested sale item does not exist.";
@@ -141,21 +162,24 @@ const cancelDelete = () => {
           class="w-72 h-72 flex items-center justify-center mb-2.5 border border-gray-300 rounded overflow-hidden bg-white"
         >
           <img
-            src="../assets/iphone.png"
+            v-if="hasImages"
+            :src="mainImageUrl"
             class="object-contain w-full h-full"
             alt="Main Product"
           />
+          <div v-else class="text-gray-400">No Picture</div>
         </div>
 
         <!-- รูปรอง -->
         <div class="flex gap-2.5 mb-4">
           <div
-            v-for="n in 4"
-            :key="n"
+            v-for="(img, idx) in images"
+            :key="idx"
             class="w-16 h-16 border border-gray-300 rounded overflow-hidden bg-white cursor-pointer hover:ring-2 hover:ring-blue-400"
+            @click="selectedIndex = idx"
           >
             <img
-              src="../assets/iphone.png"
+              :src="getImageUrl(img.fileName || img.filename)"
               class="object-contain w-full h-full"
               alt="Thumbnail"
             />

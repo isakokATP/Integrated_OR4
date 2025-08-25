@@ -1,67 +1,69 @@
-import { api, handleApiError } from "../api/client";
-import { ENDPOINTS } from "../api/endpoints";
+import { handleApiError } from "../api/client";
 
 const URL = import.meta.env.VITE_API_URL_PROD;
 
-console.log(URL);
-async function fetchSaleItems() {
-  try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Fetch sale items error:", error);
-    throw handleApiError(error);
-  }
-}
+// API URL loaded from environment variables
 
 async function fetchSaleItemsV2(
   page = 1,
   size = 10,
   sortType = "default",
-  selectedBrands = []
+  filters = {
+    brands: [],
+    priceMin: null,
+    priceMax: null,
+    storageSizes: []
+  }
 ) {
   try {
-    const filterBrandsQuery = selectedBrands
-      .map((brand) => `filterBrands=${encodeURIComponent(brand)}`)
-      .join("&");
-
-    let sortField = "";
-    let sortDirection = "";
-
+    const params = new URLSearchParams();
+    
+    // Basic pagination
+    params.append('page', page - 1);
+    params.append('size', size);
+    
+    // Sort parameters
     if (sortType === "asc") {
-      sortField = "brand.name";
-      sortDirection = "asc";
+      params.append('sortField', 'brand.name');
+      params.append('sortDirection', 'asc');
     } else if (sortType === "desc") {
-      sortField = "brand.name";
-      sortDirection = "desc";
+      params.append('sortField', 'brand.name');
+      params.append('sortDirection', 'desc');
     } else {
       // Default sort
-      sortField = "createdOn"; // Assuming default sort is by createdAt ascending based on previous code
-      sortDirection = "asc";
+      params.append('sortField', 'id');
+      params.append('sortDirection', 'asc');
     }
-
-    const sortQuery = sortField
-      ? `&sortField=${encodeURIComponent(
-          sortField
-        )}&sortDirection=${encodeURIComponent(sortDirection)}`
-      : "";
-
-    const url = `${URL}/itb-mshop/v2/sale-items?page=${
-      page - 1
-    }&size=${size}${sortQuery}${
-      filterBrandsQuery ? "&" + filterBrandsQuery : "&filterBrands="
-    }`;
-
+    
+    // Brand filter
+    if (filters.brands && filters.brands.length > 0) {
+      filters.brands.forEach(brand => {
+        params.append('filterBrands', brand);
+      });
+    }
+    
+    // Price filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    if (filters.priceMin !== null && filters.priceMin !== undefined) {
+      params.append('filterPriceLower', filters.priceMin);
+    }
+    if (filters.priceMax !== null && filters.priceMax !== undefined) {
+      params.append('filterPriceUpper', filters.priceMax);
+    }
+    
+    // Storage filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    if (filters.storageSizes && filters.storageSizes.length > 0) {
+      filters.storageSizes.forEach(storage => {
+        if (storage === 'not_specified') {
+          // Handle not specified case - send null to backend
+          params.append('storageSize', 'null');
+        } else {
+          params.append('storageSize', storage);
+        }
+      });
+    }
+    
+    const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
+    
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -76,7 +78,8 @@ async function fetchSaleItemsV2(
 
 async function fetchSaleItemById(id) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -187,6 +190,38 @@ async function fetchBrands() {
   }
 }
 
+async function fetchStorageSizes() {
+  try {
+    // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    const saleItems = result.content || result; // V2 API returns paginated result
+    
+    // ดึง storage sizes ที่ไม่ซ้ำกันและไม่เป็น null
+    const storageSizes = [...new Set(
+      saleItems
+        .map(item => item.storageGb)
+        .filter(storage => storage !== null && storage !== undefined)
+    )].sort((a, b) => a - b);
+    
+    return storageSizes;
+  } catch (error) {
+    console.error("Fetch storage sizes error:", error);
+    // Fallback to hardcoded values if API fails
+    return [32, 64, 128, 256, 512, 1024, 2048];
+  }
+}
+
 async function fetchBrandById(id) {
   try {
     const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
@@ -267,14 +302,32 @@ async function deleteBrand(id) {
   }
 }
 
+async function uploadAttachment(formData) {
+  try {
+    const response = await fetch(`${URL}/api/attachments/upload`, {
+      method: "POST",
+      body: formData, // Don't set Content-Type header for FormData
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Upload attachment error:", error);
+    throw handleApiError(error);
+  }
+}
+
 export {
-  fetchSaleItems,
   fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,
   fetchBrands,
+  fetchStorageSizes,
   fetchBrandById,
   createBrand,
   updateBrand,
   deleteBrand,
+  uploadAttachment,
 };

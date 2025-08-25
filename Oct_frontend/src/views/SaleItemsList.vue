@@ -113,9 +113,9 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { fetchSaleItems, deleteSaleItem } from "@/services/saleItemService";
-import Header from "@/components/Header.vue";
-import Notification from "@/components/Notification.vue";
+import { fetchSaleItemsV2, deleteSaleItem } from "../services/saleItemService";
+import Header from "../components/Header.vue";
+import Notification from "../components/Notification.vue";
 
 const saleItems = ref([]);
 const router = useRouter();
@@ -125,7 +125,13 @@ const showConfirm = ref(false);
 const itemToDelete = ref({ id: null, model: "" });
 
 const loadSaleItems = async () => {
-  saleItems.value = await fetchSaleItems();
+  const response = await fetchSaleItemsV2(1, 1000, "default", {
+    brands: [],
+    priceMin: null,
+    priceMax: null,
+    storageSizes: []
+  });
+  saleItems.value = response.content;
   console.log(saleItems.value);
 };
 
