@@ -10,10 +10,6 @@ const router = useRouter();
 function goToSaleItem(id) {
   router.push({ name: "sale-items-page-byId", params: { id } });
 }
-
-function getImageUrl(fileName) {
-  return `${import.meta.env.VITE_API_URL_PROD}/uploads/${encodeURIComponent(fileName)}`;
-}
 </script>
 
 <template>
@@ -37,13 +33,6 @@ function getImageUrl(fileName) {
           class="itbms-row bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
         >
           <img
-            v-if="item.saleItemImages && item.saleItemImages.length > 0"
-            :src="getImageUrl(item.saleItemImages[0].fileName || item.saleItemImages[0].filename)"
-            alt="Product"
-            class="w-full h-56 object-cover"
-          />
-          <img
-            v-else
             src="../assets/iphone.png"
             alt="Product"
             class="w-full h-56 object-cover"

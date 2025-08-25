@@ -360,8 +360,9 @@ function getImagePreview(file) {
 }
 
 function getImageUrl(fileName) {
-  // Use nginx to serve images directly from uploads folder
-  return `${import.meta.env.VITE_API_URL_PROD}/uploads/${encodeURIComponent(fileName)}`;
+  // Backend exposes GET /attachments/{id}; current BE expects filename here.
+  // Adjusted to use filename directly per BE.
+  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {
