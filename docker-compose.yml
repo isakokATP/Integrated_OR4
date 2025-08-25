@@ -31,6 +31,21 @@ services:
     networks:
       - int221-net
 
+  frontend:
+    build:
+      context: ./Oct_frontend
+      dockerfile: Dockerfile
+    container_name: int221-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./uploads:/usr/share/nginx/html/uploads
+    networks:
+      - int221-net
+
 volumes:
   mysql-data:
 
