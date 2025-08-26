@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -288,6 +289,34 @@ public class SaleItemService {
             throw new NotFoundException("No Item id = " + id);
         }
     }
+
+    @Transactional
+    public void deleteAttachmentByFileName(Integer saleItemId, Integer imageViewOrder) {
+        SaleItem saleItem = saleItemRepository.findById(saleItemId)
+                .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
+
+//        Attachment attachment = saleItem.getAttachments().stream()
+//                .filter(a -> a.getFilename().equals(fileName))
+//                .findFirst()
+//                .orElseThrow(() -> new NotFoundException("Attachment with fileName " + fileName + " not found"));
+
+        Attachment attachment = saleItem.getAttachments().stream()
+                .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Attachment with imageViewOrder " + imageViewOrder + " not found"));
+
+        // ลบไฟล์จริง
+        Path path = Path.of(uploadDir, attachment.getFilePath());
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete attachment file: " + attachment.getFilename(), e);
+        }
+
+        // ลบจาก DB
+        attachmentRepository.delete(attachment);
+    }
+
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
                                               Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper) {
