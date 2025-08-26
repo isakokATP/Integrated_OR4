@@ -1,6 +1,6 @@
 package com.int221.int221backend.dto.request;
 
-import com.int221.int221backend.dto.request.BrandDto;
+import com.int221.int221backend.dto.response.BrandDto;
 import lombok.Data;
 
 import java.util.List;
