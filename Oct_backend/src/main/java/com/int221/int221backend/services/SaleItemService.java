@@ -295,18 +295,13 @@ public class SaleItemService {
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
 
-//        Attachment attachment = saleItem.getAttachments().stream()
-//                .filter(a -> a.getFilename().equals(fileName))
-//                .findFirst()
-//                .orElseThrow(() -> new NotFoundException("Attachment with fileName " + fileName + " not found"));
-
         Attachment attachment = saleItem.getAttachments().stream()
                 .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Attachment with imageViewOrder " + imageViewOrder + " not found"));
 
-        // ลบไฟล์จริง
-        Path path = Path.of(uploadDir, attachment.getFilePath());
+        // ลบไฟล์จริง - ใช้ filename แทน filePath
+        Path path = Path.of(uploadDir, attachment.getFilename());
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
