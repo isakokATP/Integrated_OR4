@@ -196,6 +196,88 @@ export const updateSaleItem = async (id, saleItemData) => {
   }
 };
 
+// เพิ่มฟังก์ชันลบรูปภาพ
+export const deleteAttachment = async (saleItemId, imageViewOrder) => {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete attachment");
+    }
+
+    return {
+      status: response.status,
+      ok: response.ok,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// เพิ่มฟังก์ชันอัปเดต sale item พร้อมรูปภาพ
+export const updateSaleItemWithImages = async (id, saleItemData, images = []) => {
+  try {
+    const formData = new FormData();
+    
+    // เพิ่มข้อมูล sale item
+    formData.append('model', saleItemData.model);
+    formData.append('brand.id', saleItemData.brand.id);
+    formData.append('brand.name', saleItemData.brand.name);
+    formData.append('description', saleItemData.description);
+    formData.append('price', saleItemData.price);
+    
+    if (saleItemData.ramGb !== null && saleItemData.ramGb !== undefined) {
+      formData.append('ramGb', saleItemData.ramGb);
+    }
+    
+    if (saleItemData.screenSizeInch !== null && saleItemData.screenSizeInch !== undefined) {
+      formData.append('screenSizeInch', saleItemData.screenSizeInch);
+    }
+    
+    if (saleItemData.storageGb !== null && saleItemData.storageGb !== undefined) {
+      formData.append('storageGb', saleItemData.storageGb);
+    }
+    
+    if (saleItemData.color !== null && saleItemData.color !== undefined) {
+      formData.append('color', saleItemData.color);
+    }
+    
+    formData.append('quantity', saleItemData.quantity);
+    
+    // เพิ่มรูปภาพใหม่
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        formData.append('SaleItemImages', image);
+      });
+    }
+
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+      method: "PUT",
+      body: formData, // ไม่ต้องตั้ง Content-Type header สำหรับ FormData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Server error:", errorData);
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${
+          errorData.message || "Unknown error"
+        }`
+      );
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Update sale item error:", error);
+    throw handleApiError(error);
+  }
+};
+
 // Brand related functions
 async function fetchBrands() {
   try {
@@ -350,6 +432,8 @@ export {
   fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,
+  deleteSaleItem,
+  updateSaleItem,
   deleteAttachment,
   updateSaleItemWithImages,
   fetchBrands,
