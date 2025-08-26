@@ -432,8 +432,6 @@ export {
   fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,
-  deleteAttachment,
-  updateSaleItemWithImages,
   fetchBrands,
   fetchStorageSizes,
   fetchBrandById,
