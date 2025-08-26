@@ -163,6 +163,15 @@ public class SaleItemController {
         }
     }
 
+    @DeleteMapping("/v2/sale-items/{saleItemId}/attachments/by-order")
+    public ResponseEntity<Void> deleteAttachmentByFileName(
+            @PathVariable Integer saleItemId,
+            @RequestParam Integer imageViewOrder) {
+
+        saleItemService.deleteAttachmentByFileName(saleItemId, imageViewOrder);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/v2/sale-items/{id}")
     public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
         try {
