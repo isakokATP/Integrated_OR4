@@ -1,6 +1,7 @@
 import { handleApiError } from "../api/client";
 
-const URL = import.meta.env.VITE_API_URL_PROD;
+// เปลี่ยนจาก localhost เป็น production URL
+const URL = "http://ip24or4.sit.kmutt.ac.th";
 
 // API URL loaded from environment variables
 
@@ -149,25 +150,25 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-async function updateSaleItem(id, data) {
+export const updateSaleItem = async (id, saleItemData) => {
   try {
-    const response = await fetch(`${URL}/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(saleItemData),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error("Failed to update item");
     }
+
     return await response.json();
   } catch (error) {
-    console.error("Update sale item error:", error);
-    throw handleApiError(error);
+    throw error;
   }
-}
+};
 
 // Brand related functions
 async function fetchBrands() {

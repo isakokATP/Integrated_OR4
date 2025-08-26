@@ -6,7 +6,7 @@ services:
     container_name: int221-mysql
     restart: always
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 'mysql'
     volumes:
