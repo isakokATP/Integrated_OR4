@@ -319,4 +319,23 @@ public class SaleItemService {
         response.setPage(page);
         return response;
     }
+
+    public void deleteAttachmentById(Integer attachmentId) {
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new NotFoundException("No Attachment id = " + attachmentId));
+        
+        // Delete the file from filesystem
+        try {
+            Path filePath = Path.of(attachment.getFilePath());
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+        } catch (IOException e) {
+            // Log the error but don't fail the operation
+            System.err.println("Failed to delete file: " + attachment.getFilePath() + ", Error: " + e.getMessage());
+        }
+        
+        // Delete from database
+        attachmentRepository.delete(attachment);
+    }
 }

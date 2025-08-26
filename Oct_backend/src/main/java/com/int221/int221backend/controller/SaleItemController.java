@@ -179,4 +179,17 @@ public class SaleItemController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
         }
     }
+
+    // Delete specific attachment
+    @DeleteMapping("/v2/attachments/{attachmentId}")
+    public ResponseEntity<Void> deleteAttachment(@PathVariable Integer attachmentId) {
+        try {
+            saleItemService.deleteAttachmentById(attachmentId);
+            return ResponseEntity.noContent().build();
+        } catch (NotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete attachment", e);
+        }
+    }
 }

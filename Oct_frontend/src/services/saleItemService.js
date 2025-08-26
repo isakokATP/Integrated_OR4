@@ -149,25 +149,25 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-export const updateSaleItem = async (id, saleItemData) => {
+async function updateSaleItem(id, data) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}/v1/sale-items/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(saleItemData),
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error("Failed to update item");
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     return await response.json();
   } catch (error) {
-    throw error;
+    console.error("Update sale item error:", error);
+    throw handleApiError(error);
   }
-};
+}
 
 // Brand related functions
 async function fetchBrands() {

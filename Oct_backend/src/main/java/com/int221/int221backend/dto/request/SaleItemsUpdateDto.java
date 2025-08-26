@@ -1,16 +1,11 @@
 package com.int221.int221backend.dto.request;
 
-import com.int221.int221backend.dto.response.BrandDto;
-import jakarta.validation.constraints.Min;
-import lombok.*;
+import com.int221.int221backend.dto.request.BrandDto;
+import lombok.Data;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Data
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class SaleItemsUpdateDto {
     private Integer id;
     private String model;
@@ -18,23 +13,9 @@ public class SaleItemsUpdateDto {
     private String description;
     private Integer price;
     private Integer ramGb;
-    private BigDecimal screenSizeInch;
-
-    @Min(value = 0, message = "Quantity must not be negative")
-    private Long quantity;
-
+    private Double screenSizeInch;
     private Integer storageGb;
     private String color;
-
-    public void setModel(String model) {
-        this.model = model.trim();
-    }
-
-    public void setDescription(String description) {
-        this.description = description == null ? null : description.trim();
-    }
-
-    public void setColor(String color) {
-        this.color = color == null ? null : color.trim();
-    }
+    private Long quantity;
+    private List<ExistingImageDto> saleItemImages; // Add this field for existing images
 }
