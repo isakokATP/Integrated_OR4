@@ -159,3 +159,49 @@ INSERT INTO attachments (
     'png',
     1
 );
+
+CREATE TABLE users (
+    id                 INT AUTO_INCREMENT PRIMARY KEY,
+    nick_name          VARCHAR(50) NOT NULL,
+    email              VARCHAR(150) NOT NULL UNIQUE,
+    full_name          VARCHAR(150) NOT NULL,
+    password           VARCHAR(255) NOT NULL,
+    phone_number       VARCHAR(15) DEFAULT NULL,
+    bank_account       VARCHAR(30) DEFAULT NULL,
+    id_card_number     VARCHAR(20) DEFAULT NULL UNIQUE,
+    user_type          ENUM('SELLER', 'BUYER') NOT NULL,
+    id_card_image_front VARCHAR(255) DEFAULT NULL,
+    id_card_image_back  VARCHAR(255) DEFAULT NULL,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (
+    id,
+    nick_name,
+    email,
+    full_name,
+    password,
+    phone_number,
+    bank_account,
+    id_card_number,
+    user_type,
+    id_card_image_front,
+    id_card_image_back,
+    created_at,
+    updated_at
+) VALUES (
+    1,
+    'Somsuan',
+    'itbkk.somsuan@ad.sit.kmutt.ac.th',
+    'Somsuan Hundee',
+    'itProj24/SOM',
+    '083-456-7890',
+    '0371234567',
+    '1000111100222',
+    'SELLER',
+    '1000111100222_front.png',
+    '1000111100222_back.png',
+    NOW(),
+    NOW()
+);
