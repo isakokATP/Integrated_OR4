@@ -366,8 +366,8 @@ async function deleteBrand(id) {
   }
 }
 
-// New function to delete attachment
-export const deleteAttachment = async (saleItemId, imageViewOrder) => {
+// Function to delete attachment
+const deleteAttachment = async (saleItemId, imageViewOrder) => {
   try {
     const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
       method: "DELETE",
