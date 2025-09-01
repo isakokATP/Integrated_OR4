@@ -62,7 +62,7 @@ async function fetchSaleItemsV2(
       });
     }
     
-    const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
+    const url = `${URL}/itb-mshop/v1/sale-items?${params.toString()}`;
     
     const response = await fetch(url);
 
@@ -79,7 +79,7 @@ async function fetchSaleItemsV2(
 async function fetchSaleItemById(id) {
   try {
     // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -132,9 +132,12 @@ async function createSaleItem(saleItemData, images = []) {
       });
     }
 
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
-      body: formData, // ไม่ต้องตั้ง Content-Type header สำหรับ FormData
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(saleItemData), // ใช้ JSON body สำหรับ v1
     });
 
     if (!response.ok) {
@@ -156,7 +159,7 @@ async function createSaleItem(saleItemData, images = []) {
 
 export const deleteSaleItem = async (id) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -181,7 +184,7 @@ export const deleteSaleItem = async (id) => {
 // เพิ่มฟังก์ชันลบรูปภาพ
 export const deleteAttachment = async (saleItemId, imageViewOrder) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -245,9 +248,12 @@ export const updateSaleItemWithImages = async (id, saleItemData, images = []) =>
       formDataEntries: Array.from(formData.entries())
     });
 
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "PUT",
-      body: formData, // ไม่ต้องตั้ง Content-Type header สำหรับ FormData
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(saleItemData), // ใช้ JSON body สำหรับ v1
     });
 
     if (!response.ok) {
