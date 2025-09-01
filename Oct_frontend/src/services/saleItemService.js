@@ -132,7 +132,7 @@ async function createSaleItem(saleItemData, images = []) {
       });
     }
 
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
