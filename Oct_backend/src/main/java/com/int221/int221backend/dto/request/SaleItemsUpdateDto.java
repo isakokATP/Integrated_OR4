@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @Getter
@@ -26,9 +25,6 @@ public class SaleItemsUpdateDto {
 
     private Integer storageGb;
     private String color;
-    
-    // Add images field to receive image data
-    private List<Object> images; // Can handle both String and complex objects
 
     public void setModel(String model) {
         this.model = model.trim();

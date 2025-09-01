@@ -111,7 +111,7 @@
          </div>
 
          <!-- Custom Price Range Input -->
-         <div v-if="showCustomPriceInput" class="relative mt-2 custom-price-input">
+         <div v-if="showCustomPriceInput" class="relative mt-2">
            <div
              class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md p-4 w-64"
            >
@@ -257,7 +257,6 @@ const allBrands = ref([]);
 const allStorageSizes = ref([]);
 const customMinPrice = ref('');
 const customMaxPrice = ref('');
-const searchKeyword = ref('');
 
 const priceRanges = [
   { label: "0 - 5,000 Baht", min: 0, max: 5000 },
@@ -286,17 +285,6 @@ const selectedPriceRange = computed(() => {
   // If no predefined range matches, it's a custom range
   const minDisplay = props.modelValue.priceMin !== null ? props.modelValue.priceMin : '0';
   const maxDisplay = props.modelValue.priceMax !== null ? props.modelValue.priceMax : '∞';
-  
-  // ถ้ามีแค่ min price ให้แสดงเป็น min - min
-  if (props.modelValue.priceMin !== null && props.modelValue.priceMax === null) {
-    return {
-      label: `Custom: ${minDisplay} - ${minDisplay} Baht`,
-      min: props.modelValue.priceMin,
-      max: props.modelValue.priceMin,
-      isCustom: true
-    };
-  }
-  
   return {
     label: `Custom: ${minDisplay} - ${maxDisplay} Baht`,
     min: props.modelValue.priceMin,
@@ -434,25 +422,10 @@ function clearAllFilters() {
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: [],
-    searchKeyWord: null
+    storageSizes: []
   };
-  searchKeyword.value = '';
   emit("update:modelValue", newValue);
   sessionStorage.removeItem("filterSettings");
-}
-
-function updateSearchKeyword() {
-  const newValue = { ...props.modelValue, searchKeyWord: searchKeyword.value };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-}
-
-function clearSearchKeyword() {
-  searchKeyword.value = '';
-  const newValue = { ...props.modelValue, searchKeyWord: null };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
 }
 
 function saveToSessionStorage(value) {
@@ -481,19 +454,16 @@ onMounted(async () => {
       const parsedSettings = JSON.parse(savedFilterSettings);
       if (parsedSettings && typeof parsedSettings === 'object') {
         
-                         // Add click outside handler for dropdowns
-        document.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
-            showBrandDropdown.value = false;
-            showPriceDropdown.value = false;
-            showStorageDropdown.value = false;
-            // ไม่ปิด custom price input เมื่อคลิกที่ input fields
-            if (!target.closest('.custom-price-input')) {
-              showCustomPriceInput.value = false;
-            }
-          }
-        });
+                 // Add click outside handler for dropdowns
+         document.addEventListener('click', (event) => {
+           const target = event.target;
+           if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
+             showBrandDropdown.value = false;
+             showPriceDropdown.value = false;
+             showStorageDropdown.value = false;
+             showCustomPriceInput.value = false;
+           }
+         });
         // Ensure all required properties exist
         const defaultSettings = {
           brands: [],

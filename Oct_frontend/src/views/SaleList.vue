@@ -6,11 +6,8 @@ import Notification from "../components/Notification.vue";
 import { useRouter, useRoute } from "vue-router";
 import { ref, onMounted, watch, computed } from "vue";
 import {
-  fetchSaleItemsV1,
-  deleteSaleItem,
-  fetchBrands,
-  fetchStorageSizes,
-} from "../services/saleItemService";
+  fetchSaleItemsV2,
+} from "../services/saleItemService.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -22,8 +19,7 @@ const filterSettings = ref({
   brands: [],
   priceMin: null,
   priceMax: null,
-  storageSizes: [],
-  searchKeyWord: null
+  storageSizes: []
 });
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
@@ -123,8 +119,7 @@ onMounted(async () => {
           brands: [],
           priceMin: null,
           priceMax: null,
-          storageSizes: [],
-          searchKeyWord: null
+          storageSizes: []
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         filterSettings.value = mergedSettings;
@@ -148,7 +143,7 @@ async function loadSaleItems() {
     // Temporarily store the requested page before fetching
     const requestedPage = currentPage.value;
 
-    const response = await fetchSaleItemsV1(
+    const response = await fetchSaleItemsV2(
       requestedPage, // Use the potentially loaded page
       itemsPerPage.value,
       sortType.value,

@@ -42,6 +42,53 @@ public class SaleItemController {
     private SaleItemRepository saleItemRepository;
 
     @GetMapping("/v1/sale-items")
+    public List<SaleItemDto> getAllSaleItem() {
+        List<SaleItem> saleItemList = saleItemService.getAllSaleItem();
+        System.out.println(saleItemList);
+        return saleItemList.stream()
+                .map(saleItem -> {
+                    SaleItemDto saleItemDto = modelMapper.map(saleItem, SaleItemDto.class);
+                    // saleItemDto.setBrandName(saleItem.getBrand().getName());
+                    saleItemDto.setBrandName(saleItem.getBrand().getName());
+                    System.out.println("Mapped SaleItemDTO: " + saleItemDto);
+                    return saleItemDto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/v1/sale-items/{id}")
+    public SaleItemByIdDto getItemById(@PathVariable Integer id) {
+        SaleItem saleItem = saleItemService.getSaleItemById(id);
+        SaleItemByIdDto saleItemByIdDto = modelMapper.map(saleItem, SaleItemByIdDto.class);
+        saleItemByIdDto.setBrandName(saleItem.getBrand().getName());
+        return saleItemByIdDto;
+    }
+
+//    //  PBI3
+//    @PostMapping("/v1/sale-items")
+//    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
+//        NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
+//    }
+
+    //  PBI4
+    @PutMapping("/v1/sale-items/{id}")
+    public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
+        saleItemsUpdateDto.setId(id);
+        SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
+        System.out.println("Mapped SaleItemsUpdateResponseDto: " + response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //  PBI5
+//    @DeleteMapping("/v1/sale-items/{id}")
+//    public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
+//        saleItemService.deleteSaleItemById(id);
+//        return ResponseEntity.noContent().build();
+//    }
+
+    //  PBI 10
+    @GetMapping("/v2/sale-items")
     public ResponseEntity<SaleItemPaginateDto> getAllItems(@RequestParam(value = "filterBrands", required = false) String[] filterBrands,
                                                            @RequestParam(value = "filterStorages", required = false) Integer[] storageSize,
                                                            @RequestParam(value = "filterPriceLower", required = false) Integer filterPriceLower,
@@ -49,12 +96,12 @@ public class SaleItemController {
                                                            @RequestParam("page") Integer page,
                                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                                            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
-                                                           @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-                                                           @RequestParam(value = "searchKeyWord", required = false) String searchKeyWord) {
-        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper, searchKeyWord));
+                                                           @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
     }
 
-    @GetMapping("/v1/sale-items/{id}")
+    //pbi15
+    @GetMapping("/v2/sale-items/{id}")
     public SaleItemByIdDto getSaleItemById(@PathVariable Integer id) {
         SaleItem saleItem = saleItemRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SaleItem not found"));
@@ -70,14 +117,15 @@ public class SaleItemController {
         return saleItemByIdDto;
     }
 
-    //  PBI3 - Support both JSON and FormData
-    @PostMapping("/v1/sale-items")
+    // pbi15
+    @PostMapping("/v2/sale-items")
     public ResponseEntity<NewSaleItemResponseDto> createProduct(
-            @RequestBody NewSaleItemDto newSaleItem
+            @ModelAttribute NewSaleItemDto newSaleItem,
+            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
     ) {
         try {
             // 1. เรียก Service เพื่อสร้าง SaleItem และบันทึกรูป
-            NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, null);
+            NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, images);
 
             // 2. Return response
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -92,15 +140,16 @@ public class SaleItemController {
         }
     }
 
-    //  PBI4 - Support both JSON and FormData
-    @PutMapping("/v1/sale-items/{id}")
+//  pbi16
+    @PutMapping("/v2/sale-items/{id}")
     public ResponseEntity<SaleItemUpdateResponseDto> updateSaleItemWithImages(
             @PathVariable Integer id,
-            @RequestBody SaleItemsUpdateDto saleItemsUpdateDto
+            @ModelAttribute SaleItemsUpdateDto saleItemsUpdateDto,
+            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
     ) {
         try {
             // เรียก Service เพื่ออัปเดต SaleItem และรูปภาพ
-            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto);
+            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto, images);
 
             return ResponseEntity.ok(response);
 
@@ -114,24 +163,29 @@ public class SaleItemController {
         }
     }
 
-    //  PBI5
-    @DeleteMapping("/v1/sale-items/{id}")
-    public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
-        try {
-            // เรียก Service ลบ SaleItem ตาม ID
-            saleItemService.deleteSaleItemById(id);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
-        }
-    }
-
-    @DeleteMapping("/v1/sale-items/{saleItemId}/attachments/by-order")
+    @DeleteMapping("/v2/sale-items/{saleItemId}/attachments/by-order")
     public ResponseEntity<Void> deleteAttachmentByFileName(
             @PathVariable Integer saleItemId,
             @RequestParam Integer imageViewOrder) {
 
         saleItemService.deleteAttachmentByFileName(saleItemId, imageViewOrder);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/v2/sale-items/{id}")
+    public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
+        try {
+            // เรียก Service ลบ SaleItem ตาม ID
+            saleItemService.deleteSaleItemById(id);
+            return ResponseEntity.noContent().build(); // 204 No Content
+
+        } catch (NotFoundException e) {
+            // กรณีไม่พบ SaleItem
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+
+        } catch (Exception e) {
+            // กรณีอื่น ๆ
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
+        }
     }
 }

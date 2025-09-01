@@ -4,7 +4,7 @@ const URL = import.meta.env.VITE_API_URL_PROD;
 
 // API URL loaded from environment variables
 
-async function fetchSaleItemsV1(
+async function fetchSaleItemsV2(
   page = 1,
   size = 10,
   sortType = "default",
@@ -12,8 +12,7 @@ async function fetchSaleItemsV1(
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: [],
-    searchKeyWord: null
+    storageSizes: []
   }
 ) {
   try {
@@ -56,19 +55,14 @@ async function fetchSaleItemsV1(
       filters.storageSizes.forEach(storage => {
         if (storage === 'not_specified') {
           // Handle not specified case - send null to backend
-          params.append('storageSize', '-1');
+          params.append('storageSize', 'null');
         } else {
           params.append('storageSize', storage);
         }
       });
     }
     
-    // Search keyword filter
-    if (filters.searchKeyWord && filters.searchKeyWord.trim() !== '') {
-      params.append('searchKeyWord', filters.searchKeyWord.trim());
-    }
-    
-    const url = `${URL}/itb-mshop/v1/sale-items?${params.toString()}`;
+    const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
     
     const response = await fetch(url);
 
@@ -84,8 +78,8 @@ async function fetchSaleItemsV1(
 
 async function fetchSaleItemById(id) {
   try {
-    // Prefer v1 (has saleItemImages); if not available in BE, v1 still works for core fields
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -102,48 +96,18 @@ async function fetchSaleItemById(id) {
   }
 }
 
-async function createSaleItem(saleItemData, images = []) {
+async function createSaleItem(saleItemData) {
   try {
-    const formData = new FormData();
-    
-    // เพิ่มข้อมูล sale item
-    formData.append('model', saleItemData.model);
-    formData.append('brand.id', saleItemData.brand.id);
-    formData.append('brand.name', saleItemData.brand.name);
-    formData.append('description', saleItemData.description);
-    formData.append('price', saleItemData.price);
-    
-    if (saleItemData.ramGb !== null && saleItemData.ramGb !== undefined) {
-      formData.append('ramGb', saleItemData.ramGb);
-    }
-    
-    if (saleItemData.screenSizeInch !== null && saleItemData.screenSizeInch !== undefined) {
-      formData.append('screenSizeInch', saleItemData.screenSizeInch);
-    }
-    
-    if (saleItemData.storageGb !== null && saleItemData.storageGb !== undefined) {
-      formData.append('storageGb', saleItemData.storageGb);
-    }
-    
-    if (saleItemData.color !== null && saleItemData.color !== undefined) {
-      formData.append('color', saleItemData.color);
-    }
-    
-    formData.append('quantity', saleItemData.quantity);
-    
-    // เพิ่มรูปภาพ
-    if (images && images.length > 0) {
-      images.forEach((image, index) => {
-        formData.append('SaleItemImages', image);
-      });
-    }
+    console.log("API URL:", URL);
+    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items`);
 
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
-      body: JSON.stringify(saleItemData), // ใช้ JSON body สำหรับ v1
+      body: JSON.stringify(saleItemData),
     });
 
     if (!response.ok) {
@@ -185,63 +149,23 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-
-
-// เพิ่มฟังก์ชันลบรูปภาพ
-export const deleteAttachment = async (saleItemId, imageViewOrder) => {
+export const updateSaleItem = async (id, saleItemData) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete attachment");
-    }
-
-    return {
-      status: response.status,
-      ok: response.ok,
-    };
-  } catch (error) {
-    throw error;
-  }
-};
-
-// เพิ่มฟังก์ชันอัปเดต sale item พร้อมรูปภาพ
-export const updateSaleItemWithImages = async (id, saleItemData) => {
-  try {
-    console.log('Sending data to backend:', {
-      id,
-      saleItemData,
-      imagesCount: saleItemData.images ? saleItemData.images.length : 0
-    });
-
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(saleItemData), // ส่งข้อมูลทั้งหมดรวมรูปภาพ
+      body: JSON.stringify(saleItemData),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Server error:", errorData);
-      throw new Error(
-        `HTTP error! status: ${response.status}, message: ${
-          errorData.message || "Unknown error"
-        }`
-      );
+      throw new Error("Failed to update item");
     }
-    const data = await response.json();
-    console.log('Backend response:', data);
-    return data;
+
+    return await response.json();
   } catch (error) {
-    console.error("Update sale item error:", error);
-    throw handleApiError(error);
+    throw error;
   }
 };
 
@@ -268,8 +192,8 @@ async function fetchBrands() {
 
 async function fetchStorageSizes() {
   try {
-    // ดึงข้อมูล sale items ทั้งหมดจาก V1 API เพื่อเอา storage sizes ที่มีอยู่จริง
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items?page=0&size=1000`, {
+    // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -281,7 +205,7 @@ async function fetchStorageSizes() {
     }
     
     const result = await response.json();
-    const saleItems = result.content || result; // V1 API returns paginated result
+    const saleItems = result.content || result; // V2 API returns paginated result
     
     // ดึง storage sizes ที่ไม่ซ้ำกันและไม่เป็น null
     const storageSizes = [...new Set(
@@ -396,7 +320,7 @@ async function uploadAttachment(formData) {
 }
 
 export {
-  fetchSaleItemsV1,
+  fetchSaleItemsV2,
   fetchSaleItemById,
   createSaleItem,
   fetchBrands,

@@ -17,11 +17,8 @@ public class NewSaleItemDto {
     @NotNull(message = "Brand is required")
     private BrandDto brand;
 
-    @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull(message = "Price is required")
-    @Min(value = 0, message = "Price must not be negative")
     private Integer price;
     private Integer ramGb;
 

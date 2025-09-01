@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class SaleItemService {
@@ -186,7 +185,8 @@ public class SaleItemService {
     @Transactional
     public SaleItemUpdateResponseDto updateSaleItemWithImages(
             Integer id,
-            SaleItemsUpdateDto saleItemsUpdateDto
+            SaleItemsUpdateDto saleItemsUpdateDto,
+            List<MultipartFile> images
     ) {
         // 1. หา SaleItem เก่าจาก DB
         SaleItem existingItem = saleItemRepository.findById(id)
@@ -217,54 +217,52 @@ public class SaleItemService {
             throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
         }
 
-        // 4. อัปเดตรูปภาพถ้ามี
-        if (saleItemsUpdateDto.getImages() != null && !saleItemsUpdateDto.getImages().isEmpty()) {
-            if (saleItemsUpdateDto.getImages().size() > 4) {
+        // 4. อัปโหลดรูปภาพใหม่ถ้ามี
+        if (images != null && !images.isEmpty()) {
+            if (images.size() > 4) {
                 throw new IllegalArgumentException("You can upload maximum 4 images.");
             }
 
-            // ลบรูปเก่าออกก่อน
+            // ลบรูปเก่าออกก่อน (ถ้าต้องการ replace)
             attachmentRepository.deleteAll(existingItem.getAttachments());
             existingItem.getAttachments().clear();
 
-            System.out.println("Received " + saleItemsUpdateDto.getImages().size() + " images for update");
-            System.out.println("Image data types: " + saleItemsUpdateDto.getImages().stream()
-                .map(img -> img != null ? img.getClass().getSimpleName() : "null")
-                .collect(Collectors.joining(", ")));
-
-            // Process และบันทึกรูปภาพใหม่
             int order = 1;
-            for (Object imageData : saleItemsUpdateDto.getImages()) {
-                if (imageData instanceof String) {
-                    // ถ้าเป็น filename string ให้สร้าง attachment ใหม่
-                    String fileName = (String) imageData;
-                    
-                    // Detect file type จาก filename
-                    FileType fileType = FileType.JPG; // default
-                    String lowerFileName = fileName.toLowerCase();
-                    if (lowerFileName.endsWith(".png")) {
-                        fileType = FileType.PNG;
-                    } else if (lowerFileName.endsWith(".jpeg")) {
-                        fileType = FileType.JPEG;
-                    } else if (lowerFileName.endsWith(".jpg")) {
-                        fileType = FileType.JPG;
-                    }
-                    
-                    // สร้าง attachment ใหม่
-                    Attachment attachment = Attachment.builder()
-                            .saleItem(existingItem)
-                            .filename(fileName)
-                            .filePath("/uploads/" + fileName) // ใช้ path ง่ายๆ
-                            .fileType(fileType) // ใช้ file type ที่ detect ได้
-                            .fileSize(0) // ไม่มี file size จริง
-                            .imageViewOrder(order++)
-                            .build();
-
-                    attachmentRepository.save(attachment);
-                    existingItem.getAttachments().add(attachment);
-                    
-                    System.out.println("Created attachment for image: " + fileName + " with type: " + fileType);
+            for (MultipartFile file : images) {
+                long maxSize = 2 * 1024 * 1024; // 2MB
+                if (file.getSize() > maxSize) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
                 }
+
+                String extension = getFileExtension(file.getOriginalFilename());
+                if (!extension.equalsIgnoreCase("jpg") &&
+                        !extension.equalsIgnoreCase("jpeg") &&
+                        !extension.equalsIgnoreCase("png")) {
+                    throw new IllegalArgumentException(
+                            "File " + file.getOriginalFilename() + " must be JPEG or PNG");
+                }
+
+                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                Path path = Path.of(uploadDir, fileName);
+                try {
+                    Files.createDirectories(path.getParent());
+                    Files.write(path, file.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
+                }
+
+                Attachment attachment = Attachment.builder()
+                        .saleItem(existingItem)
+                        .filename(fileName)
+                        .filePath(path.toString())
+                        .fileType(getFileType(extension))
+                        .fileSize((int) file.getSize())
+                        .imageViewOrder(order++)
+                        .build();
+
+                attachmentRepository.save(attachment);
+                existingItem.getAttachments().add(attachment);
             }
         }
 
@@ -297,18 +295,13 @@ public class SaleItemService {
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
 
-//        Attachment attachment = saleItem.getAttachments().stream()
-//                .filter(a -> a.getFilename().equals(fileName))
-//                .findFirst()
-//                .orElseThrow(() -> new NotFoundException("Attachment with fileName " + fileName + " not found"));
-
         Attachment attachment = saleItem.getAttachments().stream()
                 .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Attachment with imageViewOrder " + imageViewOrder + " not found"));
 
-        // ลบไฟล์จริง
-        Path path = Path.of(uploadDir, attachment.getFilePath());
+        // ลบไฟล์จริง - ใช้ filename แทน filePath
+        Path path = Path.of(uploadDir, attachment.getFilename());
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
@@ -321,7 +314,7 @@ public class SaleItemService {
 
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
-                                              Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper, String searchKeyWord) {
+                                              Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
@@ -337,7 +330,7 @@ public class SaleItemService {
         Page<SaleItem> saleItemPage;
 
 
-        saleItemPage = saleItemRepository.findByFiltersAndSearch(brandList, storageList, pageable, filterPriceLower, filterPriceUpper, searchKeyWord);
+        saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, storageList, pageable, filterPriceLower, filterPriceUpper);
 
         SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));

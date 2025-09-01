@@ -344,7 +344,7 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { createSaleItem, fetchBrands } from "../services/saleItemService";
+import { createSaleItem, fetchBrands, uploadAttachment } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import { useRouter } from "vue-router";
 
@@ -567,6 +567,25 @@ function handleCancel() {
   router.push({ name: "sale-items-list-page" });
 }
 
+async function uploadFiles(saleItemId) {
+  for (let i = 0; i < selectedFiles.value.length; i++) {
+    const file = selectedFiles.value[i];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('saleItemId', saleItemId);
+    
+    try {
+      await uploadAttachment(formData);
+      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
+      if (i < selectedFiles.value.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      console.error(`Failed to upload file ${file.name}:`, error);
+    }
+  }
+}
+
 async function handleSave() {
   if (!validateAllFields()) {
     return;
@@ -590,8 +609,13 @@ async function handleSave() {
   };
 
   try {
-    // ส่งข้อมูล sale item พร้อมรูปภาพในครั้งเดียว
-    const createdItem = await createSaleItem(dataToSend, selectedFiles.value);
+    // First create the sale item
+    const createdItem = await createSaleItem(dataToSend);
+    
+    // Then upload files if any
+    if (selectedFiles.value.length > 0) {
+      await uploadFiles(createdItem.id);
+    }
     
     alert("สร้างรายการขายสำเร็จ!");
     router.push({
