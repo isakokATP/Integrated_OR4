@@ -256,6 +256,13 @@ export const updateSaleItemWithImages = async (id, saleItemData, images = []) =>
       });
     }
 
+    console.log('Sending data to backend:', {
+      id,
+      saleItemData,
+      imagesCount: images.length,
+      formDataEntries: Array.from(formData.entries())
+    });
+
     const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "PUT",
       body: formData, // ไม่ต้องตั้ง Content-Type header สำหรับ FormData
@@ -271,6 +278,7 @@ export const updateSaleItemWithImages = async (id, saleItemData, images = []) =>
       );
     }
     const data = await response.json();
+    console.log('Backend response:', data);
     return data;
   } catch (error) {
     console.error("Update sale item error:", error);
