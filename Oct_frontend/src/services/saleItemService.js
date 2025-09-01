@@ -176,7 +176,25 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
+export const updateSaleItem = async (id, saleItemData) => {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(saleItemData),
+    });
 
+    if (!response.ok) {
+      throw new Error("Failed to update item");
+    }
+
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
 
 // เพิ่มฟังก์ชันลบรูปภาพ
 export const deleteAttachment = async (saleItemId, imageViewOrder) => {
