@@ -285,6 +285,17 @@ const selectedPriceRange = computed(() => {
   // If no predefined range matches, it's a custom range
   const minDisplay = props.modelValue.priceMin !== null ? props.modelValue.priceMin : '0';
   const maxDisplay = props.modelValue.priceMax !== null ? props.modelValue.priceMax : '∞';
+  
+  // ถ้ามีแค่ min price ให้แสดงเป็น min - min
+  if (props.modelValue.priceMin !== null && props.modelValue.priceMax === null) {
+    return {
+      label: `Custom: ${minDisplay} - ${minDisplay} Baht`,
+      min: props.modelValue.priceMin,
+      max: props.modelValue.priceMin,
+      isCustom: true
+    };
+  }
+  
   return {
     label: `Custom: ${minDisplay} - ${maxDisplay} Baht`,
     min: props.modelValue.priceMin,

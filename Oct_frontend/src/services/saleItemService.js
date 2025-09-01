@@ -55,7 +55,7 @@ async function fetchSaleItemsV2(
       filters.storageSizes.forEach(storage => {
         if (storage === 'not_specified') {
           // Handle not specified case - send null to backend
-          params.append('storageSize', 'null');
+          params.append('storageSize', '-1');
         } else {
           params.append('storageSize', storage);
         }
