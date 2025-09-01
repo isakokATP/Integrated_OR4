@@ -227,12 +227,34 @@ public class SaleItemService {
             attachmentRepository.deleteAll(existingItem.getAttachments());
             existingItem.getAttachments().clear();
 
-            // สำหรับตอนนี้ เราจะไม่ process รูปภาพจริง แต่จะเก็บข้อมูลไว้
-            // ในอนาคตสามารถเพิ่ม logic สำหรับ process รูปภาพได้
             System.out.println("Received " + saleItemsUpdateDto.getImages().size() + " images for update");
             System.out.println("Image data types: " + saleItemsUpdateDto.getImages().stream()
                 .map(img -> img != null ? img.getClass().getSimpleName() : "null")
                 .collect(Collectors.joining(", ")));
+
+            // Process และบันทึกรูปภาพใหม่
+            int order = 1;
+            for (Object imageData : saleItemsUpdateDto.getImages()) {
+                if (imageData instanceof String) {
+                    // ถ้าเป็น filename string ให้สร้าง attachment ใหม่
+                    String fileName = (String) imageData;
+                    
+                    // สร้าง attachment ใหม่
+                    Attachment attachment = Attachment.builder()
+                            .saleItem(existingItem)
+                            .filename(fileName)
+                            .filePath("/uploads/" + fileName) // ใช้ path ง่ายๆ
+                            .fileType(FileType.IMAGE) // ใช้ default type
+                            .fileSize(0) // ไม่มี file size จริง
+                            .imageViewOrder(order++)
+                            .build();
+
+                    attachmentRepository.save(attachment);
+                    existingItem.getAttachments().add(attachment);
+                    
+                    System.out.println("Created attachment for image: " + fileName);
+                }
+            }
         }
 
         // 5. Save & refresh

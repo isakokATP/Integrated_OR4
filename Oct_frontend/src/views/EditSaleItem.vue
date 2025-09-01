@@ -445,6 +445,11 @@ const handleSave = async () => {
       images: selectedFiles.value.map(file => file.name)
     };
 
+    // Debug: Log what we're sending
+    console.log('Frontend - selectedFiles:', selectedFiles.value);
+    console.log('Frontend - dataToSend:', dataToSend);
+    console.log('Frontend - images array:', dataToSend.images);
+
     // ส่งข้อมูลทั้งหมดไป backend (รวมรูปภาพ)
     await updateSaleItemWithImages(id, dataToSend);
     
