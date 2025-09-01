@@ -17,8 +17,8 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
-    // Register User (POST /v2/users/register)
-    @PostMapping("/v2/users/register")
+    // Register User (POST /v1/users/register)
+    @PostMapping("/v1/users/register")
     public ResponseEntity<UserResponseDto> registerUser(
             @ModelAttribute UserRequestDto userRequest,
             @RequestPart(value = "idCardImageFront", required = false) MultipartFile idCardImageFront,
@@ -39,8 +39,8 @@ public class UsersController {
         return ResponseEntity.ok(savedUser);
     }
 
-    // Get User by ID (GET /itb-mshop/v2/users/{id})
-    @GetMapping("/v2/users/{id}")
+    // Get User by ID (GET /itb-mshop/v1/users/{id})
+    @GetMapping("/v1/users/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Integer id) {
         UserResponseDto responseDto = userService.getUserById(id);
         return ResponseEntity.ok(responseDto);

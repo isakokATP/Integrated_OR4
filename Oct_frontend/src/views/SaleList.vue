@@ -6,8 +6,11 @@ import Notification from "../components/Notification.vue";
 import { useRouter, useRoute } from "vue-router";
 import { ref, onMounted, watch, computed } from "vue";
 import {
-  fetchSaleItemsV2,
-} from "../services/saleItemService.js";
+  fetchSaleItemsV1,
+  deleteSaleItem,
+  fetchBrands,
+  fetchStorageSizes,
+} from "../services/saleItemService";
 
 const router = useRouter();
 const route = useRoute();
@@ -143,7 +146,7 @@ async function loadSaleItems() {
     // Temporarily store the requested page before fetching
     const requestedPage = currentPage.value;
 
-    const response = await fetchSaleItemsV2(
+    const response = await fetchSaleItemsV1(
       requestedPage, // Use the potentially loaded page
       itemsPerPage.value,
       sortType.value,

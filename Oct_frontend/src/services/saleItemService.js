@@ -4,7 +4,7 @@ const URL = import.meta.env.VITE_API_URL_PROD;
 
 // API URL loaded from environment variables
 
-async function fetchSaleItemsV2(
+async function fetchSaleItemsV1(
   page = 1,
   size = 10,
   sortType = "default",
@@ -78,7 +78,7 @@ async function fetchSaleItemsV2(
 
 async function fetchSaleItemById(id) {
   try {
-    // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
+    // Prefer v1 (has saleItemImages); if not available in BE, v1 still works for core fields
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
       method: "GET",
       headers: {
@@ -132,7 +132,7 @@ async function createSaleItem(saleItemData, images = []) {
       });
     }
 
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -297,8 +297,8 @@ async function fetchBrands() {
 
 async function fetchStorageSizes() {
   try {
-    // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
+    // ดึงข้อมูล sale items ทั้งหมดจาก V1 API เพื่อเอา storage sizes ที่มีอยู่จริง
+    const response = await fetch(`${URL}/itb-mshop/v1/sale-items?page=0&size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -310,7 +310,7 @@ async function fetchStorageSizes() {
     }
     
     const result = await response.json();
-    const saleItems = result.content || result; // V2 API returns paginated result
+    const saleItems = result.content || result; // V1 API returns paginated result
     
     // ดึง storage sizes ที่ไม่ซ้ำกันและไม่เป็น null
     const storageSizes = [...new Set(
@@ -425,7 +425,7 @@ async function uploadAttachment(formData) {
 }
 
 export {
-  fetchSaleItemsV2,
+  fetchSaleItemsV1,
   fetchSaleItemById,
   createSaleItem,
   fetchBrands,
