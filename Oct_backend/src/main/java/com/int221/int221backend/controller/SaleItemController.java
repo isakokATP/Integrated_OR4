@@ -100,7 +100,7 @@ public class SaleItemController {
     ) {
         try {
             // เรียก Service เพื่ออัปเดต SaleItem และรูปภาพ
-            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto, null);
+            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto);
 
             return ResponseEntity.ok(response);
 
