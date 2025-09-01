@@ -257,6 +257,7 @@ const allBrands = ref([]);
 const allStorageSizes = ref([]);
 const customMinPrice = ref('');
 const customMaxPrice = ref('');
+const searchKeyword = ref('');
 
 const priceRanges = [
   { label: "0 - 5,000 Baht", min: 0, max: 5000 },
@@ -433,10 +434,25 @@ function clearAllFilters() {
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   };
+  searchKeyword.value = '';
   emit("update:modelValue", newValue);
   sessionStorage.removeItem("filterSettings");
+}
+
+function updateSearchKeyword() {
+  const newValue = { ...props.modelValue, searchKeyWord: searchKeyword.value };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+}
+
+function clearSearchKeyword() {
+  searchKeyword.value = '';
+  const newValue = { ...props.modelValue, searchKeyWord: null };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
 }
 
 function saveToSessionStorage(value) {

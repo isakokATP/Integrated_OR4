@@ -49,8 +49,9 @@ public class SaleItemController {
                                                            @RequestParam("page") Integer page,
                                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                                            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
-                                                           @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper));
+                                                           @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+                                                           @RequestParam(value = "searchKeyWord", required = false) String searchKeyWord) {
+        return ResponseEntity.status(HttpStatus.OK).body(saleItemService.getAllSaleItem(sortDirection, sortField, page, size, filterBrands, storageSize, filterPriceLower, filterPriceUpper, searchKeyWord));
     }
 
     @GetMapping("/v1/sale-items/{id}")

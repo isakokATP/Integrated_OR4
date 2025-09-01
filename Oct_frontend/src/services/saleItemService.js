@@ -12,7 +12,8 @@ async function fetchSaleItemsV1(
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   }
 ) {
   try {
@@ -60,6 +61,11 @@ async function fetchSaleItemsV1(
           params.append('storageSize', storage);
         }
       });
+    }
+    
+    // Search keyword filter
+    if (filters.searchKeyWord && filters.searchKeyWord.trim() !== '') {
+      params.append('searchKeyWord', filters.searchKeyWord.trim());
     }
     
     const url = `${URL}/itb-mshop/v1/sale-items?${params.toString()}`;

@@ -22,7 +22,8 @@ const filterSettings = ref({
   brands: [],
   priceMin: null,
   priceMax: null,
-  storageSizes: []
+  storageSizes: [],
+  searchKeyWord: null
 });
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
@@ -122,7 +123,8 @@ onMounted(async () => {
           brands: [],
           priceMin: null,
           priceMax: null,
-          storageSizes: []
+          storageSizes: [],
+          searchKeyWord: null
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         filterSettings.value = mergedSettings;
