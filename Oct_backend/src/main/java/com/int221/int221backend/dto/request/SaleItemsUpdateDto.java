@@ -28,7 +28,7 @@ public class SaleItemsUpdateDto {
     private String color;
     
     // Add images field to receive image data
-    private List<String> images; // Base64 encoded images or image URLs
+    private List<Object> images; // Can handle both String and complex objects
 
     public void setModel(String model) {
         this.model = model.trim();

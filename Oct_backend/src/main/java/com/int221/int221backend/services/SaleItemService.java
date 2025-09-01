@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SaleItemService {
@@ -229,6 +230,9 @@ public class SaleItemService {
             // สำหรับตอนนี้ เราจะไม่ process รูปภาพจริง แต่จะเก็บข้อมูลไว้
             // ในอนาคตสามารถเพิ่ม logic สำหรับ process รูปภาพได้
             System.out.println("Received " + saleItemsUpdateDto.getImages().size() + " images for update");
+            System.out.println("Image data types: " + saleItemsUpdateDto.getImages().stream()
+                .map(img -> img != null ? img.getClass().getSimpleName() : "null")
+                .collect(Collectors.joining(", ")));
         }
 
         // 5. Save & refresh

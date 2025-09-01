@@ -441,8 +441,8 @@ const handleSave = async () => {
         form.value.quantity !== "" && form.value.quantity !== null
           ? parseInt(form.value.quantity)
           : 1, // Default quantity to 1 if not provided/null/empty string
-      // Add images information to the data
-      images: selectedFiles.value
+      // Add image filenames instead of File objects
+      images: selectedFiles.value.map(file => file.name)
     };
 
     // ส่งข้อมูลทั้งหมดไป backend (รวมรูปภาพ)
