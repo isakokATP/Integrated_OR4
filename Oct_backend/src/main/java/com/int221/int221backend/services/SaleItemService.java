@@ -295,13 +295,18 @@ public class SaleItemService {
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
 
+//        Attachment attachment = saleItem.getAttachments().stream()
+//                .filter(a -> a.getFilename().equals(fileName))
+//                .findFirst()
+//                .orElseThrow(() -> new NotFoundException("Attachment with fileName " + fileName + " not found"));
+
         Attachment attachment = saleItem.getAttachments().stream()
                 .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Attachment with imageViewOrder " + imageViewOrder + " not found"));
 
-        // ลบไฟล์จริง - ใช้ filename แทน filePath
-        Path path = Path.of(uploadDir, attachment.getFilename());
+        // ลบไฟล์จริง
+        Path path = Path.of(uploadDir, attachment.getFilePath());
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
@@ -314,7 +319,7 @@ public class SaleItemService {
 
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
-                                              Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper) {
+                                              Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper, String searchKeyWord) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
         Sort sort = Sort.by(direction, sortBy).and(Sort.by(direction, "id"));
 
@@ -330,7 +335,7 @@ public class SaleItemService {
         Page<SaleItem> saleItemPage;
 
 
-        saleItemPage = saleItemRepository.findByBrand_NameIn(brandList, storageList, pageable, filterPriceLower, filterPriceUpper);
+        saleItemPage = saleItemRepository.findByFiltersAndSearch(brandList, storageList, pageable, filterPriceLower, filterPriceUpper, searchKeyWord);
 
         SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));

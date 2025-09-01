@@ -1,22 +1,6 @@
 import { handleApiError } from "../api/client";
-import { ENDPOINTS } from "../api/endpoints";
 
-// Get API URL from environment variables with fallback
-const getApiUrl = () => {
-  // Check if we're in development or production
-  const isLocalhost = window.location.hostname === "localhost" || 
-                     window.location.hostname === "127.0.0.1" || 
-                     window.location.hostname === "::1";
-  
-  if (isLocalhost) {
-    return import.meta.env.VITE_API_URL_DEV || "http://localhost:8080";
-  } else {
-    // For production (university server), use relative path with /or4
-    return "/or4";
-  }
-};
-
-const URL = getApiUrl();
+const URL = import.meta.env.VITE_API_URL_PROD;
 
 // API URL loaded from environment variables
 
@@ -28,17 +12,18 @@ async function fetchSaleItemsV2(
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   }
 ) {
   try {
     const params = new URLSearchParams();
     
-    // Basic pagination
+    // Basic pagination - Backend expects 0-based indexing
     params.append('page', page - 1);
     params.append('size', size);
     
-    // Sort parameters
+    // Sort parameters - Fixed to match Backend
     if (sortType === "asc") {
       params.append('sortField', 'brand.name');
       params.append('sortDirection', 'asc');
@@ -51,14 +36,14 @@ async function fetchSaleItemsV2(
       params.append('sortDirection', 'asc');
     }
     
-    // Brand filter
+    // Brand filter - Fixed parameter name to match Backend
     if (filters.brands && filters.brands.length > 0) {
       filters.brands.forEach(brand => {
         params.append('filterBrands', brand);
       });
     }
     
-    // Price filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    // Price filter - Fixed parameter names to match Backend
     if (filters.priceMin !== null && filters.priceMin !== undefined) {
       params.append('filterPriceLower', filters.priceMin);
     }
@@ -66,19 +51,24 @@ async function fetchSaleItemsV2(
       params.append('filterPriceUpper', filters.priceMax);
     }
     
-    // Storage filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    // Storage filter - Fixed parameter name to match Backend
     if (filters.storageSizes && filters.storageSizes.length > 0) {
       filters.storageSizes.forEach(storage => {
         if (storage === 'not_specified') {
           // Handle not specified case - send null to backend
-          params.append('storageSize', 'null');
+          params.append('filterStorages', 'null');
         } else {
-          params.append('storageSize', storage);
+          params.append('filterStorages', storage);
         }
       });
     }
+
+    // Search keyword - Added to match Backend
+    if (filters.searchKeyWord && filters.searchKeyWord.trim() !== '') {
+      params.append('searchKeyWord', filters.searchKeyWord.trim());
+    }
     
-    const url = `${URL}${ENDPOINTS.SALE_ITEMS.V2_ALL}?${params.toString()}`;
+    const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
     
     const response = await fetch(url);
 
@@ -94,8 +84,8 @@ async function fetchSaleItemsV2(
 
 async function fetchSaleItemById(id) {
   try {
-    // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
-    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.BY_ID(id)}`, {
+    // Use V2 endpoint for detailed view with images
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -112,31 +102,64 @@ async function fetchSaleItemById(id) {
   }
 }
 
-async function createSaleItem(saleItemData) {
+async function createSaleItem(saleItemData, images = null) {
   try {
     console.log("API URL:", URL);
-    console.log("Full URL:", `${URL}${ENDPOINTS.SALE_ITEMS.CREATE}`);
+    console.log("Full URL:", `${URL}/itb-mshop/v2/sale-items`);
 
-    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.CREATE}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(saleItemData),
-    });
+    // Use FormData for multipart/form-data if images are provided
+    if (images && images.length > 0) {
+      const formData = new FormData();
+      
+      // Add sale item data
+      Object.keys(saleItemData).forEach(key => {
+        formData.append(key, saleItemData[key]);
+      });
+      
+      // Add images
+      images.forEach((image, index) => {
+        formData.append('SaleItemImages', image);
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Server error:", errorData);
-      throw new Error(
-        `HTTP error! status: ${response.status}, message: ${
-          errorData.message || "Unknown error"
-        }`
-      );
+      const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
+        method: "POST",
+        body: formData, // Don't set Content-Type for FormData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+      const data = await response.json();
+      return data;
+    } else {
+      // Fallback to JSON if no images
+      const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(saleItemData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+      const data = await response.json();
+      return data;
     }
-    const data = await response.json();
-    return data;
   } catch (error) {
     console.error("Create sale item error:", error);
     throw handleApiError(error);
@@ -145,7 +168,7 @@ async function createSaleItem(saleItemData) {
 
 export const deleteSaleItem = async (id) => {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.DELETE(id)}`, {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -165,30 +188,55 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-export const updateSaleItem = async (id, saleItemData) => {
+export const updateSaleItem = async (id, saleItemData, images = null) => {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.UPDATE(id)}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(saleItemData),
-    });
+    // Use FormData for multipart/form-data if images are provided
+    if (images && images.length > 0) {
+      const formData = new FormData();
+      
+      // Add sale item data
+      Object.keys(saleItemData).forEach(key => {
+        formData.append(key, saleItemData[key]);
+      });
+      
+      // Add images
+      images.forEach((image, index) => {
+        formData.append('SaleItemImages', image);
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to update item");
+      const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+        method: "PUT",
+        body: formData, // Don't set Content-Type for FormData
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update item");
+      }
+      return await response.json();
+    } else {
+      // Fallback to JSON if no images
+      const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(saleItemData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update item");
+      }
+      return await response.json();
     }
-
-    return await response.json();
   } catch (error) {
     throw error;
   }
 };
 
-// Brand related functions
+// Brand related functions - Updated to use correct endpoints
 async function fetchBrands() {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.ALL}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -209,7 +257,7 @@ async function fetchBrands() {
 async function fetchStorageSizes() {
   try {
     // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
-    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.V2_ALL}?page=0&size=1000`, {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -240,7 +288,7 @@ async function fetchStorageSizes() {
 
 async function fetchBrandById(id) {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.BY_ID(id)}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -259,7 +307,7 @@ async function fetchBrandById(id) {
 
 async function createBrand(brandData) {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.CREATE}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -280,7 +328,7 @@ async function createBrand(brandData) {
 
 async function updateBrand(id, brandData) {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.UPDATE(id)}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -301,7 +349,7 @@ async function updateBrand(id, brandData) {
 
 async function deleteBrand(id) {
   try {
-    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.DELETE(id)}`, {
+    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -317,6 +365,26 @@ async function deleteBrand(id) {
     throw handleApiError(error);
   }
 }
+
+// New function to delete attachment
+export const deleteAttachment = async (saleItemId, imageViewOrder) => {
+  try {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete attachment");
+    }
+    return true;
+  } catch (error) {
+    console.error("Delete attachment error:", error);
+    throw handleApiError(error);
+  }
+};
 
 async function uploadAttachment(formData) {
   try {
@@ -346,4 +414,5 @@ export {
   updateBrand,
   deleteBrand,
   uploadAttachment,
+  deleteAttachment,
 };
