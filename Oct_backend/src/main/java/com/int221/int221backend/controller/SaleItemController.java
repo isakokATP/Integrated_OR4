@@ -73,12 +73,11 @@ public class SaleItemController {
     //  PBI3 - Support both JSON and FormData
     @PostMapping("/v1/sale-items")
     public ResponseEntity<NewSaleItemResponseDto> createProduct(
-            @ModelAttribute NewSaleItemDto newSaleItem,
-            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
+            @RequestBody NewSaleItemDto newSaleItem
     ) {
         try {
             // 1. เรียก Service เพื่อสร้าง SaleItem และบันทึกรูป
-            NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, images);
+            NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, null);
 
             // 2. Return response
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

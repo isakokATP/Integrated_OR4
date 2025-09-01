@@ -24,7 +24,7 @@ public class SaleItem {
     @Column(name = "model", length = 60, nullable = false)
     private String model;
 
-    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "description", columnDefinition = "TEXT", nullable = true)
     private String description;
 
     @Column(name = "price", nullable = false)
