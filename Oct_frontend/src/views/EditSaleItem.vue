@@ -443,11 +443,8 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    // รวมรูปที่เหลืออยู่จาก existingImages และรูปใหม่
-    const allImages = [...existingImages.value, ...selectedFiles.value];
-    
-    // ใช้ updateSaleItemWithImages เพื่อจัดการรูปภาพ
-    await updateSaleItemWithImages(id, dataToSend, allImages);
+    // ส่งเฉพาะรูปใหม่ไป backend (backend จะลบรูปเก่าทั้งหมดแล้วใส่รูปใหม่)
+    await updateSaleItemWithImages(id, dataToSend, selectedFiles.value);
     
     router.push({
       name: "sale-items-page-byId",
