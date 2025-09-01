@@ -111,7 +111,7 @@
          </div>
 
          <!-- Custom Price Range Input -->
-         <div v-if="showCustomPriceInput" class="relative mt-2">
+         <div v-if="showCustomPriceInput" class="relative mt-2 custom-price-input">
            <div
              class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md p-4 w-64"
            >
@@ -465,16 +465,19 @@ onMounted(async () => {
       const parsedSettings = JSON.parse(savedFilterSettings);
       if (parsedSettings && typeof parsedSettings === 'object') {
         
-                 // Add click outside handler for dropdowns
-         document.addEventListener('click', (event) => {
-           const target = event.target;
-           if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
-             showBrandDropdown.value = false;
-             showPriceDropdown.value = false;
-             showStorageDropdown.value = false;
-             showCustomPriceInput.value = false;
-           }
-         });
+                         // Add click outside handler for dropdowns
+        document.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
+            showBrandDropdown.value = false;
+            showPriceDropdown.value = false;
+            showStorageDropdown.value = false;
+            // ไม่ปิด custom price input เมื่อคลิกที่ input fields
+            if (!target.closest('.custom-price-input')) {
+              showCustomPriceInput.value = false;
+            }
+          }
+        });
         // Ensure all required properties exist
         const defaultSettings = {
           brands: [],

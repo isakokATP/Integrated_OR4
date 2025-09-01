@@ -2,9 +2,9 @@
 import { ref, onMounted, computed, watch, reactive } from "vue";
 import {
   fetchSaleItemById,
-  updateSaleItem,
+  updateSaleItemWithImages,
   deleteSaleItem,
-  uploadAttachment,
+  deleteAttachment,
 } from "../services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import { fetchBrands } from "../services/saleItemService";
@@ -418,7 +418,7 @@ const handleSave = async () => {
     const dataToSend = {
       model: form.value.model.trim(),
       // Ensure brand object is correctly structured for the backend
-      brand: form.value.brandId ? { id: parseInt(form.value.brandId) } : null, // Assuming backend needs brand ID for update
+      brand: form.value.brandId ? { id: parseInt(form.value.brandId), name: brands.value.find(b => b.id === parseInt(form.value.brandId))?.name || '' } : null,
       description: form.value.description.trim(),
       price:
         form.value.price !== "" && form.value.price !== null
@@ -443,12 +443,8 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    await updateSaleItem(id, dataToSend);
-    
-    // Upload new files if any
-    if (selectedFiles.value.length > 0) {
-      await uploadFiles(id);
-    }
+    // ใช้ updateSaleItemWithImages เพื่อจัดการรูปภาพ
+    await updateSaleItemWithImages(id, dataToSend, selectedFiles.value);
     
     router.push({
       name: "sale-items-page-byId",
@@ -461,24 +457,7 @@ const handleSave = async () => {
   }
 };
 
-async function uploadFiles(saleItemId) {
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const file = selectedFiles.value[i];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('saleItemId', saleItemId);
-    
-    try {
-      await uploadAttachment(formData);
-      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
-      if (i < selectedFiles.value.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.error(`Failed to upload file ${file.name}:`, error);
-    }
-  }
-}
+
 
 const handleCancel = () => {
   if (hasAnyChanges.value) {
