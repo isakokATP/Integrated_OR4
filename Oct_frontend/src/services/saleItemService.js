@@ -1,6 +1,22 @@
 import { handleApiError } from "../api/client";
+import { ENDPOINTS } from "../api/endpoints";
 
-const URL = import.meta.env.VITE_API_URL_PROD;
+// Get API URL from environment variables with fallback
+const getApiUrl = () => {
+  // Check if we're in development or production
+  const isLocalhost = window.location.hostname === "localhost" || 
+                     window.location.hostname === "127.0.0.1" || 
+                     window.location.hostname === "::1";
+  
+  if (isLocalhost) {
+    return import.meta.env.VITE_API_URL_DEV || "http://localhost:8080";
+  } else {
+    // For production (university server), use relative path with /or4
+    return "/or4";
+  }
+};
+
+const URL = getApiUrl();
 
 // API URL loaded from environment variables
 
@@ -62,7 +78,7 @@ async function fetchSaleItemsV2(
       });
     }
     
-    const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
+    const url = `${URL}${ENDPOINTS.SALE_ITEMS.V2_ALL}?${params.toString()}`;
     
     const response = await fetch(url);
 
@@ -79,7 +95,7 @@ async function fetchSaleItemsV2(
 async function fetchSaleItemById(id) {
   try {
     // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.BY_ID(id)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -99,9 +115,9 @@ async function fetchSaleItemById(id) {
 async function createSaleItem(saleItemData) {
   try {
     console.log("API URL:", URL);
-    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items`);
+    console.log("Full URL:", `${URL}${ENDPOINTS.SALE_ITEMS.CREATE}`);
 
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
+    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.CREATE}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,7 +145,7 @@ async function createSaleItem(saleItemData) {
 
 export const deleteSaleItem = async (id) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.DELETE(id)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +167,7 @@ export const deleteSaleItem = async (id) => {
 
 export const updateSaleItem = async (id, saleItemData) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.UPDATE(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -172,7 +188,7 @@ export const updateSaleItem = async (id, saleItemData) => {
 // Brand related functions
 async function fetchBrands() {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
+    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.ALL}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -193,7 +209,7 @@ async function fetchBrands() {
 async function fetchStorageSizes() {
   try {
     // ดึงข้อมูล sale items ทั้งหมดจาก V2 API เพื่อเอา storage sizes ที่มีอยู่จริง
-    const response = await fetch(`${URL}/itb-mshop/v2/sale-items?page=0&size=1000`, {
+    const response = await fetch(`${URL}${ENDPOINTS.SALE_ITEMS.V2_ALL}?page=0&size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -224,7 +240,7 @@ async function fetchStorageSizes() {
 
 async function fetchBrandById(id) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.BY_ID(id)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -243,7 +259,7 @@ async function fetchBrandById(id) {
 
 async function createBrand(brandData) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
+    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.CREATE}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -264,7 +280,7 @@ async function createBrand(brandData) {
 
 async function updateBrand(id, brandData) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.UPDATE(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -285,7 +301,7 @@ async function updateBrand(id, brandData) {
 
 async function deleteBrand(id) {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/brands/${id}`, {
+    const response = await fetch(`${URL}${ENDPOINTS.BRANDS.DELETE(id)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

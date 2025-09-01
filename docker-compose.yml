@@ -19,7 +19,6 @@ services:
     build:
       context: ./Oct_backend
       dockerfile: Dockerfile
-      network: host
     container_name: int221-backend
     restart: always
     ports:

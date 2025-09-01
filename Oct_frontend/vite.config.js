@@ -40,10 +40,15 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
       },
       proxy: {
-        "/api": {
+        "/or4/api": {
           target: isProduction ? env.VITE_API_URL_PROD : env.VITE_API_URL_DEV,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+          rewrite: (path) => path.replace(/^\/or4\/api/, ""),
+        },
+        "/or4/itb-mshop": {
+          target: isProduction ? env.VITE_API_URL_PROD : env.VITE_API_URL_DEV,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/or4/, ""),
         },
       },
     },
