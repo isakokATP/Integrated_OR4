@@ -239,12 +239,23 @@ public class SaleItemService {
                     // ถ้าเป็น filename string ให้สร้าง attachment ใหม่
                     String fileName = (String) imageData;
                     
+                    // Detect file type จาก filename
+                    FileType fileType = FileType.JPG; // default
+                    String lowerFileName = fileName.toLowerCase();
+                    if (lowerFileName.endsWith(".png")) {
+                        fileType = FileType.PNG;
+                    } else if (lowerFileName.endsWith(".jpeg")) {
+                        fileType = FileType.JPEG;
+                    } else if (lowerFileName.endsWith(".jpg")) {
+                        fileType = FileType.JPG;
+                    }
+                    
                     // สร้าง attachment ใหม่
                     Attachment attachment = Attachment.builder()
                             .saleItem(existingItem)
                             .filename(fileName)
                             .filePath("/uploads/" + fileName) // ใช้ path ง่ายๆ
-                            .fileType(FileType.IMAGE) // ใช้ default type
+                            .fileType(fileType) // ใช้ file type ที่ detect ได้
                             .fileSize(0) // ไม่มี file size จริง
                             .imageViewOrder(order++)
                             .build();
@@ -252,7 +263,7 @@ public class SaleItemService {
                     attachmentRepository.save(attachment);
                     existingItem.getAttachments().add(attachment);
                     
-                    System.out.println("Created attachment for image: " + fileName);
+                    System.out.println("Created attachment for image: " + fileName + " with type: " + fileType);
                 }
             }
         }
