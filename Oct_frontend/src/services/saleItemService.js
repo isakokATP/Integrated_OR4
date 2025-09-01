@@ -211,47 +211,12 @@ export const deleteAttachment = async (saleItemId, imageViewOrder) => {
 };
 
 // เพิ่มฟังก์ชันอัปเดต sale item พร้อมรูปภาพ
-export const updateSaleItemWithImages = async (id, saleItemData, images = []) => {
+export const updateSaleItemWithImages = async (id, saleItemData) => {
   try {
-    const formData = new FormData();
-    
-    // เพิ่มข้อมูล sale item
-    formData.append('model', saleItemData.model);
-    formData.append('brand.id', saleItemData.brand.id);
-    formData.append('brand.name', saleItemData.brand.name);
-    formData.append('description', saleItemData.description);
-    formData.append('price', saleItemData.price);
-    
-    if (saleItemData.ramGb !== null && saleItemData.ramGb !== undefined) {
-      formData.append('ramGb', saleItemData.ramGb);
-    }
-    
-    if (saleItemData.screenSizeInch !== null && saleItemData.screenSizeInch !== undefined) {
-      formData.append('screenSizeInch', saleItemData.screenSizeInch);
-    }
-    
-    if (saleItemData.storageGb !== null && saleItemData.storageGb !== undefined) {
-      formData.append('storageGb', saleItemData.storageGb);
-    }
-    
-    if (saleItemData.color !== null && saleItemData.color !== undefined) {
-      formData.append('color', saleItemData.color);
-    }
-    
-    formData.append('quantity', saleItemData.quantity);
-    
-    // เพิ่มรูปภาพใหม่
-    if (images && images.length > 0) {
-      images.forEach((image, index) => {
-        formData.append('SaleItemImages', image);
-      });
-    }
-
     console.log('Sending data to backend:', {
       id,
       saleItemData,
-      imagesCount: images.length,
-      formDataEntries: Array.from(formData.entries())
+      imagesCount: saleItemData.images ? saleItemData.images.length : 0
     });
 
     const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
@@ -259,7 +224,7 @@ export const updateSaleItemWithImages = async (id, saleItemData, images = []) =>
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(saleItemData), // ใช้ JSON body สำหรับ v1
+      body: JSON.stringify(saleItemData), // ส่งข้อมูลทั้งหมดรวมรูปภาพ
     });
 
     if (!response.ok) {

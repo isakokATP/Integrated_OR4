@@ -441,10 +441,12 @@ const handleSave = async () => {
         form.value.quantity !== "" && form.value.quantity !== null
           ? parseInt(form.value.quantity)
           : 1, // Default quantity to 1 if not provided/null/empty string
+      // Add images information to the data
+      images: selectedFiles.value
     };
 
-    // ส่งเฉพาะรูปใหม่ไป backend (backend จะลบรูปเก่าทั้งหมดแล้วใส่รูปใหม่)
-    await updateSaleItemWithImages(id, dataToSend, selectedFiles.value);
+    // ส่งข้อมูลทั้งหมดไป backend (รวมรูปภาพ)
+    await updateSaleItemWithImages(id, dataToSend);
     
     router.push({
       name: "sale-items-page-byId",

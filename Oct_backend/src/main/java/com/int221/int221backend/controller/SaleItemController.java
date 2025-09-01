@@ -96,12 +96,11 @@ public class SaleItemController {
     @PutMapping("/v1/sale-items/{id}")
     public ResponseEntity<SaleItemUpdateResponseDto> updateSaleItemWithImages(
             @PathVariable Integer id,
-            @ModelAttribute SaleItemsUpdateDto saleItemsUpdateDto,
-            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
+            @RequestBody SaleItemsUpdateDto saleItemsUpdateDto
     ) {
         try {
             // เรียก Service เพื่ออัปเดต SaleItem และรูปภาพ
-            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto, images);
+            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto, null);
 
             return ResponseEntity.ok(response);
 

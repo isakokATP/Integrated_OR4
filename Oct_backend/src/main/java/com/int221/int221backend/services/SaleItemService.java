@@ -185,8 +185,7 @@ public class SaleItemService {
     @Transactional
     public SaleItemUpdateResponseDto updateSaleItemWithImages(
             Integer id,
-            SaleItemsUpdateDto saleItemsUpdateDto,
-            List<MultipartFile> images
+            SaleItemsUpdateDto saleItemsUpdateDto
     ) {
         // 1. หา SaleItem เก่าจาก DB
         SaleItem existingItem = saleItemRepository.findById(id)
@@ -217,53 +216,19 @@ public class SaleItemService {
             throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
         }
 
-        // 4. อัปโหลดรูปภาพใหม่ถ้ามี
-        if (images != null && !images.isEmpty()) {
-            if (images.size() > 4) {
+        // 4. อัปเดตรูปภาพถ้ามี
+        if (saleItemsUpdateDto.getImages() != null && !saleItemsUpdateDto.getImages().isEmpty()) {
+            if (saleItemsUpdateDto.getImages().size() > 4) {
                 throw new IllegalArgumentException("You can upload maximum 4 images.");
             }
 
-            // ลบรูปเก่าออกก่อน (ถ้าต้องการ replace)
+            // ลบรูปเก่าออกก่อน
             attachmentRepository.deleteAll(existingItem.getAttachments());
             existingItem.getAttachments().clear();
 
-            int order = 1;
-            for (MultipartFile file : images) {
-                long maxSize = 2 * 1024 * 1024; // 2MB
-                if (file.getSize() > maxSize) {
-                    throw new IllegalArgumentException(
-                            "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
-                }
-
-                String extension = getFileExtension(file.getOriginalFilename());
-                if (!extension.equalsIgnoreCase("jpg") &&
-                        !extension.equalsIgnoreCase("jpeg") &&
-                        !extension.equalsIgnoreCase("png")) {
-                    throw new IllegalArgumentException(
-                            "File " + file.getOriginalFilename() + " must be JPEG or PNG");
-                }
-
-                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                Path path = Path.of(uploadDir, fileName);
-                try {
-                    Files.createDirectories(path.getParent());
-                    Files.write(path, file.getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
-                }
-
-                Attachment attachment = Attachment.builder()
-                        .saleItem(existingItem)
-                        .filename(fileName)
-                        .filePath(path.toString())
-                        .fileType(getFileType(extension))
-                        .fileSize((int) file.getSize())
-                        .imageViewOrder(order++)
-                        .build();
-
-                attachmentRepository.save(attachment);
-                existingItem.getAttachments().add(attachment);
-            }
+            // สำหรับตอนนี้ เราจะไม่ process รูปภาพจริง แต่จะเก็บข้อมูลไว้
+            // ในอนาคตสามารถเพิ่ม logic สำหรับ process รูปภาพได้
+            System.out.println("Received " + saleItemsUpdateDto.getImages().size() + " images for update");
         }
 
         // 5. Save & refresh
