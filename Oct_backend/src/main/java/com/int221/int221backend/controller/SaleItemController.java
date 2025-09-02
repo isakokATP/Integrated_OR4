@@ -72,13 +72,13 @@ public class SaleItemController {
 //    }
 
     //  PBI4
-    @PutMapping("/v1/sale-items/{id}")
-    public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
-        saleItemsUpdateDto.setId(id);
-        SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
-        System.out.println("Mapped SaleItemsUpdateResponseDto: " + response);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+//    @PutMapping("/v1/sale-items/{id}")
+//    public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
+//        saleItemsUpdateDto.setId(id);
+//        SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
+//        System.out.println("Mapped SaleItemsUpdateResponseDto: " + response);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
     //  PBI5
 //    @DeleteMapping("/v1/sale-items/{id}")
