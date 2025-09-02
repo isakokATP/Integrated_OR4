@@ -358,22 +358,6 @@ function clearPriceFilter() {
   saveToSessionStorage(newValue);
 }
 
-// Brand Functions
-function addBrand(brand) {
-  const newSelectedBrands = [...props.modelValue.brands, brand];
-  const newValue = { ...props.modelValue, brands: newSelectedBrands };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-  showBrandDropdown.value = false;
-}
-
-function removeBrand(brand) {
-  const newSelectedBrands = props.modelValue.brands.filter((b) => b !== brand);
-  const newValue = { ...props.modelValue, brands: newSelectedBrands };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-}
-
 // Storage Functions
 function addStorage(storage) {
   const newSelectedStorageSizes = [...props.modelValue.storageSizes, storage];
@@ -399,6 +383,10 @@ function formatStorageSize(storage) {
   }
   return `${storage} GB`;
 }
+
+
+
+
 
 
 
