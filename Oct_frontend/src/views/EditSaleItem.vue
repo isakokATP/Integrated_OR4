@@ -24,6 +24,7 @@ const fileInput = ref(null);
 const selectedFiles = ref([]);
 const fileErrors = ref([]);
 const existingImages = ref([]);
+const filesToDelete = ref([]); // New: track files marked for deletion
 
 const form = ref({
   brandId: "",
@@ -159,6 +160,7 @@ const isFormValid = computed(() => {
 // Check if there are any changes including file changes
 const hasFileChanges = computed(() => {
   return selectedFiles.value.length > 0 || 
+         filesToDelete.value.length > 0 ||
          (originalData.value && originalData.value.saleItemImages && 
           existingImages.value.length !== originalData.value.saleItemImages.length);
 });
@@ -298,11 +300,11 @@ function handleFileSelect(event) {
   const files = Array.from(event.target.files);
   fileErrors.value = [];
   
-  // Validate file count
-  if (existingImages.value.length + selectedFiles.value.length + files.length > 4) {
-    fileErrors.value.push("Maximum 4 pictures are allowed.");
-    return;
-  }
+     // Validate file count (including files marked for deletion)
+   if (existingImages.value.length + selectedFiles.value.length + files.length > 4) {
+     fileErrors.value.push("Maximum 4 pictures are allowed.");
+     return;
+   }
   
   // Validate each file and check for duplicates
   files.forEach(file => {
@@ -318,20 +320,27 @@ function handleFileSelect(event) {
       return;
     }
     
-    // Check for duplicate file names in existing images
-    // BE returns attachment DTO with fileName or filename? Fall back to both.
-    const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
-    if (existingImage) {
-      fileErrors.value.push(`${file.name} already exists in existing images.`);
-      return;
-    }
-    
-    // Check for duplicate file names in new files
-    const existingFile = selectedFiles.value.find(f => f.name === file.name);
-    if (existingFile) {
-      fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
-      return;
-    }
+         // Check for duplicate file names in existing images
+     // BE returns attachment DTO with fileName or filename? Fall back to both.
+     const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
+     if (existingImage) {
+       fileErrors.value.push(`${file.name} already exists in existing images.`);
+       return;
+     }
+     
+     // Check for duplicate file names in new files
+     const existingFile = selectedFiles.value.find(f => f.name === file.name);
+     if (existingFile) {
+       fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
+       return;
+     }
+     
+     // Check for duplicate file names in files marked for deletion
+     const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
+     if (fileToDelete) {
+       fileErrors.value.push(`${file.name} is marked for deletion. Please restore it first or choose a different file.`);
+       return;
+     }
   });
   
   // If there are errors, don't add files
@@ -347,6 +356,9 @@ function handleFileSelect(event) {
 }
 
 function removeFile(index) {
+  // Mark the file for deletion instead of removing immediately
+  filesToDelete.value.push(selectedFiles.value[index]);
+  // Remove from the selectedFiles list
   selectedFiles.value.splice(index, 1);
   fileErrors.value = [];
 }
@@ -424,6 +436,13 @@ function moveExistingImageDown(index) {
   }
 }
 
+function restoreFile(index) {
+  // Restore file from deletion list back to selectedFiles
+  const fileToRestore = filesToDelete.value[index];
+  selectedFiles.value.push(fileToRestore);
+  filesToDelete.value.splice(index, 1);
+}
+
 const handleBlur = (field) => {
   validateField(field);
 };
@@ -472,8 +491,9 @@ const handleSave = async () => {
     // Send data and images together to Backend
     await updateSaleItem(id, dataToSend, selectedFiles.value);
     
-    // Clear selected files after successful save
+    // Clear selected files and files to delete after successful save
     selectedFiles.value = [];
+    filesToDelete.value = [];
     
     router.push({
       name: "sale-items-page-byId",
@@ -495,6 +515,9 @@ const handleCancel = () => {
   } else {
     router.push({ name: "sale-items-page" });
   }
+  // Clear all temporary changes
+  selectedFiles.value = [];
+  filesToDelete.value = [];
 };
 
 const handleDelete = async () => {
@@ -686,61 +709,90 @@ const handleDelete = async () => {
           </div>
         </div>
 
-        <!-- File list with reorder controls -->
-        <div v-if="selectedFiles.length > 0" class="mb-4">
-          <h4 class="text-sm font-medium mb-2">New Files:</h4>
-          <div class="space-y-2">
-            <div
-              v-for="(file, index) in selectedFiles"
-              :key="`new-file-${index}-${file.name}`"
-              class="flex items-center justify-between bg-gray-50 p-2 rounded"
-            >
-              <div class="flex items-center space-x-2">
-                <span class="text-sm font-medium">{{ existingImages.length + index + 1 }}.</span>
-                <span class="text-sm">{{ file.name }}</span>
-                <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
-              </div>
-              <div class="flex items-center space-x-1">
-                <!-- Move up button -->
-                <button
-                  v-if="index > 0"
-                  type="button"
-                  @click="moveFileUp(index)"
-                  class="text-blue-500 hover:text-blue-700 p-1"
-                  title="Move up"
-                >
-                  ↑
-                </button>
-                <!-- Move down button -->
-                <button
-                  v-if="index < selectedFiles.length - 1"
-                  type="button"
-                  @click="moveFileDown(index)"
-                  class="text-blue-500 hover:text-blue-700 p-1"
-                  title="Move down"
-                >
-                  ↓
-                </button>
-                <!-- Remove button -->
-                <button
-                  type="button"
-                  @click="removeFile(index)"
-                  class="text-red-500 hover:text-red-700 p-1"
-                  title="Remove file"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Warning for too many files -->
-          <div v-if="existingImages.length + selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
-            <p class="text-sm text-yellow-800">
-              Maximum 4 pictures are allowed.
-            </p>
-          </div>
-        </div>
+                 <!-- File list with reorder controls -->
+         <div v-if="selectedFiles.length > 0" class="mb-4">
+           <h4 class="text-sm font-medium mb-2">New Files:</h4>
+           <div class="space-y-2">
+             <div
+               v-for="(file, index) in selectedFiles"
+               :key="`new-file-${index}-${file.name}`"
+               class="flex items-center justify-between bg-gray-50 p-2 rounded"
+             >
+               <div class="flex items-center space-x-2">
+                 <span class="text-sm font-medium">{{ existingImages.length + index + 1 }}.</span>
+                 <span class="text-sm">{{ file.name }}</span>
+                 <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <!-- Move up button -->
+                 <button
+                   v-if="index > 0"
+                   type="button"
+                   @click="moveFileUp(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move up"
+                 >
+                   ↑
+                 </button>
+                 <!-- Move down button -->
+                 <button
+                   v-if="index < selectedFiles.length - 1"
+                   type="button"
+                   @click="moveFileDown(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move down"
+                 >
+                   ↓
+                 </button>
+                 <!-- Remove button -->
+                 <button
+                   type="button"
+                   @click="removeFile(index)"
+                   class="text-red-500 hover:text-red-700 p-1"
+                   title="Remove file"
+                 >
+                   ×
+                 </button>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Warning for too many files -->
+           <div v-if="existingImages.length + selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
+             <p class="text-sm text-yellow-800">
+               Maximum 4 pictures are allowed.
+             </p>
+           </div>
+         </div>
+
+         <!-- Files marked for deletion -->
+         <div v-if="filesToDelete.length > 0" class="mb-4">
+           <h4 class="text-sm font-medium mb-2 text-red-600">Files to be removed:</h4>
+           <div class="space-y-2">
+             <div
+               v-for="(file, index) in filesToDelete"
+               :key="`delete-file-${index}-${file.name}`"
+               class="flex items-center justify-between bg-red-50 p-2 rounded border border-red-200"
+             >
+               <div class="flex items-center space-x-2">
+                 <span class="text-sm font-medium text-red-700">{{ file.name }}</span>
+                 <span class="text-xs text-red-500">({{ formatFileSize(file.size) }})</span>
+                 <span class="text-xs text-red-500">(Will be removed)</span>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <!-- Restore button -->
+                 <button
+                   type="button"
+                   @click="restoreFile(index)"
+                   class="text-green-600 hover:text-green-800 p-1"
+                   title="Restore file"
+                 >
+                   ↺
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
 
         <!-- Error messages -->
         <div v-if="fileErrors.length > 0" class="mb-4">
