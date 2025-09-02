@@ -360,9 +360,9 @@ function getImagePreview(file) {
 }
 
 function getImageUrl(fileName) {
-  // Backend exposes GET /attachments/{id}; current BE expects filename here.
-  // Adjusted to use filename directly per BE.
-  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(fileName)}`;
+  // Use Nginx proxy to serve images from backend uploads directory
+  // This will go through /uploads/ -> /attachments/ -> Backend
+  return `${import.meta.env.VITE_API_URL_PROD}/uploads/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {
@@ -395,6 +395,22 @@ function moveFileDown(index) {
     const files = [...selectedFiles.value];
     [files[index], files[index + 1]] = [files[index + 1], files[index]];
     selectedFiles.value = files;
+  }
+}
+
+function moveExistingImageUp(index) {
+  if (index > 0) {
+    const images = [...existingImages.value];
+    [images[index], images[index - 1]] = [images[index - 1], images[index]];
+    existingImages.value = images;
+  }
+}
+
+function moveExistingImageDown(index) {
+  if (index < existingImages.value.length - 1) {
+    const images = [...existingImages.value];
+    [images[index], images[index + 1]] = [images[index + 1], images[index]];
+    existingImages.value = images;
   }
 }
 
@@ -629,6 +645,55 @@ const handleDelete = async () => {
           class="hidden"
         />
 
+        <!-- Existing images list with reorder controls -->
+        <div v-if="existingImages.length > 0" class="mb-4">
+          <h4 class="text-sm font-medium mb-2">Existing Images:</h4>
+          <div class="space-y-2">
+            <div
+              v-for="(image, index) in existingImages"
+              :key="`existing-file-${index}-${image.fileName || image.filename}`"
+              class="flex items-center justify-between bg-gray-50 p-2 rounded"
+            >
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium">{{ index + 1 }}.</span>
+                <span class="text-sm">{{ image.fileName || image.filename }}</span>
+                <span class="text-xs text-gray-500">(Existing)</span>
+              </div>
+              <div class="flex items-center space-x-1">
+                <!-- Move up button -->
+                <button
+                  v-if="index > 0"
+                  type="button"
+                  @click="moveExistingImageUp(index)"
+                  class="text-blue-500 hover:text-blue-700 p-1"
+                  title="Move up"
+                >
+                  ↑
+                </button>
+                <!-- Move down button -->
+                <button
+                  v-if="index < existingImages.length - 1"
+                  type="button"
+                  @click="moveExistingImageDown(index)"
+                  class="text-blue-500 hover:text-blue-700 p-1"
+                  title="Move down"
+                >
+                  ↓
+                </button>
+                <!-- Remove button -->
+                <button
+                  type="button"
+                  @click="removeExistingImage(index)"
+                  class="text-red-500 hover:text-red-700 p-1"
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- File list with reorder controls -->
         <div v-if="selectedFiles.length > 0" class="mb-4">
           <h4 class="text-sm font-medium mb-2">New Files:</h4>
@@ -680,7 +745,7 @@ const handleDelete = async () => {
           <!-- Warning for too many files -->
           <div v-if="existingImages.length + selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
             <p class="text-sm text-yellow-800">
-              ⚠️ Maximum 4 pictures reached. First image will be used as thumbnail.
+              Maximum 4 pictures are allowed.
             </p>
           </div>
         </div>

@@ -55,8 +55,8 @@ async function fetchSaleItemsV2(
     if (filters.storageSizes && filters.storageSizes.length > 0) {
       filters.storageSizes.forEach(storage => {
         if (storage === 'not_specified') {
-          // Handle not specified case - send null to backend
-          params.append('filterStorages', 'null');
+          // Handle not specified case - send -1 to backend (matches JPQL logic)
+          params.append('filterStorages', -1);
         } else {
           params.append('filterStorages', storage);
         }
