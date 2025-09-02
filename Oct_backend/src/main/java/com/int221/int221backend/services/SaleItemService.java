@@ -48,7 +48,7 @@ public class SaleItemService {
     @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Value("${file.upload-dir}")
+    @Value("${file.upload-dir.saleitems}")
     private String uploadDir; // รับค่าจาก application.properties
 
     public List<SaleItem> getAllSaleItem(){

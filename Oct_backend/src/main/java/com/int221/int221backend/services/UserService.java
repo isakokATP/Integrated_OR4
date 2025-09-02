@@ -4,8 +4,11 @@ import com.int221.int221backend.dto.request.UserRequestDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
 import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.repositories.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,59 +25,74 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    @Value("${file.upload-dir.users}")
+    private String uploadDir;
+
     // Register User
+    @Transactional
     public UserResponseDto registerUser(UserRequestDto requestDto,
                                         MultipartFile idCardImageFront,
                                         MultipartFile idCardImageBack) {
 
+        // 1. เช็ค email ซ้ำ
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new RuntimeException("Email already exists: " + requestDto.getEmail());
+        }
+
+        // 2. เช็ค ID card number ซ้ำ
+        if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
+            throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
+        }
+
         try {
-            // เช็ค email ซ้ำ
-            if (userRepository.existsByEmail(requestDto.getEmail())) {
-                throw new RuntimeException("Email already exists: " + requestDto.getEmail());
-            }
-
-            if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
-                throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
-            }
-
-            // บันทึกไฟล์ลงโฟลเดอร์
+            // 3. บันทึกไฟล์รูป
             String frontFileName = saveFile(idCardImageFront);
             String backFileName = saveFile(idCardImageBack);
 
-            // แปลงจาก DTO → Entity
-            Users user = new Users();
-            user.setNickName(requestDto.getNickName());
-            user.setEmail(requestDto.getEmail());
-            user.setFullName(requestDto.getFullName());
-            user.setPassword(requestDto.getPassword()); // ยังไม่เข้ารหัส
-            user.setPhoneNumber(requestDto.getPhoneNumber());
-            user.setBankAccount(requestDto.getBankAccount());
-            user.setIdCardNumber(requestDto.getIdCardNumber());
-            user.setUserType(Users.UserType.valueOf(requestDto.getUserType()));
-            user.setIdCardImageFront(frontFileName);
-            user.setIdCardImageBack(backFileName);
+            // 4. สร้าง entity
+            Users user = Users.builder()
+                    .nickName(requestDto.getNickName())
+                    .email(requestDto.getEmail())
+                    .fullName(requestDto.getFullName())
+                    .password(requestDto.getPassword()) // ถ้าอยากเข้ารหัส ใช้ passwordEncoder
+                    .phoneNumber(requestDto.getPhoneNumber())
+                    .bankAccount(requestDto.getBankAccount())
+                    .idCardNumber(requestDto.getIdCardNumber())
+                    .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
+                    .idCardImageFront(frontFileName)
+                    .idCardImageBack(backFileName)
+                    .build();
 
-            // บันทึกลงฐานข้อมูล
-            Users savedUser = userRepository.save(user);
+            // 5. บันทึกลง DB
+            Users savedUser = userRepository.saveAndFlush(user);
+            entityManager.refresh(savedUser);
 
-            // แปลง Entity → DTO สำหรับ response
+            // 6. map → DTO
             return UserResponseDto.fromEntity(savedUser);
 
         } catch (IOException e) {
-            throw new RuntimeException("Upload image failed: " + e.getMessage());
+            throw new RuntimeException("Failed to upload images: " + e.getMessage());
         }
     }
 
     // helper method สำหรับบันทึกไฟล์
     private String saveFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return null;
+        if (file == null || file.isEmpty()) return null;
+
+        // สร้าง folder ถ้ายังไม่มี
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
         }
-        String uploadDir = "uploads/idcards/";
-        Files.createDirectories(Paths.get(uploadDir));
-        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path path = Paths.get(uploadDir + filename);
-        file.transferTo(path);
+
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(filename);
+
+        file.transferTo(filePath.toFile());
+
         return filename;
     }
 
