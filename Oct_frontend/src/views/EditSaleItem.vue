@@ -360,9 +360,9 @@ function getImagePreview(file) {
 }
 
 function getImageUrl(fileName) {
-  // Use Nginx proxy to serve images from backend uploads directory
-  // This will go through /uploads/ -> /attachments/ -> Backend
-  return `${import.meta.env.VITE_API_URL_PROD}/uploads/${encodeURIComponent(fileName)}`;
+  // Use Nginx to serve images directly from shared volume
+  // Frontend is served at /or4/ base path
+  return `/or4/uploads/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {
