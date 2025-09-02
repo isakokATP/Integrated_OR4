@@ -67,56 +67,60 @@
           <!-- Price Dropdown -->
           <div v-if="showPriceDropdown" class="absolute top-full left-0 right-0 mt-2 z-20">
             <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm">
+              <!-- Predefined Price Ranges -->
               <div
                 v-for="range in priceRanges"
                 :key="range.label"
-                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:pl-6"
+                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 cursor-pointer text-sm font-medium border-b border-gray-100 transition-all duration-200 hover:pl-6"
                 @click="selectPriceRange(range)"
               >
                 {{ range.label }}
               </div>
+              
+              <!-- Custom Price Input Section -->
+              <div class="border-t border-gray-200 p-4">
+                <div class="text-sm font-medium text-gray-700 mb-3">Custom Price Range</div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-1">Min (Baht)</label>
+                    <input
+                      v-model="customMinPrice"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      class="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-100"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-1">Max (Baht)</label>
+                    <input
+                      v-model="customMaxPrice"
+                      type="number"
+                      min="0"
+                      placeholder="50000"
+                      class="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-100"
+                    />
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    @click="applyCustomPriceRange"
+                    class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm hover:from-green-600 hover:to-green-700 transition-all duration-200 font-medium"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    @click="cancelCustomPriceRange"
+                    class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-2 rounded-lg text-sm hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Custom Price Range Input -->
-          <div v-if="showCustomPriceInput" class="absolute top-full left-0 right-0 mt-2 z-20">
-            <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 w-64 backdrop-blur-sm">
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Min Price (Baht)</label>
-                <input
-                  v-model="customMinPrice"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                />
-              </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Max Price (Baht)</label>
-                <input
-                  v-model="customMaxPrice"
-                  type="number"
-                  min="0"
-                  placeholder="50000"
-                  class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                />
-              </div>
-              <div class="flex gap-2">
-                <button
-                  @click="applyCustomPriceRange"
-                  class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium"
-                >
-                  Apply
-                </button>
-                <button
-                  @click="cancelCustomPriceRange"
-                  class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+
         </div>
 
         <!-- Storage Filter -->
@@ -204,7 +208,6 @@ const emit = defineEmits(["update:modelValue"]);
 const showBrandDropdown = ref(false);
 const showPriceDropdown = ref(false);
 const showStorageDropdown = ref(false);
-const showCustomPriceInput = ref(false);
 const allBrands = ref([]);
 const allStorageSizes = ref([]);
 const customMinPrice = ref('');
@@ -216,8 +219,7 @@ const priceRanges = [
   { label: "10,001-20,000 Baht", min: 10001, max: 20000 },
   { label: "20,001-30,000 Baht", min: 20001, max: 30000 },
   { label: "30,001-40,000 Baht", min: 30001, max: 40000 },
-  { label: "40,001-50,000 Baht", min: 40001, max: 50000 },
-  { label: "Custom Range", min: null, max: null, isCustom: true }
+  { label: "40,001-50,000 Baht", min: 40001, max: 50000 }
 ];
 
 const selectedPriceRange = computed(() => {
@@ -318,17 +320,10 @@ function saveToSessionStorage(value) {
 
 // Custom Price Range Functions
 function selectPriceRange(range) {
-  if (range.isCustom) {
-    showCustomPriceInput.value = true;
-    showPriceDropdown.value = false;
-    customMinPrice.value = '';
-    customMaxPrice.value = '';
-  } else {
-    const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
-    emit("update:modelValue", newValue);
-    saveToSessionStorage(newValue);
-    showPriceDropdown.value = false;
-  }
+  const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showPriceDropdown.value = false;
 }
 
 function applyCustomPriceRange() {
@@ -419,7 +414,6 @@ onMounted(async () => {
              showBrandDropdown.value = false;
              showPriceDropdown.value = false;
              showStorageDropdown.value = false;
-             showCustomPriceInput.value = false;
            }
          });
         // Ensure all required properties exist
