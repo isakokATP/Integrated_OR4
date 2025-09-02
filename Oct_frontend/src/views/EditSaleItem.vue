@@ -816,7 +816,7 @@ const handleDelete = async () => {
            </div>
            
            <!-- Warning for too many files -->
-           <div v-if="existingImages.length + selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
+           <div v-if="existingImages.length + selectedFiles.length > 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
              <p class="text-sm text-yellow-800">
                Maximum 4 pictures are allowed.
              </p>
