@@ -363,18 +363,16 @@ function removeFile(index) {
   fileErrors.value = [];
 }
 
-async function removeExistingImage(index) {
-  try {
-    const image = existingImages.value[index];
-    // ลบจาก Backend ก่อน
-    await deleteAttachment(id, image.imageViewOrder);
-    // ลบจาก local state
-    existingImages.value.splice(index, 1);
-  } catch (error) {
-    console.error('Failed to delete image:', error);
-    // แสดง error message
-    errorMsg.value = "Failed to delete image: " + (error.message || "Unknown error");
-  }
+function removeExistingImage(index) {
+  // Mark the existing image for deletion instead of removing immediately
+  const image = existingImages.value[index];
+  filesToDelete.value.push({
+    ...image,
+    isExisting: true, // Mark as existing image for backend deletion
+    originalIndex: index
+  });
+  // Remove from existingImages list
+  existingImages.value.splice(index, 1);
 }
 
 function getImagePreview(file) {
@@ -437,9 +435,17 @@ function moveExistingImageDown(index) {
 }
 
 function restoreFile(index) {
-  // Restore file from deletion list back to selectedFiles
+  // Restore file from deletion list
   const fileToRestore = filesToDelete.value[index];
-  selectedFiles.value.push(fileToRestore);
+  
+  if (fileToRestore.isExisting) {
+    // Restore existing image back to existingImages
+    existingImages.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
+  } else {
+    // Restore new file back to selectedFiles
+    selectedFiles.value.push(fileToRestore);
+  }
+  
   filesToDelete.value.splice(index, 1);
 }
 
@@ -460,6 +466,19 @@ const handleSave = async () => {
   errorMsg.value = "";
 
   try {
+    // First, delete existing images marked for deletion
+    for (const fileToDelete of filesToDelete.value) {
+      if (fileToDelete.isExisting) {
+        try {
+          await deleteAttachment(id, fileToDelete.imageViewOrder);
+        } catch (error) {
+          console.error('Failed to delete existing image:', error);
+          errorMsg.value = "Failed to delete image: " + (error.message || "Unknown error");
+          return;
+        }
+      }
+    }
+
     const dataToSend = {
       model: form.value.model.trim(),
       // Ensure brand object is correctly structured for the backend
@@ -518,6 +537,11 @@ const handleCancel = () => {
   // Clear all temporary changes
   selectedFiles.value = [];
   filesToDelete.value = [];
+  
+  // Reload original data to restore existing images
+  if (originalData.value && originalData.value.saleItemImages) {
+    existingImages.value = [...originalData.value.saleItemImages];
+  }
 };
 
 const handleDelete = async () => {
@@ -775,8 +799,9 @@ const handleDelete = async () => {
                class="flex items-center justify-between bg-red-50 p-2 rounded border border-red-200"
              >
                <div class="flex items-center space-x-2">
-                 <span class="text-sm font-medium text-red-700">{{ file.name }}</span>
-                 <span class="text-xs text-red-500">({{ formatFileSize(file.size) }})</span>
+                 <span class="text-sm font-medium text-red-700">{{ file.fileName || file.filename || file.name }}</span>
+                 <span class="text-xs text-red-500">({{ formatFileSize(file.fileSize || file.size) }})</span>
+                 <span class="text-xs text-red-500">{{ file.isExisting ? '(Existing)' : '(New)' }}</span>
                  <span class="text-xs text-red-500">(Will be removed)</span>
                </div>
                <div class="flex items-center space-x-1">
