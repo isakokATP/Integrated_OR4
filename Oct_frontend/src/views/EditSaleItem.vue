@@ -316,39 +316,58 @@ function handleFileSelect(event) {
   const filesRejected = files.slice(availableSlots);
   
   // Validate each file to be added
+  const validFiles = [];
+  const invalidFiles = [];
+  
   filesToAdd.forEach(file => {
+    let isValid = true;
+    let errorMessage = '';
+    
     // Check file type
     if (!file.type.startsWith('image/')) {
-      fileErrors.value.push(`${file.name} is not an image file.`);
-      return;
+      errorMessage = `${file.name} is not an image file.`;
+      isValid = false;
     }
     
     // Check file size (2MB = 2 * 1024 * 1024 bytes)
-    if (file.size > 2 * 1024 * 1024) {
-      fileErrors.value.push(`${file.name} is larger than 2MB.`);
-      return;
+    if (isValid && file.size > 2 * 1024 * 1024) {
+      errorMessage = `${file.name} is larger than 2MB.`;
+      isValid = false;
     }
     
     // Check for duplicate file names in existing images
-    // BE returns attachment DTO with fileName or filename? Fall back to both.
-    const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
-    if (existingImage) {
-      fileErrors.value.push(`${file.name} already exists in existing images.`);
-      return;
+    if (isValid) {
+      const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
+      if (existingImage) {
+        errorMessage = `${file.name} already exists in existing images.`;
+        isValid = false;
+      }
     }
     
     // Check for duplicate file names in new files
-    const existingFile = selectedFiles.value.find(f => f.name === file.name);
-    if (existingFile) {
-      fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
-      return;
+    if (isValid) {
+      const existingFile = selectedFiles.value.find(f => f.name === file.name);
+      if (existingFile) {
+        errorMessage = `${file.name} already exists in new files. Please choose a different file.`;
+        isValid = false;
+      }
     }
     
     // Check for duplicate file names in files marked for deletion
-    const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
-    if (fileToDelete) {
-      fileErrors.value.push(`${file.name} is marked for deletion. Please restore it first or choose a different file.`);
-      return;
+    if (isValid) {
+      const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
+      if (fileToDelete) {
+        errorMessage = `${file.name} is marked for deletion. Please restore it first or choose a different file.`;
+        isValid = false;
+      }
+    }
+    
+    // Categorize file
+    if (isValid) {
+      validFiles.push(file);
+    } else {
+      invalidFiles.push(file);
+      fileErrors.value.push(errorMessage);
     }
   });
   
@@ -358,7 +377,7 @@ function handleFileSelect(event) {
   }
   
   // Add valid files (limited to available slots)
-  selectedFiles.value.push(...filesToAdd);
+  selectedFiles.value.push(...validFiles);
   
   // Show message if some files were rejected due to limit
   if (filesRejected.length > 0) {
