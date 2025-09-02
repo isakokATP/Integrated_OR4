@@ -4,7 +4,7 @@ import {
   fetchSaleItemById,
   updateSaleItem,
   deleteSaleItem,
-  uploadAttachment,
+  deleteAttachment,
 } from "../services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import { fetchBrands } from "../services/saleItemService";
@@ -351,8 +351,18 @@ function removeFile(index) {
   fileErrors.value = [];
 }
 
-function removeExistingImage(index) {
-  existingImages.value.splice(index, 1);
+async function removeExistingImage(index) {
+  try {
+    const image = existingImages.value[index];
+    // ลบจาก Backend ก่อน
+    await deleteAttachment(id, image.imageViewOrder);
+    // ลบจาก local state
+    existingImages.value.splice(index, 1);
+  } catch (error) {
+    console.error('Failed to delete image:', error);
+    // แสดง error message
+    errorMsg.value = "Failed to delete image: " + (error.message || "Unknown error");
+  }
 }
 
 function getImagePreview(file) {
@@ -461,6 +471,9 @@ const handleSave = async () => {
 
     // Send data and images together to Backend
     await updateSaleItem(id, dataToSend, selectedFiles.value);
+    
+    // Clear selected files after successful save
+    selectedFiles.value = [];
     
     router.push({
       name: "sale-items-page-byId",

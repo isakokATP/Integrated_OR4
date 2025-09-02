@@ -344,7 +344,7 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { createSaleItem, fetchBrands, uploadAttachment } from "../services/saleItemService";
+import { createSaleItem, fetchBrands } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import { useRouter } from "vue-router";
 
@@ -594,6 +594,10 @@ async function handleSave() {
   try {
     // Send data and images together to Backend
     const createdItem = await createSaleItem(dataToSend, selectedFiles.value);
+    
+    // Clear selected files after successful save
+    selectedFiles.value = [];
+    fileErrors.value = [];
     
     alert("สร้างรายการขายสำเร็จ!");
     router.push({
