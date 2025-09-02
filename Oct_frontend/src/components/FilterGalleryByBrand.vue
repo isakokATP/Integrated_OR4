@@ -409,93 +409,13 @@ function clearAllFilters() {
   sessionStorage.removeItem("filterSettings");
 }
 
-// Custom Price Range Functions
-function selectPriceRange(range) {
-  if (range.isCustom) {
-    showCustomPriceInput.value = true;
-    showPriceDropdown.value = false;
-    customMinPrice.value = '';
-    customMaxPrice.value = '';
-  } else {
-    const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
-    emit("update:modelValue", newValue);
-    saveToSessionStorage(newValue);
-    showPriceDropdown.value = false;
-  }
-}
 
-function applyCustomPriceRange() {
-  const min = customMinPrice.value ? parseInt(customMinPrice.value) : null;
-  const max = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
-  
-  if (min !== null || max !== null) {
-    const newValue = { ...props.modelValue, priceMin: min, priceMax: max };
-    emit("update:modelValue", newValue);
-    saveToSessionStorage(newValue);
-  }
-  
-  showCustomPriceInput.value = false;
-  customMinPrice.value = '';
-  customMaxPrice.value = '';
-}
-
-function cancelCustomPriceRange() {
-  showCustomPriceInput.value = false;
-  customMinPrice.value = '';
-  customMaxPrice.value = '';
-}
-
-function clearPriceFilter() {
-  const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-}
 
 function saveToSessionStorage(value) {
   sessionStorage.setItem("filterSettings", JSON.stringify(value));
 }
 
-// Brand Functions
-function addBrand(brand) {
-  const newSelectedBrands = [...props.modelValue.brands, brand];
-  const newValue = { ...props.modelValue, brands: newSelectedBrands };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-  showBrandDropdown.value = false;
-}
 
-function removeBrand(brand) {
-  const newSelectedBrands = props.modelValue.brands.filter((b) => b !== brand);
-  const newValue = { ...props.modelValue, brands: newSelectedBrands };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-}
-
-// Storage Functions
-function addStorage(storage) {
-  const newSelectedStorageSizes = [...props.modelValue.storageSizes, storage];
-  const newValue = { ...props.modelValue, storageSizes: newSelectedStorageSizes };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-  showStorageDropdown.value = false;
-}
-
-function removeStorage(storage) {
-  const newSelectedStorageSizes = props.modelValue.storageSizes.filter((s) => s !== storage);
-  const newValue = { ...props.modelValue, storageSizes: newSelectedStorageSizes };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-}
-
-function formatStorageSize(storage) {
-  if (storage === 'not_specified') {
-    return 'Not specified';
-  }
-  if (storage >= 1024) {
-    return `${storage / 1024} TB`;
-  }
-  return `${storage} GB`;
-}
 
 onMounted(async () => {
   // Load brands from the API
