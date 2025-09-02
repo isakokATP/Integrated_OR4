@@ -283,10 +283,26 @@ const selectedPriceRange = computed(() => {
   }
   
   // If no predefined range matches, it's a custom range
-  const minDisplay = props.modelValue.priceMin !== null ? props.modelValue.priceMin : '0';
-  const maxDisplay = props.modelValue.priceMax !== null ? props.modelValue.priceMax : '∞';
+  let label;
+  
+  if (props.modelValue.priceMin === props.modelValue.priceMax && props.modelValue.priceMin !== null) {
+    // Exact price: 2000-2000 -> "2000 Baht"
+    label = `${props.modelValue.priceMin} Baht`;
+  } else if (props.modelValue.priceMin !== null && props.modelValue.priceMax !== null) {
+    // Range: min-max
+    label = `${props.modelValue.priceMin} - ${props.modelValue.priceMax} Baht`;
+  } else if (props.modelValue.priceMin !== null) {
+    // Only min: min-∞
+    label = `${props.modelValue.priceMin}+ Baht`;
+  } else if (props.modelValue.priceMax !== null) {
+    // Only max: 0-max
+    label = `0 - ${props.modelValue.priceMax} Baht`;
+  } else {
+    label = 'Custom Price Range';
+  }
+  
   return {
-    label: `Custom: ${minDisplay} - ${maxDisplay} Baht`,
+    label: `Custom: ${label}`,
     min: props.modelValue.priceMin,
     max: props.modelValue.priceMax,
     isCustom: true
@@ -362,10 +378,21 @@ function applyCustomPriceRange() {
     return;
   }
   
+  // If only min is provided, set max to min (exact price)
+  // If only max is provided, set min to 0
+  let finalMin = min;
+  let finalMax = max;
+  
+  if (min !== null && max === null) {
+    finalMax = min; // Exact price: 2000 -> 2000-2000
+  } else if (min === null && max !== null) {
+    finalMin = 0; // Up to max: max -> 0-max
+  }
+  
   const newValue = { 
     ...props.modelValue, 
-    priceMin: min, 
-    priceMax: max 
+    priceMin: finalMin, 
+    priceMax: finalMax 
   };
   emit("update:modelValue", newValue);
   saveToSessionStorage(newValue);
