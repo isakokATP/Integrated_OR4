@@ -391,9 +391,13 @@ function handleFileSelect(event) {
 
 function removeFile(index) {
   // Mark the file for deletion instead of removing immediately
-  filesToDelete.value.push(selectedFiles.value[index]);
-  // Remove from the selectedFiles list
-  selectedFiles.value.splice(index, 1);
+  const fileToDelete = selectedFiles.value[index];
+  filesToDelete.value.push({
+    ...fileToDelete,
+    isExisting: false, // Mark as new file
+    originalIndex: index
+  });
+  // Don't remove from selectedFiles until save - just mark as deleted
   fileErrors.value = [];
 }
 
@@ -405,8 +409,7 @@ function removeExistingImage(index) {
     isExisting: true, // Mark as existing image for backend deletion
     originalIndex: index
   });
-  // Remove from existingImages list
-  existingImages.value.splice(index, 1);
+  // Don't remove from existingImages until save - just mark as deleted
 }
 
 function getImagePreview(file) {
@@ -472,15 +475,11 @@ function restoreFile(index) {
   // Restore file from deletion list
   const fileToRestore = filesToDelete.value[index];
   
-  if (fileToRestore.isExisting) {
-    // Restore existing image back to existingImages
-    existingImages.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
-  } else {
-    // Restore new file back to selectedFiles
-    selectedFiles.value.push(fileToRestore);
-  }
-  
+  // Remove from deletion list
   filesToDelete.value.splice(index, 1);
+  
+  // No need to restore to original arrays since they weren't removed
+  // Just clear the deletion mark
 }
 
 const handleBlur = (field) => {
@@ -544,8 +543,28 @@ const handleSave = async () => {
     // Send data and images together to Backend
     await updateSaleItem(id, dataToSend, selectedFiles.value);
     
-    // Clear selected files and files to delete after successful save
-    selectedFiles.value = [];
+    // Remove files marked for deletion from arrays after successful save
+    for (const fileToDelete of filesToDelete.value) {
+      if (fileToDelete.isExisting) {
+        // Remove from existingImages array
+        const index = existingImages.value.findIndex(img => 
+          (img.fileName || img.filename) === (fileToDelete.fileName || fileToDelete.filename)
+        );
+        if (index !== -1) {
+          existingImages.value.splice(index, 1);
+        }
+      } else {
+        // Remove from selectedFiles array
+        const index = selectedFiles.value.findIndex(file => 
+          file.name === fileToDelete.name
+        );
+        if (index !== -1) {
+          selectedFiles.value.splice(index, 1);
+        }
+      }
+    }
+    
+    // Clear deletion list
     filesToDelete.value = [];
     
     router.push({
@@ -568,7 +587,8 @@ const handleCancel = () => {
   } else {
     router.push({ name: "sale-items-page" });
   }
-  // Clear all temporary changes
+  
+  // Clear all temporary changes and restore original state
   selectedFiles.value = [];
   filesToDelete.value = [];
   
@@ -650,7 +670,12 @@ const handleDelete = async () => {
           <div
             v-for="(image, index) in existingImages"
             :key="`existing-${index}`"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
+            :class="[
+              'w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden',
+              filesToDelete.some(f => f.isExisting && (f.fileName || f.filename) === (image.fileName || image.filename)) 
+                ? 'opacity-50 border-red-300' 
+                : ''
+            ]"
           >
             <img
               :src="getImageUrl(image.fileName || image.filename)"
@@ -663,13 +688,25 @@ const handleDelete = async () => {
             >
               ×
             </button>
+            <!-- Mark for deletion indicator -->
+            <div
+              v-if="filesToDelete.some(f => f.isExisting && (f.fileName || f.filename) === (image.fileName || image.filename))"
+              class="absolute inset-0 bg-red-100 bg-opacity-50 flex items-center justify-center"
+            >
+              <span class="text-red-600 text-xs font-bold">DEL</span>
+            </div>
           </div>
           
           <!-- New selected files -->
           <div
             v-for="(file, index) in selectedFiles.slice(0, 4 - existingImages.length)"
             :key="`new-${index}`"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
+            :class="[
+              'w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden',
+              filesToDelete.some(f => !f.isExisting && f.name === file.name) 
+                ? 'opacity-50 border-red-300' 
+                : ''
+            ]"
           >
             <img
               :src="getImagePreview(file)"
@@ -682,6 +719,13 @@ const handleDelete = async () => {
             >
               ×
             </button>
+            <!-- Mark for deletion indicator -->
+            <div
+              v-if="filesToDelete.some(f => !f.isExisting && f.name === file.name)"
+              class="absolute inset-0 bg-red-100 bg-opacity-50 flex items-center justify-center"
+            >
+              <span class="text-red-600 text-xs font-bold">DEL</span>
+            </div>
           </div>
           
           <!-- Empty slots -->
