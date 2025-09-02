@@ -77,6 +77,46 @@
               </div>
             </div>
           </div>
+
+          <!-- Custom Price Range Input -->
+          <div v-if="showCustomPriceInput" class="absolute top-full left-0 right-0 mt-2 z-20">
+            <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 w-64 backdrop-blur-sm">
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Min Price (Baht)</label>
+                <input
+                  v-model="customMinPrice"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Max Price (Baht)</label>
+                <input
+                  v-model="customMaxPrice"
+                  type="number"
+                  min="0"
+                  placeholder="50000"
+                  class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+                />
+              </div>
+              <div class="flex gap-2">
+                <button
+                  @click="applyCustomPriceRange"
+                  class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium"
+                >
+                  Apply
+                </button>
+                <button
+                  @click="cancelCustomPriceRange"
+                  class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Storage Filter -->
@@ -369,8 +409,92 @@ function clearAllFilters() {
   sessionStorage.removeItem("filterSettings");
 }
 
+// Custom Price Range Functions
+function selectPriceRange(range) {
+  if (range.isCustom) {
+    showCustomPriceInput.value = true;
+    showPriceDropdown.value = false;
+    customMinPrice.value = '';
+    customMaxPrice.value = '';
+  } else {
+    const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
+    emit("update:modelValue", newValue);
+    saveToSessionStorage(newValue);
+    showPriceDropdown.value = false;
+  }
+}
+
+function applyCustomPriceRange() {
+  const min = customMinPrice.value ? parseInt(customMinPrice.value) : null;
+  const max = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
+  
+  if (min !== null || max !== null) {
+    const newValue = { ...props.modelValue, priceMin: min, priceMax: max };
+    emit("update:modelValue", newValue);
+    saveToSessionStorage(newValue);
+  }
+  
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
+}
+
+function cancelCustomPriceRange() {
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
+}
+
+function clearPriceFilter() {
+  const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+}
+
 function saveToSessionStorage(value) {
   sessionStorage.setItem("filterSettings", JSON.stringify(value));
+}
+
+// Brand Functions
+function addBrand(brand) {
+  const newSelectedBrands = [...props.modelValue.brands, brand];
+  const newValue = { ...props.modelValue, brands: newSelectedBrands };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showBrandDropdown.value = false;
+}
+
+function removeBrand(brand) {
+  const newSelectedBrands = props.modelValue.brands.filter((b) => b !== brand);
+  const newValue = { ...props.modelValue, brands: newSelectedBrands };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+}
+
+// Storage Functions
+function addStorage(storage) {
+  const newSelectedStorageSizes = [...props.modelValue.storageSizes, storage];
+  const newValue = { ...props.modelValue, storageSizes: newSelectedStorageSizes };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showStorageDropdown.value = false;
+}
+
+function removeStorage(storage) {
+  const newSelectedStorageSizes = props.modelValue.storageSizes.filter((s) => s !== storage);
+  const newValue = { ...props.modelValue, storageSizes: newSelectedStorageSizes };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+}
+
+function formatStorageSize(storage) {
+  if (storage === 'not_specified') {
+    return 'Not specified';
+  }
+  if (storage >= 1024) {
+    return `${storage / 1024} TB`;
+  }
+  return `${storage} GB`;
 }
 
 onMounted(async () => {
