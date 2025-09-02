@@ -1,241 +1,143 @@
 <template>
-  <div class="flex flex-col gap-6 p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-lg border border-gray-100">
-    <!-- Brand Filter -->
-    <div class="flex items-start gap-3">
-      <div
-        class="itbms-brand-filter flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-        @click="showBrandDropdown = !showBrandDropdown"
-      >
-        <template v-if="modelValue.brands.length">
+  <div class="flex items-center gap-6">
+    <!-- Filter Container - ทั้ง 3 filter + Clear All ในกรอบเดียวกัน -->
+    <div class="flex-1 bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
+      <div class="flex items-center gap-4">
+        <!-- Brand Filter -->
+        <div class="flex-1 relative">
           <div
-            v-for="brand in modelValue.brands"
-            :key="brand"
-            class="itbms-filter-item flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            {{ brand }}
-            <button
-              @click="removeBrand(brand)"
-              class="itbms-filter-item-clear ml-2 text-white hover:text-red-200 font-bold hover:bg-white hover:bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center transition-all duration-200"
-              aria-label="Remove brand"
-            >
-              &times;
-            </button>
-          </div>
-        </template>
-        <div v-else class="text-gray-500 text-sm font-medium">Filter by brand(s)</div>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <div class="flex gap-2">
-          <button
+            class="itbms-brand-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
             @click="showBrandDropdown = !showBrandDropdown"
-            class="itbms-brand-filter-button bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 h-[48px] text-sm flex items-center rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-            </svg>
-            Choose
-          </button>
-          <button
-            @click="clearBrands"
-            class="itbms-brand-filter-clear bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-2 h-[48px] text-sm flex items-center rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Clear
-          </button>
-        </div>
-
-        <div v-if="showBrandDropdown" class="relative mt-2">
-          <div
-            class="absolute right-0 z-10 bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto w-56 backdrop-blur-sm"
-          >
-            <div
-              v-for="brand in availableBrands"
-              :key="brand"
-              class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:pl-6"
-              @click="addBrand(brand)"
-            >
-              {{ brand }}
+            <template v-if="modelValue.brands.length">
+              <div
+                v-for="brand in modelValue.brands"
+                :key="brand"
+                class="itbms-filter-item flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                {{ brand }}
+                <button
+                  @click.stop="removeBrand(brand)"
+                  class="itbms-filter-item-clear ml-2 text-white hover:text-red-200 font-bold hover:bg-white hover:bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center transition-all duration-200"
+                  aria-label="Remove brand"
+                >
+                  &times;
+                </button>
+              </div>
+            </template>
+            <div v-else class="text-gray-500 text-sm font-medium">Brand</div>
+          </div>
+          
+          <!-- Brand Dropdown -->
+          <div v-if="showBrandDropdown" class="absolute top-full left-0 right-0 mt-2 z-20">
+            <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm">
+              <div
+                v-for="brand in availableBrands"
+                :key="brand"
+                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:pl-6"
+                @click="addBrand(brand)"
+              >
+                {{ brand }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Price Range Filter -->
-    <div class="flex items-start gap-0.5">
-      <div
-        class="itbms-price-filter w-102.5 border border-gray-300 rounded-md px-4 py-2 flex flex-wrap gap-2 items-start min-h-[40px]"
-        @click="showPriceDropdown = !showPriceDropdown"
-      >
-        <template v-if="selectedPriceRange">
-          <div class="itbms-filter-item flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm">
-            {{ selectedPriceRange.label }}
-            <button
-              @click="clearPriceFilter"
-              class="itbms-filter-item-clear ml-2 text-blue-600 hover:text-blue-900 font-bold"
-              aria-label="Clear price filter"
-            >
-              &times;
-            </button>
-          </div>
-        </template>
-        <div v-else class="text-gray-500 text-sm">Filter by price range</div>
-      </div>
-
-      <div class="flex flex-col ml-1">
-        <div class="flex gap-1.5">
-          <button
+        <!-- Price Filter -->
+        <div class="flex-1 relative">
+          <div
+            class="itbms-price-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
             @click="showPriceDropdown = !showPriceDropdown"
-            class="itbms-price-filter-button bg-gray-200 px-3 py-2 hover:bg-blue-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
           >
-            <span class="inline-block mr-1">Choose</span>
-          </button>
-          <button
-            @click="clearPriceFilter"
-            class="itbms-price-filter-clear bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
-          >
-            Clear
-          </button>
+            <template v-if="selectedPriceRange">
+              <div class="itbms-filter-item flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200">
+                {{ selectedPriceRange.label }}
+                <button
+                  @click.stop="clearPriceFilter"
+                  class="itbms-filter-item-clear ml-2 text-white hover:text-red-200 font-bold hover:bg-white hover:bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center transition-all duration-200"
+                  aria-label="Clear price filter"
+                >
+                  &times;
+                </button>
+              </div>
+            </template>
+            <div v-else class="text-gray-500 text-sm font-medium">Price</div>
+          </div>
+          
+          <!-- Price Dropdown -->
+          <div v-if="showPriceDropdown" class="absolute top-full left-0 right-0 mt-2 z-20">
+            <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm">
+              <div
+                v-for="range in priceRanges"
+                :key="range.label"
+                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:pl-6"
+                @click="selectPriceRange(range)"
+              >
+                {{ range.label }}
+              </div>
+            </div>
+          </div>
         </div>
 
-                 <div v-if="showPriceDropdown" class="relative mt-2">
-           <div
-             class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto w-48"
-           >
-             <div
-               v-for="range in priceRanges"
-               :key="range.label"
-               class="itbms-filter-item px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
-               @click="selectPriceRange(range)"
-             >
-               {{ range.label }}
-             </div>
-           </div>
-         </div>
-
-         <!-- Custom Price Range Input -->
-         <div v-if="showCustomPriceInput" class="relative mt-2">
-           <div
-             class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md p-4 w-64"
-           >
-             <div class="mb-3">
-               <label class="block text-sm font-medium mb-1">Min Price (Baht)</label>
-               <input
-                 v-model="customMinPrice"
-                 type="number"
-                 min="0"
-                 placeholder="0"
-                 class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-               />
-             </div>
-             <div class="mb-3">
-               <label class="block text-sm font-medium mb-1">Max Price (Baht)</label>
-               <input
-                 v-model="customMaxPrice"
-                 type="number"
-                 min="0"
-                 placeholder="50000"
-                 class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-               />
-             </div>
-             <div class="flex gap-2">
-               <button
-                 @click="applyCustomPriceRange"
-                 class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-               >
-                 Apply
-               </button>
-               <button
-                 @click="cancelCustomPriceRange"
-                 class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
-               >
-                 Cancel
-               </button>
-             </div>
-           </div>
-         </div>
-      </div>
-    </div>
-
-    <!-- Storage Size Filter -->
-    <div class="flex items-start gap-0.5">
-      <div
-        class="itbms-storage-filter w-102.5 border border-gray-300 rounded-md px-4 py-2 flex flex-wrap gap-2 items-start min-h-[40px]"
-        @click="showStorageDropdown = !showStorageDropdown"
-      >
-        <template v-if="modelValue.storageSizes.length">
+        <!-- Storage Filter -->
+        <div class="flex-1 relative">
           <div
-            v-for="storage in modelValue.storageSizes"
-            :key="storage"
-            class="itbms-filter-item flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm"
-          >
-            {{ formatStorageSize(storage) }}
-            <button
-              @click="removeStorage(storage)"
-              class="itbms-filter-item-clear ml-2 text-green-600 hover:text-green-900 font-bold"
-              aria-label="Remove storage size"
-            >
-              &times;
-            </button>
-          </div>
-        </template>
-        <div v-else class="text-gray-500 text-sm">Filter by storage size</div>
-      </div>
-
-      <div class="flex flex-col ml-1">
-        <div class="flex gap-1.5">
-          <button
+            class="itbms-storage-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
             @click="showStorageDropdown = !showStorageDropdown"
-            class="itbms-storage-filter-button bg-gray-200 px-3 py-2 hover:bg-green-200 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
           >
-            <span class="inline-block mr-1">Choose</span>
-          </button>
-          <button
-            @click="clearStorageSizes"
-            class="itbms-storage-filter-clear bg-gray-200 px-3 py-2 hover:bg-gray-300 h-[40px] text-sm flex items-center border border-gray-300 rounded-md font-semibold"
-          >
-            Clear
-          </button>
-        </div>
-
-        <div v-if="showStorageDropdown" class="relative mt-2">
-          <div
-            class="absolute right-0 z-10 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto w-48"
-          >
-            <div
-              v-for="storage in availableStorageSizes"
-              :key="storage"
-              class="itbms-filter-item px-4 py-2 hover:bg-green-100 cursor-pointer text-sm"
-              @click="addStorage(storage)"
-            >
-              {{ formatStorageSize(storage) }}
-            </div>
-            <div
-              v-if="!modelValue.storageSizes.includes('not_specified')"
-              class="itbms-filter-item px-4 py-2 hover:bg-green-100 cursor-pointer text-sm border-t border-gray-200"
-              @click="addStorage('not_specified')"
-            >
-              Not specified
+            <template v-if="modelValue.storageSizes.length">
+              <div
+                v-for="storage in modelValue.storageSizes"
+                :key="storage"
+                class="itbms-filter-item flex items-center bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                {{ formatStorageSize(storage) }}
+                <button
+                  @click.stop="removeStorage(storage)"
+                  class="itbms-filter-item-clear ml-2 text-white hover:text-red-200 font-bold hover:bg-white hover:bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center transition-all duration-200"
+                  aria-label="Remove storage size"
+                >
+                  &times;
+                </button>
+              </div>
+            </template>
+            <div v-else class="text-gray-500 text-sm font-medium">Storage</div>
+          </div>
+          
+          <!-- Storage Dropdown -->
+          <div v-if="showStorageDropdown" class="absolute top-full left-0 right-0 mt-2 z-20">
+            <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm">
+              <div
+                v-for="storage in availableStorageSizes"
+                :key="storage"
+                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:pl-6"
+                @click="addStorage(storage)"
+              >
+                {{ formatStorageSize(storage) }}
+              </div>
+              <div
+                v-if="!modelValue.storageSizes.includes('not_specified')"
+                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 cursor-pointer text-sm font-medium border-t border-gray-200 transition-all duration-200 hover:pl-6"
+                @click="addStorage('not_specified')"
+              >
+                Not specified
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Clear All Filters Button -->
-    <div class="flex justify-end pt-2">
-      <button
-        @click="clearAllFilters"
-        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 text-sm rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Clear All Filters
-      </button>
+        <!-- Clear All Filters Button (ไม่กระทบ Search) -->
+        <button
+          @click="clearAllFilters"
+          class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap"
+          title="Clear all filters (keeps search)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Clear All Filters
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -455,12 +357,13 @@ function formatStorageSize(storage) {
 }
 
 function clearAllFilters() {
+  // Clear all filters but keep search keyword
   const newValue = {
     brands: [],
     priceMin: null,
     priceMax: null,
     storageSizes: [],
-    searchKeyWord: null
+    searchKeyWord: props.modelValue.searchKeyWord // Keep search keyword
   };
   emit("update:modelValue", newValue);
   sessionStorage.removeItem("filterSettings");

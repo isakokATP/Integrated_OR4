@@ -92,12 +92,12 @@ function clearSearch() {
             </svg>
           </button>
           
-          <!-- Clear Button -->
+          <!-- Clear Search Button -->
           <button
             v-if="searchQuery"
             @click="clearSearch"
             class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-            title="Clear search"
+            title="Clear search only"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

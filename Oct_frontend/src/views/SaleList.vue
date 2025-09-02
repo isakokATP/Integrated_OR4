@@ -283,8 +283,8 @@ function goToPrevPage() {
     </div>
 
     <!-- Filter + Sort Bar -->
-    <div class="flex items-center justify-between mb-8 bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-      <!-- Filter -->
+    <div class="flex items-center gap-6 mb-8">
+      <!-- Filter Container -->
       <div class="flex-1">
         <FilterGalleryByBrand
           :modelValue="filterSettings"
@@ -292,26 +292,28 @@ function goToPrevPage() {
         />
       </div>
 
-      <!-- Size -->
-      <div class="flex items-center gap-3 ml-6 bg-gray-50 px-4 py-2 rounded-xl">
-        <span class="text-sm font-medium text-gray-700">Show</span>
-        <select
-          class="itbms-page-size border-2 border-gray-200 rounded-lg px-3 py-2 bg-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-          v-model="itemsPerPage"
-          @change="setItemsPerPage(itemsPerPage)"
-        >
-          <option
-            v-for="option in itemsPerPageOptions"
-            :key="option"
-            :value="option"
+      <!-- Right Side Controls -->
+      <div class="flex items-center gap-4">
+        <!-- Size -->
+        <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl">
+          <span class="text-sm font-medium text-gray-700">Show</span>
+          <select
+            class="itbms-page-size border-2 border-gray-200 rounded-lg px-3 py-2 bg-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+            v-model="itemsPerPage"
+            @change="setItemsPerPage(itemsPerPage)"
           >
-            {{ option }}
-          </option>
-        </select>
-      </div>
-      
-      <!-- Sort Buttons -->
-      <div class="flex items-center gap-2 ml-6">
+            <option
+              v-for="option in itemsPerPageOptions"
+              :key="option"
+              :value="option"
+            >
+              {{ option }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Sort Buttons -->
+        <div class="flex items-center gap-2">
         <button
           :class="
             sortType === 'asc'
@@ -389,6 +391,7 @@ function goToPrevPage() {
         </button>
       </div>
     </div>
+  </div>
 
     <!-- แสดงรายการสินค้า -->
     <ItemsGallary :items="filteredItems" />
