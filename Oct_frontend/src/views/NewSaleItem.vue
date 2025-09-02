@@ -42,9 +42,10 @@
          
          <!-- Thumbnail previews -->
          <div class="flex gap-2 mb-4">
+           <!-- New selected files -->
            <div
              v-for="(file, index) in selectedFiles.slice(0, 4)"
-             :key="index"
+             :key="`new-${index}`"
              class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
            >
              <img
@@ -52,7 +53,15 @@
                alt="Thumbnail"
                class="w-full h-full object-cover"
              />
+             <button
+               @click="removeFile(index)"
+               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
+             >
+               ×
+             </button>
            </div>
+           
+           <!-- Empty slots -->
            <div
              v-for="n in Math.max(0, 4 - selectedFiles.length)"
              :key="`empty-${n}`"
@@ -462,41 +471,72 @@ function handleFileSelect(event) {
   const files = Array.from(event.target.files);
   fileErrors.value = [];
   
-  // Validate file count
-  if (selectedFiles.value.length + files.length > 4) {
-    fileErrors.value.push("Maximum 4 pictures are allowed.");
+  // Calculate how many files we can actually add
+  const currentTotal = selectedFiles.value.length;
+  const maxAllowed = 4;
+  const availableSlots = maxAllowed - currentTotal;
+  
+  // If no slots available, don't add any files
+  if (availableSlots <= 0) {
+    fileErrors.value.push("Maximum 4 pictures are allowed. Please remove some images first.");
     return;
   }
   
-  // Validate each file and check for duplicates
-  files.forEach(file => {
+  // Limit files to available slots (take only the first N files)
+  const filesToAdd = files.slice(0, availableSlots);
+  const filesRejected = files.slice(availableSlots);
+  
+  // Validate each file to be added
+  const validFiles = [];
+  const invalidFiles = [];
+  
+  filesToAdd.forEach(file => {
+    let isValid = true;
+    let errorMessage = '';
+    
     // Check file type
     if (!file.type.startsWith('image/')) {
-      fileErrors.value.push(`${file.name} is not an image file.`);
-      return;
+      errorMessage = `${file.name} is not an image file.`;
+      isValid = false;
     }
     
     // Check file size (2MB = 2 * 1024 * 1024 bytes)
-    if (file.size > 2 * 1024 * 1024) {
-      fileErrors.value.push(`${file.name} is larger than 2MB.`);
-      return;
+    if (isValid && file.size > 2 * 1024 * 1024) {
+      errorMessage = `${file.name} is larger than 2MB.`;
+      isValid = false;
     }
     
-    // Check for duplicate file names
-    const existingFile = selectedFiles.value.find(f => f.name === file.name);
-    if (existingFile) {
-      fileErrors.value.push(`${file.name} already exists. Please choose a different file.`);
-      return;
+    // Check for duplicate file names in new files
+    if (isValid) {
+      const existingFile = selectedFiles.value.find(f => f.name === file.name);
+      if (existingFile) {
+        errorMessage = `${file.name} already exists. Please choose a different file.`;
+        isValid = false;
+      }
+    }
+    
+    // Categorize file
+    if (isValid) {
+      validFiles.push(file);
+    } else {
+      invalidFiles.push(file);
+      fileErrors.value.push(errorMessage);
     }
   });
   
-  // If there are errors, don't add files
+  // If there are validation errors, don't add files
   if (fileErrors.value.length > 0) {
     return;
   }
   
-  // Add valid files
-  selectedFiles.value.push(...files);
+  // Add valid files (limited to available slots)
+  selectedFiles.value.push(...validFiles);
+  
+  // Show message if some files were rejected due to limit
+  if (filesRejected.length > 0) {
+    const rejectedNames = filesRejected.map(f => f.name).join(', ');
+    fileErrors.value.push(`Only ${availableSlots} files added. ${filesRejected.length} files rejected due to limit: ${rejectedNames}`);
+  }
   
   // Clear the input
   event.target.value = '';
