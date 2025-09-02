@@ -391,45 +391,8 @@ function clearAllFilters() {
   sessionStorage.removeItem("filterSettings");
 }
 
-
-
 function saveToSessionStorage(value) {
   sessionStorage.setItem("filterSettings", JSON.stringify(value));
-}
-
-// Custom Price Range Functions
-function selectPriceRange(range) {
-  const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
-  showPriceDropdown.value = false;
-}
-
-function applyCustomPriceRange() {
-  const min = customMinPrice.value ? parseInt(customMinPrice.value) : null;
-  const max = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
-  
-  if (min !== null || max !== null) {
-    const newValue = { ...props.modelValue, priceMin: min, priceMax: max };
-    emit("update:modelValue", newValue);
-    saveToSessionStorage(newValue);
-  }
-  
-  showCustomPriceInput.value = false;
-  customMinPrice.value = '';
-  customMaxPrice.value = '';
-}
-
-function cancelCustomPriceRange() {
-  showCustomPriceInput.value = false;
-  customMinPrice.value = '';
-  customMaxPrice.value = '';
-}
-
-function clearPriceFilter() {
-  const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
-  emit("update:modelValue", newValue);
-  saveToSessionStorage(newValue);
 }
 
 // Storage Functions
