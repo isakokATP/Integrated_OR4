@@ -242,7 +242,8 @@ const props = defineProps({
       brands: [],
       priceMin: null,
       priceMax: null,
-      storageSizes: []
+      storageSizes: [],
+      searchKeyWord: null
     })
   }
 });
@@ -449,7 +450,8 @@ function clearAllFilters() {
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   };
   emit("update:modelValue", newValue);
   sessionStorage.removeItem("filterSettings");
@@ -496,7 +498,8 @@ onMounted(async () => {
           brands: [],
           priceMin: null,
           priceMax: null,
-          storageSizes: []
+          storageSizes: [],
+          searchKeyWord: null
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         emit("update:modelValue", mergedSettings);

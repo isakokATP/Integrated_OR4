@@ -19,7 +19,8 @@ const filterSettings = ref({
   brands: [],
   priceMin: null,
   priceMax: null,
-  storageSizes: []
+  storageSizes: [],
+  searchKeyWord: null
 });
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
@@ -66,10 +67,33 @@ watch(
   { immediate: true }
 );
 
+// ดึง search query จาก URL และ apply search
+watch(
+  () => route.query.search,
+  (newSearch) => {
+    if (newSearch) {
+      filterSettings.value.searchKeyWord = newSearch;
+      // Clear search from URL after applying
+      router.replace({ query: { ...route.query, search: undefined } });
+      loadSaleItems();
+    }
+  },
+  { immediate: true }
+);
+
 // Handle filter updates from FilterGalleryByBrand
 function handleFilterUpdate(newFilters) {
   filterSettings.value = newFilters;
   // Reset to first page when filters change
+  currentPage.value = 1;
+  sessionStorage.setItem("currentPage", 1);
+  loadSaleItems();
+}
+
+// Handle search updates from Header
+function handleSearchUpdate(searchQuery) {
+  filterSettings.value.searchKeyWord = searchQuery;
+  // Reset to first page when search changes
   currentPage.value = 1;
   sessionStorage.setItem("currentPage", 1);
   loadSaleItems();
@@ -119,7 +143,8 @@ onMounted(async () => {
           brands: [],
           priceMin: null,
           priceMax: null,
-          storageSizes: []
+          storageSizes: [],
+          searchKeyWord: null
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         filterSettings.value = mergedSettings;
@@ -143,12 +168,12 @@ async function loadSaleItems() {
     // Temporarily store the requested page before fetching
     const requestedPage = currentPage.value;
 
-    const response = await fetchSaleItemsV2(
-      requestedPage, // Use the potentially loaded page
-      itemsPerPage.value,
-      sortType.value,
-      filterSettings.value  // ส่ง filter ทั้งหมดไป Backend
-    );
+      const response = await fetchSaleItemsV2(
+    requestedPage, // Use the potentially loaded page
+    itemsPerPage.value,
+    sortType.value,
+    filterSettings.value  // ส่ง filter ทั้งหมดไป Backend รวมถึง searchKeyWord
+  );
     allItems.value = response.content;
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
@@ -237,7 +262,10 @@ function goToPrevPage() {
 </script>
 
 <template>
-  <Header />
+  <Header 
+    :searchValue="filterSettings.searchKeyWord" 
+    @search="handleSearchUpdate" 
+  />
   <div class="max-w-6xl mx-auto mt-2">
     <Notification :message="message" />
 

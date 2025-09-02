@@ -1,5 +1,8 @@
 <template>
-  <Header />
+  <Header 
+    :searchValue="null" 
+    @search="handleSearchUpdate" 
+  />
   <div class="px-6 pt-2">
     <Notification :message="message" />
     <div class="flex justify-between mb-4">
@@ -129,10 +132,24 @@ const loadSaleItems = async () => {
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   });
   saleItems.value = response.content;
   console.log(saleItems.value);
+};
+
+// Handle search updates from Header
+const handleSearchUpdate = async (searchQuery) => {
+  const response = await fetchSaleItemsV2(1, 1000, "default", {
+    brands: [],
+    priceMin: null,
+    priceMax: null,
+    storageSizes: [],
+    searchKeyWord: searchQuery
+  });
+  saleItems.value = response.content;
+  console.log("Search results:", saleItems.value);
 };
 
 const goToAddSaleItem = () => {

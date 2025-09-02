@@ -1,9 +1,49 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const searchQuery = ref("");
+
+// Props for search value from parent
+const props = defineProps({
+  searchValue: {
+    type: String,
+    default: ""
+  }
+});
+
+const searchQuery = ref(props.searchValue);
+
+// Emit search query to parent component
+const emit = defineEmits(["search"]);
+
+// Watch for search query changes and emit to parent
+watch(searchQuery, (newQuery) => {
+  emit("search", newQuery);
+});
+
+// Watch for props changes to sync search input
+watch(() => props.searchValue, (newValue) => {
+  searchQuery.value = newValue || "";
+});
+
+// Handle Enter key press
+function handleSearch(event) {
+  if (event.key === "Enter") {
+    emit("search", searchQuery.value);
+  }
+}
+
+// Handle search icon click
+function handleSearchClick() {
+  emit("search", searchQuery.value);
+}
+
+// Clear search
+function clearSearch() {
+  searchQuery.value = "";
+  emit("search", "");
+}
 </script>
 
 <template>
@@ -27,13 +67,37 @@ const searchQuery = ref("");
       <router-link to="/">
         <span class="text-3xl font-bold">ITB MShop</span>
       </router-link>
-      <div class="w-full max-w-md">
+      <div class="w-full max-w-md relative">
         <input
           type="text"
           v-model="searchQuery"
-          placeholder="Search..."
-          class="w-full p-1.25 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Search for description, model, or color..."
+          @keyup="handleSearch"
+          class="w-full p-2 pr-20 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
+        
+        <!-- Search Icon -->
+        <button
+          @click="handleSearchClick"
+          class="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1"
+          title="Search"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </button>
+        
+        <!-- Clear Button -->
+        <button
+          v-if="searchQuery"
+          @click="clearSearch"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-600 p-1"
+          title="Clear search"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
     <!-- ไอคอน user/cart -->
