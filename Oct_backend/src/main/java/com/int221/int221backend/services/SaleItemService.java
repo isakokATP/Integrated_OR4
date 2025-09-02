@@ -14,6 +14,7 @@ import com.int221.int221backend.repositories.SaleItemRepository;
 import com.int221.int221backend.utils.ListMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+@Slf4j
 @Service
 public class SaleItemService {
     @Autowired
@@ -219,15 +221,19 @@ public class SaleItemService {
 
         // 4. อัปโหลดรูปภาพใหม่ถ้ามี
         if (images != null && !images.isEmpty()) {
-            if (images.size() > 4) {
-                throw new IllegalArgumentException("You can upload maximum 4 images.");
+            // **เช็คจำนวนรูปเก่า + รูปใหม่**
+            int existingCount = existingItem.getAttachments().size();
+            int newCount = images.size();
+            if (existingCount + newCount > 4) {
+                throw new IllegalArgumentException("You can upload a maximum of 4 images.");
             }
 
-            // ลบรูปเก่าออกก่อน (ถ้าต้องการ replace)
-            attachmentRepository.deleteAll(existingItem.getAttachments());
-            existingItem.getAttachments().clear();
+            // หา imageViewOrder ล่าสุด เพื่อจัดลำดับต่อเนื่อง
+            int nextOrder = existingItem.getAttachments().stream()
+                    .mapToInt(Attachment::getImageViewOrder)
+                    .max()
+                    .orElse(0) + 1;
 
-            int order = 1;
             for (MultipartFile file : images) {
                 long maxSize = 2 * 1024 * 1024; // 2MB
                 if (file.getSize() > maxSize) {
@@ -243,11 +249,14 @@ public class SaleItemService {
                             "File " + file.getOriginalFilename() + " must be JPEG or PNG");
                 }
 
+                // ตั้งชื่อไฟล์ใหม่
                 String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
                 Path path = Path.of(uploadDir, fileName);
+
                 try {
                     Files.createDirectories(path.getParent());
                     Files.write(path, file.getBytes());
+                    log.info("✅ Saved file: {}", path);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
                 }
@@ -255,10 +264,10 @@ public class SaleItemService {
                 Attachment attachment = Attachment.builder()
                         .saleItem(existingItem)
                         .filename(fileName)
-                        .filePath(path.toString())
+                        .filePath(fileName)  // ✅ เก็บเฉพาะชื่อไฟล์
                         .fileType(getFileType(extension))
                         .fileSize((int) file.getSize())
-                        .imageViewOrder(order++)
+                        .imageViewOrder(nextOrder++)
                         .build();
 
                 attachmentRepository.save(attachment);
@@ -282,6 +291,7 @@ public class SaleItemService {
         return responseDto;
     }
 
+
     public void deleteSaleItemById(Integer id) {
         if (saleItemRepository.existsById(id)) {
             saleItemRepository.deleteById(id);
@@ -292,28 +302,33 @@ public class SaleItemService {
 
     @Transactional
     public void deleteAttachmentByFileName(Integer saleItemId, Integer imageViewOrder) {
+        // หา SaleItem ก่อน
         SaleItem saleItem = saleItemRepository.findById(saleItemId)
                 .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
 
-//        Attachment attachment = saleItem.getAttachments().stream()
-//                .filter(a -> a.getFilename().equals(fileName))
-//                .findFirst()
-//                .orElseThrow(() -> new NotFoundException("Attachment with fileName " + fileName + " not found"));
-
+        // หา attachment ตาม imageViewOrder
         Attachment attachment = saleItem.getAttachments().stream()
                 .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Attachment with imageViewOrder " + imageViewOrder + " not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Attachment with imageViewOrder " + imageViewOrder + " not found"));
 
-        // ลบไฟล์จริง
-        Path path = Path.of(uploadDir, attachment.getFilePath());
+        // Path ของไฟล์ใน container
+        Path path = Paths.get(uploadDir, attachment.getFilePath());
+
         try {
-            Files.deleteIfExists(path);
+            if (Files.exists(path)) {
+                Files.delete(path);
+                log.info("✅ Deleted file: {}", path);
+            } else {
+                log.warn("⚠️ File not found: {}", path);
+            }
         } catch (IOException e) {
+            log.error("❌ Failed to delete file: {}", path, e);
             throw new RuntimeException("Failed to delete attachment file: " + attachment.getFilename(), e);
         }
 
-        // ลบจาก DB
+        // ลบออกจาก DB
         attachmentRepository.delete(attachment);
     }
 

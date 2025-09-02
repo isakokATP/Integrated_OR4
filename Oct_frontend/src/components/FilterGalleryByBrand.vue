@@ -67,18 +67,20 @@
           <!-- Price Dropdown -->
           <div v-if="showPriceDropdown" class="absolute top-full left-0 right-0 mt-2 z-20">
             <div class="bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm">
-              <!-- Predefined Price Ranges -->
-              <div
-                v-for="range in priceRanges"
-                :key="range.label"
-                class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 cursor-pointer text-sm font-medium border-b border-gray-100 transition-all duration-200 hover:pl-6"
-                @click="selectPriceRange(range)"
-              >
-                {{ range.label }}
-              </div>
+              <!-- Show predefined ranges only when custom is not selected -->
+              <template v-if="!showCustomPriceInput">
+                <div
+                  v-for="range in priceRanges"
+                  :key="range.label"
+                  class="itbms-filter-item px-4 py-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 cursor-pointer text-sm font-medium border-b border-gray-100 transition-all duration-200 hover:pl-6"
+                  @click="selectPriceRange(range)"
+                >
+                  {{ range.label }}
+                </div>
+              </template>
               
-              <!-- Custom Price Input Section -->
-              <div class="border-t border-gray-200 p-4">
+              <!-- Custom Price Input Section - Show only when custom is selected -->
+              <div v-if="showCustomPriceInput" class="p-4">
                 <div class="text-sm font-medium text-gray-700 mb-3">Custom Price Range</div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                   <div>
@@ -240,6 +242,7 @@ const allBrands = ref([]);
 const allStorageSizes = ref([]);
 const customMinPrice = ref('');
 const customMaxPrice = ref('');
+const showCustomPriceInput = ref(false);
 
 const priceRanges = [
   { label: "0 - 5,000 Baht", min: 0, max: 5000 },
@@ -247,7 +250,8 @@ const priceRanges = [
   { label: "10,001-20,000 Baht", min: 10001, max: 20000 },
   { label: "20,001-30,000 Baht", min: 20001, max: 30000 },
   { label: "30,001-40,000 Baht", min: 30001, max: 40000 },
-  { label: "40,001-50,000 Baht", min: 40001, max: 50000 }
+  { label: "40,001-50,000 Baht", min: 40001, max: 50000 },
+  { label: "Custom Range", min: null, max: null, isCustom: true }
 ];
 
 const selectedPriceRange = computed(() => {
@@ -274,8 +278,8 @@ const selectedPriceRange = computed(() => {
     // Range: min-max
     label = `${props.modelValue.priceMin} - ${props.modelValue.priceMax} Baht`;
   } else if (props.modelValue.priceMin !== null) {
-    // Only min: min-∞
-    label = `${props.modelValue.priceMin}+ Baht`;
+    // Only min: min-min (same value)
+    label = `${props.modelValue.priceMin} - ${props.modelValue.priceMin} Baht`;
   } else if (props.modelValue.priceMax !== null) {
     // Only max: 0-max
     label = `0 - ${props.modelValue.priceMax} Baht`;
@@ -289,6 +293,11 @@ const selectedPriceRange = computed(() => {
     max: props.modelValue.priceMax,
     isCustom: true
   };
+});
+
+// Check if custom price is selected
+const isCustomPriceSelected = computed(() => {
+  return selectedPriceRange.value && selectedPriceRange.value.isCustom;
 });
 
 const availableBrands = computed(() =>
@@ -326,6 +335,48 @@ function clearBrands() {
 
 
 
+
+function selectPriceRange(range) {
+  if (range.isCustom) {
+    showCustomPriceInput.value = true;
+    // Clear current price values when selecting custom
+    const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
+    emit("update:modelValue", newValue);
+    saveToSessionStorage(newValue);
+  } else {
+    showCustomPriceInput.value = false;
+    const newValue = { ...props.modelValue, priceMin: range.min, priceMax: range.max };
+    emit("update:modelValue", newValue);
+    saveToSessionStorage(newValue);
+  }
+}
+
+function applyCustomPriceRange() {
+  const minPrice = customMinPrice.value ? parseInt(customMinPrice.value) : null;
+  const maxPrice = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
+  
+  if (minPrice !== null || maxPrice !== null) {
+    const newValue = { ...props.modelValue, priceMin: minPrice, priceMax: maxPrice };
+    emit("update:modelValue", newValue);
+    saveToSessionStorage(newValue);
+    showCustomPriceInput.value = false;
+  }
+}
+
+function cancelCustomPriceRange() {
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
+}
+
+function clearPriceFilter() {
+  const newValue = { ...props.modelValue, priceMin: null, priceMax: null };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+  showCustomPriceInput.value = false;
+  customMinPrice.value = '';
+  customMaxPrice.value = '';
+}
 
 function clearAllFilters() {
   // Clear all filters but keep search keyword
@@ -446,6 +497,19 @@ onMounted(async () => {
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         emit("update:modelValue", mergedSettings);
+        
+        // Sync custom price input with current values
+        if (mergedSettings.priceMin !== null || mergedSettings.priceMax !== null) {
+          customMinPrice.value = mergedSettings.priceMin ? mergedSettings.priceMin.toString() : '';
+          customMaxPrice.value = mergedSettings.priceMax ? mergedSettings.priceMax.toString() : '';
+          // Check if it's a custom range (not matching predefined ranges)
+          const predefinedRange = priceRanges.find(range => 
+            range.min === mergedSettings.priceMin && range.max === mergedSettings.priceMax
+          );
+          if (!predefinedRange) {
+            showCustomPriceInput.value = true;
+          }
+        }
       } else {
         console.error("Invalid data in session storage for filterSettings.");
         sessionStorage.removeItem("filterSettings");
