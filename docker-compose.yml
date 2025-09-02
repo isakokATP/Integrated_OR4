@@ -26,12 +26,9 @@ services:
       - "8080:8080"
     depends_on:
       - mysql
-    environment:
-      - FILE_UPLOAD_DIR_SALEITEMS=/app/uploads/saleitems
-      - FILE_UPLOAD_DIR_USERS=/app/uploads/idcards
     volumes:
-      - ./uploads/saleitems:/app/uploads/saleitems
-      - ./uploads/idcards:/app/uploads/idcards
+      - ./uploads:/app/uploads
+      - ./uploads:/app/users
     networks:
       - int221-net
 
