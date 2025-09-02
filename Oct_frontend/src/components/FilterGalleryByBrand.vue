@@ -7,7 +7,7 @@
         <div class="flex-1 relative">
           <div
             class="itbms-brand-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-            @click="showBrandDropdown = !showBrandDropdown"
+            @click="toggleBrandDropdown"
           >
             <template v-if="modelValue.brands.length">
               <div
@@ -47,7 +47,7 @@
         <div class="flex-1 relative">
           <div
             class="itbms-price-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-            @click="showPriceDropdown = !showPriceDropdown"
+            @click="togglePriceDropdown"
           >
             <template v-if="selectedPriceRange">
               <div class="itbms-filter-item flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200">
@@ -127,7 +127,7 @@
         <div class="flex-1 relative">
           <div
             class="itbms-storage-filter border-2 border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-start min-h-[48px] bg-white hover:border-blue-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-            @click="showStorageDropdown = !showStorageDropdown"
+            @click="toggleStorageDropdown"
           >
             <template v-if="modelValue.storageSizes.length">
               <div
@@ -208,6 +208,34 @@ const emit = defineEmits(["update:modelValue"]);
 const showBrandDropdown = ref(false);
 const showPriceDropdown = ref(false);
 const showStorageDropdown = ref(false);
+
+// Toggle functions for dropdowns
+function toggleBrandDropdown() {
+  showBrandDropdown.value = !showBrandDropdown.value;
+  // Close other dropdowns when opening this one
+  if (showBrandDropdown.value) {
+    showPriceDropdown.value = false;
+    showStorageDropdown.value = false;
+  }
+}
+
+function togglePriceDropdown() {
+  showPriceDropdown.value = !showPriceDropdown.value;
+  // Close other dropdowns when opening this one
+  if (showPriceDropdown.value) {
+    showBrandDropdown.value = false;
+    showStorageDropdown.value = false;
+  }
+}
+
+function toggleStorageDropdown() {
+  showStorageDropdown.value = !showStorageDropdown.value;
+  // Close other dropdowns when opening this one
+  if (showStorageDropdown.value) {
+    showBrandDropdown.value = false;
+    showPriceDropdown.value = false;
+  }
+}
 const allBrands = ref([]);
 const allStorageSizes = ref([]);
 const customMinPrice = ref('');
@@ -407,15 +435,7 @@ onMounted(async () => {
       const parsedSettings = JSON.parse(savedFilterSettings);
       if (parsedSettings && typeof parsedSettings === 'object') {
         
-                 // Add click outside handler for dropdowns
-         document.addEventListener('click', (event) => {
-           const target = event.target;
-           if (!target.closest('.itbms-brand-filter') && !target.closest('.itbms-price-filter') && !target.closest('.itbms-storage-filter')) {
-             showBrandDropdown.value = false;
-             showPriceDropdown.value = false;
-             showStorageDropdown.value = false;
-           }
-         });
+        
         // Ensure all required properties exist
         const defaultSettings = {
           brands: [],
