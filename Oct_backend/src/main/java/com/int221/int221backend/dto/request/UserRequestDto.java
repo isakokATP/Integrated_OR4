@@ -57,7 +57,7 @@ public class UserRequestDto {
     @Pattern(regexp = "SELLER|BUYER", message = "User type must be either SELLER or BUYER")
     private String userType;
 
-    private String idCardImageFront;
-
-    private String idCardImageBack;
+//    private String idCardImageFront;
+//
+//    private String idCardImageBack;
 }
