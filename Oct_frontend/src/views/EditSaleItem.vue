@@ -410,7 +410,8 @@ function removeNewFile(index) {
     isExisting: false, // Mark as new file
     originalIndex: index
   });
-  // Don't remove from selectedFiles until save - just mark as deleted
+  // Remove from selectedFiles list to hide it from UI
+  selectedFiles.value.splice(index, 1);
 }
 
 function removeExistingImage(index) {
@@ -421,7 +422,8 @@ function removeExistingImage(index) {
     isExisting: true, // Mark as existing image for backend deletion
     originalIndex: index
   });
-  // Don't remove from existingImages until save - just mark as deleted
+  // Remove from existingImages list to hide it from UI
+  existingImages.value.splice(index, 1);
 }
 
 function getImagePreview(file) {
@@ -487,11 +489,16 @@ function restoreFile(index) {
   // Restore file from deletion list
   const fileToRestore = filesToDelete.value[index];
   
+  if (fileToRestore.isExisting) {
+    // Restore existing image back to existingImages
+    existingImages.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
+  } else {
+    // Restore new file back to selectedFiles
+    selectedFiles.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
+  }
+  
   // Remove from deletion list
   filesToDelete.value.splice(index, 1);
-  
-  // No need to restore to original arrays since they weren't removed
-  // Just clear the deletion mark
 }
 
 const handleBlur = (field) => {
@@ -555,28 +562,7 @@ const handleSave = async () => {
     // Send data and images together to Backend
     await updateSaleItem(id, dataToSend, selectedFiles.value);
     
-    // Remove files marked for deletion from arrays after successful save
-    for (const fileToDelete of filesToDelete.value) {
-      if (fileToDelete.isExisting) {
-        // Remove from existingImages array
-        const index = existingImages.value.findIndex(img => 
-          (img.fileName || img.filename) === (fileToDelete.fileName || fileToDelete.filename)
-        );
-        if (index !== -1) {
-          existingImages.value.splice(index, 1);
-        }
-      } else {
-        // Remove from selectedFiles array
-        const index = selectedFiles.value.findIndex(file => 
-          file.name === fileToDelete.name
-        );
-        if (index !== -1) {
-          selectedFiles.value.splice(index, 1);
-        }
-      }
-    }
-    
-    // Clear deletion list
+    // Clear deletion list (files were already removed from arrays when × was clicked)
     filesToDelete.value = [];
     
     router.push({
