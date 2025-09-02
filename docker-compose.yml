@@ -28,7 +28,7 @@ services:
       - mysql
     volumes:
       - ./uploads:/app/uploads
-      - ./uploads:/app/users
+      - ./users:/app/users
     networks:
       - int221-net
 

@@ -49,21 +49,21 @@ public class UserService {
 
         try {
             // 3. บันทึกไฟล์รูป
-            String frontFileName = saveFile(idCardImageFront);
-            String backFileName = saveFile(idCardImageBack);
+            String frontFilePath = saveFile(idCardImageFront);
+            String backFilePath = saveFile(idCardImageBack);
 
             // 4. สร้าง entity
             Users user = Users.builder()
                     .nickName(requestDto.getNickName())
                     .email(requestDto.getEmail())
                     .fullName(requestDto.getFullName())
-                    .password(requestDto.getPassword()) // ถ้าอยากเข้ารหัส ใช้ passwordEncoder
+                    .password(requestDto.getPassword()) // ใช้ passwordEncoder ถ้าต้องการเข้ารหัส
                     .phoneNumber(requestDto.getPhoneNumber())
                     .bankAccount(requestDto.getBankAccount())
                     .idCardNumber(requestDto.getIdCardNumber())
                     .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
-                    .idCardImageFront(frontFileName)
-                    .idCardImageBack(backFileName)
+                    .idCardImageFront(frontFilePath)
+                    .idCardImageBack(backFilePath)
                     .build();
 
             // 5. บันทึกลง DB
@@ -74,11 +74,11 @@ public class UserService {
             return UserResponseDto.fromEntity(savedUser);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload images: " + e.getMessage());
+            throw new RuntimeException("Failed to upload images: " + e.getMessage(), e);
         }
     }
 
-    // helper method สำหรับบันทึกไฟล์
+    // helper method สำหรับบันทึกไฟล์ และคืน path เต็ม
     private String saveFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return null;
 
@@ -91,10 +91,13 @@ public class UserService {
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(filename);
 
+        // บันทึกไฟล์จริง
         file.transferTo(filePath.toFile());
 
-        return filename;
+        // คืนค่าเป็น path เต็ม (absolute path)
+        return filePath.toAbsolutePath().toString();
     }
+
 
     // ดึง User ตาม ID
     public UserResponseDto getUserById(Integer id) {
