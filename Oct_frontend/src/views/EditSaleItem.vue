@@ -459,12 +459,8 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    await updateSaleItem(id, dataToSend);
-    
-    // Upload new files if any
-    if (selectedFiles.value.length > 0) {
-      await uploadFiles(id);
-    }
+    // Send data and images together to Backend
+    await updateSaleItem(id, dataToSend, selectedFiles.value);
     
     router.push({
       name: "sale-items-page-byId",
@@ -477,24 +473,7 @@ const handleSave = async () => {
   }
 };
 
-async function uploadFiles(saleItemId) {
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const file = selectedFiles.value[i];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('saleItemId', saleItemId);
-    
-    try {
-      await uploadAttachment(formData);
-      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
-      if (i < selectedFiles.value.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.error(`Failed to upload file ${file.name}:`, error);
-    }
-  }
-}
+
 
 const handleCancel = () => {
   if (hasAnyChanges.value) {

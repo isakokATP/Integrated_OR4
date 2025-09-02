@@ -362,22 +362,7 @@ const deleteAttachment = async (saleItemId, imageViewOrder) => {
   }
 };
 
-async function uploadAttachment(formData) {
-  try {
-    const response = await fetch(`${URL}/api/attachments/upload`, {
-      method: "POST",
-      body: formData, // Don't set Content-Type header for FormData
-    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Upload attachment error:", error);
-    throw handleApiError(error);
-  }
-}
 
 export {
   fetchSaleItemsV2,
@@ -389,6 +374,5 @@ export {
   createBrand,
   updateBrand,
   deleteBrand,
-  uploadAttachment,
   deleteAttachment,
 };

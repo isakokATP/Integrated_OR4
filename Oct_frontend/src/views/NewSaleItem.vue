@@ -567,24 +567,7 @@ function handleCancel() {
   router.push({ name: "sale-items-list-page" });
 }
 
-async function uploadFiles(saleItemId) {
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const file = selectedFiles.value[i];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('saleItemId', saleItemId);
-    
-    try {
-      await uploadAttachment(formData);
-      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
-      if (i < selectedFiles.value.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.error(`Failed to upload file ${file.name}:`, error);
-    }
-  }
-}
+
 
 async function handleSave() {
   if (!validateAllFields()) {
@@ -609,13 +592,8 @@ async function handleSave() {
   };
 
   try {
-    // First create the sale item
-    const createdItem = await createSaleItem(dataToSend);
-    
-    // Then upload files if any
-    if (selectedFiles.value.length > 0) {
-      await uploadFiles(createdItem.id);
-    }
+    // Send data and images together to Backend
+    const createdItem = await createSaleItem(dataToSend, selectedFiles.value);
     
     alert("สร้างรายการขายสำเร็จ!");
     router.push({
