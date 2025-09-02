@@ -401,6 +401,18 @@ function removeFile(index) {
   fileErrors.value = [];
 }
 
+// New function: same logic as removeExistingImage but for new files
+function removeNewFile(index) {
+  // Mark the file for deletion instead of removing immediately
+  const fileToDelete = selectedFiles.value[index];
+  filesToDelete.value.push({
+    ...fileToDelete,
+    isExisting: false, // Mark as new file
+    originalIndex: index
+  });
+  // Don't remove from selectedFiles until save - just mark as deleted
+}
+
 function removeExistingImage(index) {
   // Mark the existing image for deletion instead of removing immediately
   const image = existingImages.value[index];
@@ -714,7 +726,7 @@ const handleDelete = async () => {
               class="w-full h-full object-cover"
             />
             <button
-              @click="removeFile(index)"
+              @click="removeNewFile(index)"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
             >
               ×
@@ -849,7 +861,7 @@ const handleDelete = async () => {
                  <!-- Remove button -->
                  <button
                    type="button"
-                   @click="removeFile(index)"
+                   @click="removeNewFile(index)"
                    class="text-red-500 hover:text-red-700 p-1"
                    title="Remove file"
                  >
