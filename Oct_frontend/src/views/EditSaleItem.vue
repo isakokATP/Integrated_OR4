@@ -300,14 +300,23 @@ function handleFileSelect(event) {
   const files = Array.from(event.target.files);
   fileErrors.value = [];
   
-     // Validate file count (including files marked for deletion)
-   if (existingImages.value.length + selectedFiles.value.length + files.length > 4) {
-     fileErrors.value.push("Maximum 4 pictures are allowed.");
-     return;
-   }
+  // Calculate how many files we can actually add
+  const currentTotal = existingImages.value.length + selectedFiles.value.length;
+  const maxAllowed = 4;
+  const availableSlots = maxAllowed - currentTotal;
   
-  // Validate each file and check for duplicates
-  files.forEach(file => {
+  // If no slots available, don't add any files
+  if (availableSlots <= 0) {
+    fileErrors.value.push("Maximum 4 pictures are allowed. Please remove some images first.");
+    return;
+  }
+  
+  // Limit files to available slots (take only the first N files)
+  const filesToAdd = files.slice(0, availableSlots);
+  const filesRejected = files.slice(availableSlots);
+  
+  // Validate each file to be added
+  filesToAdd.forEach(file => {
     // Check file type
     if (!file.type.startsWith('image/')) {
       fileErrors.value.push(`${file.name} is not an image file.`);
@@ -320,36 +329,42 @@ function handleFileSelect(event) {
       return;
     }
     
-         // Check for duplicate file names in existing images
-     // BE returns attachment DTO with fileName or filename? Fall back to both.
-     const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
-     if (existingImage) {
-       fileErrors.value.push(`${file.name} already exists in existing images.`);
-       return;
-     }
-     
-     // Check for duplicate file names in new files
-     const existingFile = selectedFiles.value.find(f => f.name === file.name);
-     if (existingFile) {
-       fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
-       return;
-     }
-     
-     // Check for duplicate file names in files marked for deletion
-     const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
-     if (fileToDelete) {
-       fileErrors.value.push(`${file.name} is marked for deletion. Please restore it first or choose a different file.`);
-       return;
-     }
+    // Check for duplicate file names in existing images
+    // BE returns attachment DTO with fileName or filename? Fall back to both.
+    const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
+    if (existingImage) {
+      fileErrors.value.push(`${file.name} already exists in existing images.`);
+      return;
+    }
+    
+    // Check for duplicate file names in new files
+    const existingFile = selectedFiles.value.find(f => f.name === file.name);
+    if (existingFile) {
+      fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
+      return;
+    }
+    
+    // Check for duplicate file names in files marked for deletion
+    const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
+    if (fileToDelete) {
+      fileErrors.value.push(`${file.name} is marked for deletion. Please restore it first or choose a different file.`);
+      return;
+    }
   });
   
-  // If there are errors, don't add files
+  // If there are validation errors, don't add files
   if (fileErrors.value.length > 0) {
     return;
   }
   
-  // Add valid files
-  selectedFiles.value.push(...files);
+  // Add valid files (limited to available slots)
+  selectedFiles.value.push(...filesToAdd);
+  
+  // Show message if some files were rejected due to limit
+  if (filesRejected.length > 0) {
+    const rejectedNames = filesRejected.map(f => f.name).join(', ');
+    fileErrors.value.push(`Only ${availableSlots} files added. ${filesRejected.length} files rejected due to limit: ${rejectedNames}`);
+  }
   
   // Clear the input
   event.target.value = '';
