@@ -107,59 +107,43 @@ async function createSaleItem(saleItemData, images = null) {
     console.log("API URL:", URL);
     console.log("Full URL:", `${URL}/itb-mshop/v2/sale-items`);
 
-    // Use FormData for multipart/form-data if images are provided
-    if (images && images.length > 0) {
-      const formData = new FormData();
-      
-      // Add sale item data
-      Object.keys(saleItemData).forEach(key => {
+    // Backend uses @ModelAttribute which requires FormData
+    // Always use FormData regardless of whether images are provided
+    const formData = new FormData();
+    
+    // Add sale item data
+    Object.keys(saleItemData).forEach(key => {
+      // Handle nested objects like brand
+      if (key === 'brand' && saleItemData[key]) {
+        formData.append('brand.id', saleItemData[key].id);
+      } else {
         formData.append(key, saleItemData[key]);
-      });
-      
-      // Add images
+      }
+    });
+    
+    // Add images if provided
+    if (images && images.length > 0) {
       images.forEach((image, index) => {
         formData.append('SaleItemImages', image);
       });
-
-      const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
-        method: "POST",
-        body: formData, // Don't set Content-Type for FormData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server error:", errorData);
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${
-            errorData.message || "Unknown error"
-          }`
-        );
-      }
-      const data = await response.json();
-      return data;
-    } else {
-      // Fallback to JSON if no images
-      const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(saleItemData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server error:", errorData);
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${
-            errorData.message || "Unknown error"
-          }`
-        );
-      }
-      const data = await response.json();
-      return data;
     }
+
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
+      method: "POST",
+      body: formData, // Don't set Content-Type for FormData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Server error:", errorData);
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${
+          errorData.message || "Unknown error"
+        }`
+      );
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error("Create sale item error:", error);
     throw handleApiError(error);
@@ -190,44 +174,36 @@ export const deleteSaleItem = async (id) => {
 
 export const updateSaleItem = async (id, saleItemData, images = null) => {
   try {
-    // Use FormData for multipart/form-data if images are provided
-    if (images && images.length > 0) {
-      const formData = new FormData();
-      
-      // Add sale item data
-      Object.keys(saleItemData).forEach(key => {
+    // Backend uses @ModelAttribute which requires FormData
+    // Always use FormData regardless of whether images are provided
+    const formData = new FormData();
+    
+    // Add sale item data
+    Object.keys(saleItemData).forEach(key => {
+      // Handle nested objects like brand
+      if (key === 'brand' && saleItemData[key]) {
+        formData.append('brand.id', saleItemData[key].id);
+      } else {
         formData.append(key, saleItemData[key]);
-      });
-      
-      // Add images
+      }
+    });
+    
+    // Add images if provided
+    if (images && images.length > 0) {
       images.forEach((image, index) => {
         formData.append('SaleItemImages', image);
       });
-
-      const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
-        method: "PUT",
-        body: formData, // Don't set Content-Type for FormData
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update item");
-      }
-      return await response.json();
-    } else {
-      // Fallback to JSON if no images
-      const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(saleItemData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update item");
-      }
-      return await response.json();
     }
+
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
+      method: "PUT",
+      body: formData, // Don't set Content-Type for FormData
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update item");
+    }
+    return await response.json();
   } catch (error) {
     throw error;
   }
