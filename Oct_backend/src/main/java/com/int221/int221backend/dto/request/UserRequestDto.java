@@ -44,10 +44,6 @@ public class UserRequestDto {
     @Pattern(regexp = "^[0-9]*$", message = "Bank account must contain only digits")
     private String bankAccount;
 
-    @NotBlank(message = "Bank name is required")
-    @Size(max = 100, message = "Bank name must not exceed 100 characters")
-    private String bankName;
-
     @NotBlank(message = "National ID number is required")
     @Size(max = 20, message = "ID card number must not exceed 20 characters")
     @Pattern(regexp = "^[0-9]*$", message = "ID card number must contain only digits")

@@ -2,6 +2,7 @@ package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.UserRequestDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
+import com.int221.int221backend.repositories.VerificationTokenRepository;
 import com.int221.int221backend.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class UsersController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private VerificationTokenRepository tokenRepo;
 
     // Register User (POST /v2/users/register)
     @PostMapping("/v2/users/register")

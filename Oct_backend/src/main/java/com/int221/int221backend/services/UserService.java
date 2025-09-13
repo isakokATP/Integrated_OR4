@@ -3,12 +3,15 @@ package com.int221.int221backend.services;
 import com.int221.int221backend.dto.request.UserRequestDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
 import com.int221.int221backend.entities.Users;
+import com.int221.int221backend.entities.VerificationToken;
 import com.int221.int221backend.repositories.UserRepository;
+import com.int221.int221backend.repositories.VerificationTokenRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -28,8 +32,19 @@ public class UserService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Value("${file.upload-dir.users}")
     private String uploadDir;
+
+
 
     // Register User
     @Transactional
@@ -52,25 +67,43 @@ public class UserService {
             String frontFilePath = saveFile(idCardImageFront);
             String backFilePath = saveFile(idCardImageBack);
 
-            // 4. สร้าง entity
+            // 4. สร้าง entity user
             Users user = Users.builder()
                     .nickName(requestDto.getNickName())
                     .email(requestDto.getEmail())
                     .fullName(requestDto.getFullName())
-                    .password(requestDto.getPassword()) // ใช้ passwordEncoder ถ้าต้องการเข้ารหัส
+                    .password(passwordEncoder.encode(requestDto.getPassword())) // เข้ารหัส
                     .phoneNumber(requestDto.getPhoneNumber())
                     .bankAccount(requestDto.getBankAccount())
                     .idCardNumber(requestDto.getIdCardNumber())
                     .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
                     .idCardImageFront(frontFilePath)
                     .idCardImageBack(backFilePath)
+                    .status(Users.Status.INACTIVE) // default = INACTIVE
                     .build();
 
-            // 5. บันทึกลง DB
+            // 5. บันทึก user ลง DB
             Users savedUser = userRepository.saveAndFlush(user);
             entityManager.refresh(savedUser);
 
-            // 6. map → DTO
+            // 6. สร้าง Verification Token
+            String token = UUID.randomUUID().toString();
+            VerificationToken verificationToken = VerificationToken.builder()
+                    .token(token)
+                    .expiryDate(LocalDateTime.now().plusHours(24))
+                    .user(savedUser)
+                    .build();
+            tokenRepository.save(verificationToken);
+
+            // 7. ส่ง Email Verification (จับ exception ภายใน)
+            try {
+                emailService.sendVerificationEmail(savedUser, token);
+            } catch (Exception e) {
+                // log หรือ throw runtime ถ้าต้องการ
+                throw new RuntimeException("Failed to send verification email: " + e.getMessage(), e);
+            }
+
+            // 8. map → DTO และ return
             return UserResponseDto.fromEntity(savedUser);
 
         } catch (IOException e) {
