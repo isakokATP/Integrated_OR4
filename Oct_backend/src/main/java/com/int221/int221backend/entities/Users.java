@@ -49,6 +49,10 @@ public class Users {
     @Column(name = "id_card_image_back")
     private String idCardImageBack;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 10)
+    private Status status; // ลบ = Status.INACTIVE ออกไป
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdAt;
 
@@ -58,5 +62,9 @@ public class Users {
     public enum UserType {
         SELLER,
         BUYER
+    }
+    public enum Status {
+        INACTIVE,
+        ACTIVE
     }
 }
