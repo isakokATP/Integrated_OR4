@@ -1,6 +1,8 @@
 package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.TokenRequest;
+import com.int221.int221backend.dto.response.UserResponseDto;
+import com.int221.int221backend.dto.response.UserResponseVerDto;
 import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.entities.VerificationToken;
 import com.int221.int221backend.repositories.UserRepository;
@@ -21,9 +23,8 @@ public class VerificationController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/v2/user/verify-email")
+    @PostMapping("/v2/auth/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestBody TokenRequest tokenRequest) {
-
         String token = tokenRequest.getToken();
         VerificationToken verificationToken = tokenRepository.findByToken(token);
 
@@ -49,5 +50,23 @@ public class VerificationController {
         tokenRepository.delete(verificationToken);
 
         return ResponseEntity.ok("Your account has been successfully activated.");
+    }
+
+    @GetMapping("/v2/auth/verify-email")
+    public ResponseEntity<?> getUserByVerificationToken(@RequestParam("token") String token) {
+        VerificationToken verificationToken = tokenRepository.findByToken(token);
+
+        if (verificationToken == null) {
+            return ResponseEntity.badRequest().body(
+                    "Invalid token or verification link has expired."
+            );
+        }
+
+        Users user = verificationToken.getUser();
+
+        // map เป็น DTO ที่มี isActive
+        UserResponseVerDto responseDto = UserResponseVerDto.fromEntity(user);
+
+        return ResponseEntity.ok(responseDto);
     }
 }
