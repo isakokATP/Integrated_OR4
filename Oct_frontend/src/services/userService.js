@@ -39,6 +39,7 @@ export async function registerUser(form) {
   }
 }
 
+<<<<<<< HEAD
 export async function verifyEmail(token) {
   try {
     const res = await fetch(`${URL}/itb-mshop/v2/auth/verify-email`, {
@@ -57,4 +58,6 @@ export async function verifyEmail(token) {
   }
 }
 
+=======
+>>>>>>> parent of e48ac85 (65130500101-[INT222]-pbi20)
 
