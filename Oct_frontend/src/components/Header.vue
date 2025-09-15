@@ -49,16 +49,14 @@ function clearSearch() {
 <template>
   <!-- แถบบน -->
   <div class="w-full bg-blue-900 h-12 flex items-center justify-end px-8">
-    <a
-      href="#signin"
+    <router-link
+      :to="{ name: 'login-page' }"
       class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
-      >Signin</a
-    >
-    <a
-      href="#register"
+      >Signin</router-link>
+    <router-link
+      :to="{ name: 'register-page' }"
       class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
-      >Register</a
-    >
+      >Register</router-link>
   </div>
   <!-- ส่วน header หลัก -->
   <div class="container mx-auto px-5 py-6 flex items-center justify-between">
