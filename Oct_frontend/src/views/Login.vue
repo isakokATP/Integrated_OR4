@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { saveBasicAuth } from "../services/auth";
+import { saveJwtToken } from "../services/auth";
+import { loginUser } from "../services/authService";
 
 const router = useRouter();
 const email = ref("");
@@ -13,11 +14,20 @@ async function onSubmit(e){
   e.preventDefault();
   loading.value = true;
   try {
-    // For Basic Auth, save credentials to session and redirect
     if (!email.value || !password.value) throw new Error("Email and password are required");
-    saveBasicAuth(email.value, password.value);
-    message.value = "Logged in.";
-    router.push({ name: "sale-items-page" });
+    
+    // ใช้ JWT login API
+    const response = await loginUser(email.value, password.value);
+    
+    // เก็บ JWT token ไว้ใน session
+    saveJwtToken(response.token);
+    message.value = "Logged in successfully!";
+    
+    // Redirect ไปหน้า gallery
+    setTimeout(() => {
+      router.push({ name: "sale-items-page" });
+    }, 1000);
+    
   } catch (err) {
     message.value = err.message || "Login failed";
   } finally {
