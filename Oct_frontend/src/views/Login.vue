@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { saveBasicAuth } from "../services/auth";
 
 const router = useRouter();
 const email = ref("");
@@ -12,9 +13,10 @@ async function onSubmit(e){
   e.preventDefault();
   loading.value = true;
   try {
-    // Stub: replace with real BE login when available
-    await new Promise(r => setTimeout(r, 400));
-    message.value = "Logged in (stub).";
+    // For Basic Auth, save credentials to session and redirect
+    if (!email.value || !password.value) throw new Error("Email and password are required");
+    saveBasicAuth(email.value, password.value);
+    message.value = "Logged in.";
     router.push({ name: "sale-items-page" });
   } catch (err) {
     message.value = err.message || "Login failed";

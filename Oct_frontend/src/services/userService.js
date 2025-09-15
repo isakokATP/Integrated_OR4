@@ -1,4 +1,5 @@
 import { handleApiError } from "../api/client";
+import { getAuthHeader } from "./auth";
 
 const URL = import.meta.env.VITE_API_URL_PROD;
 
@@ -45,9 +46,11 @@ export async function verifyEmail(token) {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        'X-Requested-With': 'XMLHttpRequest'
+        'X-Requested-With': 'XMLHttpRequest',
+        ...getAuthHeader(),
       },
       body: JSON.stringify({ token }),
+      credentials: 'omit'
     });
     const text = await res.text();
     if (!res.ok) throw new Error(text || `Verify failed (${res.status})`);

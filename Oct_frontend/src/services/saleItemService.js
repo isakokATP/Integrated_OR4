@@ -1,4 +1,5 @@
 import { handleApiError } from "../api/client";
+import { getAuthHeader } from "./auth";
 
 const URL = import.meta.env.VITE_API_URL_PROD;
 
@@ -70,7 +71,13 @@ async function fetchSaleItemsV2(
     
     const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, { 
+      headers: { 
+        ...getAuthHeader(),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'omit'
+    });
 
     if (!response.ok) {
       throw new Error("Failed to fetch sale items");
@@ -89,7 +96,10 @@ async function fetchSaleItemById(id) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeader(),
+        'X-Requested-With': 'XMLHttpRequest'
       },
+      credentials: 'omit'
     });
 
     if (!response.ok) {
