@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './client.js';
+import { apiUrl as API_BASE_URL } from '../api/client.js';
 
 export async function loginUser(email, password) {
   try {
