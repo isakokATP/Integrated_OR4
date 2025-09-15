@@ -111,7 +111,7 @@
               v-model="form.phoneNumber" 
               type="tel" 
               class="w-full border p-2 rounded"
-              required
+              :required="form.userType === 'SELLER'"
             />
           </div>
           
@@ -121,7 +121,7 @@
               v-model="form.bankAccount" 
               type="text" 
               class="w-full border p-2 rounded"
-              required
+              :required="form.userType === 'SELLER'"
             />
           </div>
         </div>
@@ -132,7 +132,7 @@
             v-model="form.bankName" 
             type="text" 
             class="w-full border p-2 rounded"
-            required
+            :required="form.userType === 'SELLER'"
           />
         </div>
 
@@ -142,7 +142,7 @@
             v-model="form.idCardNumber" 
             type="text" 
             class="w-full border p-2 rounded"
-            required
+            :required="form.userType === 'SELLER'"
           />
         </div>
 
@@ -154,7 +154,7 @@
               type="file" 
               accept="image/*"
               class="w-full border p-2 rounded"
-              required
+              :required="form.userType === 'SELLER'"
             />
           </div>
           
@@ -165,7 +165,7 @@
               type="file" 
               accept="image/*"
               class="w-full border p-2 rounded"
-              required
+              :required="form.userType === 'SELLER'"
             />
           </div>
         </div>

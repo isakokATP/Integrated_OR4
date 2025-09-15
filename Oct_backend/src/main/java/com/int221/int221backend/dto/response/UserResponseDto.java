@@ -25,6 +25,8 @@ public class UserResponseDto {
 
     private String bankAccount;
 
+    private String bankName;
+
     private String idCardNumber;
 
     private String userType; // SELLER or BUYER
@@ -45,6 +47,7 @@ public class UserResponseDto {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .bankAccount(user.getBankAccount())
+                .bankName(user.getBankName())
                 .idCardNumber(user.getIdCardNumber())
                 .userType(String.valueOf(user.getUserType()))
                 .idCardImageFront(user.getIdCardImageFront())
