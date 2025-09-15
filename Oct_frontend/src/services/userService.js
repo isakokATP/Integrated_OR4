@@ -46,8 +46,7 @@ export async function verifyEmail(token) {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        'X-Requested-With': 'XMLHttpRequest',
-        ...getAuthHeader(),
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({ token }),
       credentials: 'omit'

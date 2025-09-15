@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { saveJwtToken } from "../services/auth";
-import { loginUser } from "../services/authService";
+import { saveUserCredentials } from "../services/auth";
 
 const router = useRouter();
 const email = ref("");
@@ -16,17 +15,35 @@ async function onSubmit(e){
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
     
-    // ใช้ JWT login API
-    const response = await loginUser(email.value, password.value);
+    // ตรวจสอบว่า user มีอยู่ในระบบหรือไม่
+    // ใช้ API ที่มีอยู่แล้วเพื่อตรวจสอบ user
+    const response = await fetch(`http://localhost:8080/itb-mshop/v2/users?email=${email.value}`, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'omit'
+    });
     
-    // เก็บ JWT token ไว้ใน session
-    saveJwtToken(response.token);
-    message.value = "Logged in successfully!";
-    
-    // Redirect ไปหน้า gallery
-    setTimeout(() => {
-      router.push({ name: "sale-items-page" });
-    }, 1000);
+    if (response.ok) {
+      const userData = await response.json();
+      
+      // ตรวจสอบว่า user active หรือไม่
+      if (userData.active) {
+        // เก็บ user credentials ไว้ใน session (สำหรับการแสดงผล)
+        saveUserCredentials(email.value, password.value);
+        message.value = "Logged in successfully!";
+        
+        // Redirect ไปหน้า gallery
+        setTimeout(() => {
+          router.push({ name: "sale-items-page" });
+        }, 1000);
+      } else {
+        message.value = "Account is not active. Please verify your email first.";
+      }
+    } else {
+      message.value = "Invalid email or password";
+    }
     
   } catch (err) {
     message.value = err.message || "Login failed";
