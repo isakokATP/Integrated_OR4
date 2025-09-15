@@ -36,4 +36,19 @@ export async function registerUser(form) {
   }
 }
 
+export async function verifyEmail(token) {
+  try {
+    const res = await fetch(`${URL}/itb-mshop/v2/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(text || `Verify failed (${res.status})`);
+    return text;
+  } catch (err) {
+    throw handleApiError(err);
+  }
+}
+
 
