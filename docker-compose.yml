@@ -6,14 +6,21 @@ services:
     container_name: int221-mysql
     restart: always
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 'mysql'
+      MYSQL_DATABASE: 'pbi1'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'mysql'
     volumes:
       - mysql-data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - int221-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql"]
+      timeout: 20s
+      retries: 10
 
   backend:
     build:
@@ -25,7 +32,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - ./uploads:/app/uploads
       - ./users:/app/users

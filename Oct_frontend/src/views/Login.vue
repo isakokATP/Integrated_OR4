@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { saveUserCredentials } from "../services/auth";
 
 const router = useRouter();
 const email = ref("");
@@ -15,11 +14,14 @@ async function onSubmit(e){
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
     
-    // ตรวจสอบว่า user มีอยู่ในระบบหรือไม่
-    // ใช้ API ที่มีอยู่แล้วเพื่อตรวจสอบ user
+    // Create Basic Auth header
+    const credentials = btoa(`${email.value}:${password.value}`);
+    
+    // Try to authenticate by making a request to a protected endpoint
     const response = await fetch(`http://localhost:8080/itb-mshop/v2/users?email=${email.value}`, {
       method: 'GET',
       headers: {
+        'Authorization': `Basic ${credentials}`,
         'X-Requested-With': 'XMLHttpRequest'
       },
       credentials: 'omit'
@@ -28,13 +30,14 @@ async function onSubmit(e){
     if (response.ok) {
       const userData = await response.json();
       
-      // ตรวจสอบว่า user active หรือไม่
-      if (userData.active) {
-        // เก็บ user credentials ไว้ใน session (สำหรับการแสดงผล)
-        saveUserCredentials(email.value, password.value);
+      // Check if user is active
+      if (userData.status === 'ACTIVE') {
+        // Store user credentials in sessionStorage for future requests
+        sessionStorage.setItem('userEmail', email.value);
+        sessionStorage.setItem('userPassword', password.value);
         message.value = "Logged in successfully!";
         
-        // Redirect ไปหน้า gallery
+        // Redirect to gallery page
         setTimeout(() => {
           router.push({ name: "sale-items-page" });
         }, 1000);
