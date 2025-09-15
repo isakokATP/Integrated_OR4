@@ -127,6 +127,16 @@
         </div>
 
         <div>
+          <label class="block text-sm font-medium mb-1">Bank Name *</label>
+          <input 
+            v-model="form.bankName" 
+            type="text" 
+            class="w-full border p-2 rounded"
+            required
+          />
+        </div>
+
+        <div>
           <label class="block text-sm font-medium mb-1">National ID Number *</label>
           <input 
             v-model="form.idCardNumber" 
@@ -204,6 +214,7 @@ const form = ref({
   fullName: '',
   phoneNumber: '',
   bankAccount: '',
+  bankName: '',
   idCardNumber: '',
   idCardImageFront: null,
   idCardImageBack: null
@@ -223,6 +234,7 @@ const isFormValid = computed(() => {
     return commonFields && 
            form.value.phoneNumber && 
            form.value.bankAccount && 
+           form.value.bankName &&
            form.value.idCardNumber &&
            form.value.idCardImageFront &&
            form.value.idCardImageBack

@@ -11,6 +11,7 @@ export async function registerUser(form) {
     fd.append("password", form.password);
     fd.append("phoneNumber", form.phoneNumber || "");
     fd.append("bankAccount", form.bankAccount || "");
+    fd.append("bankName", form.bankName || "");
     fd.append("idCardNumber", form.idCardNumber || "");
     fd.append("userType", form.userType);
 
