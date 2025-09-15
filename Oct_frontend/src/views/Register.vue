@@ -72,7 +72,7 @@
               <li v-if="!/[a-z]/.test(form.password)">Include lowercase letter</li>
               <li v-if="!/[A-Z]/.test(form.password)">Include uppercase letter</li>
               <li v-if="!/\d/.test(form.password)">Include number</li>
-              <li v-if="!/[!@#$%^&*(),.?":{}|<>]/.test(form.password)">Include special character</li>
+              <li v-if="!hasSpecialChar">Include special character</li>
             </ul>
           </div>
         </div>
@@ -241,6 +241,13 @@ const isPasswordValid = computed(() => {
   const hasMinLength = password.length >= 8
   
   return hasLower && hasUpper && hasNumber && hasSpecial && hasMinLength
+})
+
+// Special character check for template
+const hasSpecialChar = computed(() => {
+  const password = form.value.password
+  if (!password) return false
+  return /[!@#$%^&*(),.?":{}|<>]/.test(password)
 })
 
 // Full name validation
