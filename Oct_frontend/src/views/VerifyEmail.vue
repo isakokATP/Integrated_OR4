@@ -1,12 +1,14 @@
 <template>
   <div class="max-w-md mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4">Email Verification</h1>
-    
-    <div v-if="loading" class="text-center">
+
+    <!-- Loading -->
+    <div v-if="loading" class="text-center text-gray-500">
       <p>Verifying your email...</p>
     </div>
-    
-    <div v-else-if="message" class="p-4 rounded" :class="messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+
+    <!-- Message -->
+    <div v-else-if="message" :class="messageType === 'success' ? 'bg-green-100 text-green-800 p-4 rounded' : 'bg-red-100 text-red-800 p-4 rounded'">
       <p>{{ message }}</p>
       <div v-if="messageType === 'success'" class="mt-4">
         <router-link 
@@ -17,7 +19,8 @@
         </router-link>
       </div>
     </div>
-    
+
+    <!-- No token -->
     <div v-else class="text-center">
       <p>No verification token found.</p>
       <router-link 
@@ -32,36 +35,50 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { verifyEmail } from '../services/userService'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
 
 const loading = ref(false)
 const message = ref('')
 const messageType = ref('')
 
-onMounted(async () => {
+// API ผ่าน nginx proxy (ลดปัญหา CORS)
+const VERIFY_URL = '/itb-mshop/v2/auth/verify-email'
+
+async function verifyToken(token) {
+  try {
+    // ใช้ GET แทน POST เพื่อแค่ตรวจสอบ token
+    const res = await fetch(`${VERIFY_URL}?token=${token}`, {
+      method: 'GET',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(text || 'Verification failed')
+    }
+
+    const data = await res.json()
+    message.value = `Hello ${data.fullName}, your email has been successfully verified!`
+    messageType.value = 'success'
+
+  } catch (err) {
+    message.value = err.message || 'Email verification failed'
+    messageType.value = 'error'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
   const token = route.query.token
-  
   if (!token) {
     message.value = 'No verification token found.'
     messageType.value = 'error'
     return
   }
-  
   loading.value = true
-  
-  try {
-    const result = await verifyEmail(token)
-    message.value = result || 'Your account has been successfully activated.'
-    messageType.value = 'success'
-  } catch (error) {
-    message.value = error.message || 'Email verification failed'
-    messageType.value = 'error'
-  } finally {
-    loading.value = false
-  }
+  verifyToken(token)
 })
 </script>

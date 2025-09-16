@@ -36,9 +36,6 @@ public class Users {
     @Column(name = "bank_account", length = 50)
     private String bankAccount;
 
-    @Column(name = "bank_name", length = 100)
-    private String bankName;
-
     @Column(name = "id_card_number", length = 20)
     private String idCardNumber;
 
@@ -59,7 +56,7 @@ public class Users {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    @Column(name = "updated_At", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedAt;
 
     public enum UserType {

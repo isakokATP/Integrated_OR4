@@ -26,50 +26,42 @@ const password = ref("");
 const loading = ref(false);
 const message = ref("");
 
+// ใช้ nginx proxy (ไม่เรียก port 8080 ตรง ๆ)
+const LOGIN_URL = '/itb-mshop/v2/users'
+
 async function onSubmit(e){
   e.preventDefault();
   loading.value = true;
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
-    
-    // Create Basic Auth header
+
     const credentials = btoa(`${email.value}:${password.value}`);
-    
-    // Try to authenticate by making a request to a protected endpoint
-    const response = await fetch(`http://ip24or4.sit.kmutt.ac.th/itb-mshop/v2/users?email=${email.value}`, {
+
+    const response = await fetch(`${LOGIN_URL}?email=${email.value}`, {
       method: 'GET',
       headers: {
         'Authorization': `Basic ${credentials}`,
         'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'omit'
+      }
     });
-    
+
     if (response.ok) {
       const userData = await response.json();
-      
-      // Check if user is active
+
       if (userData.status === 'ACTIVE') {
-        // Store user credentials in sessionStorage for future requests
         sessionStorage.setItem('userEmail', email.value);
         sessionStorage.setItem('userPassword', password.value);
         message.value = "Logged in successfully!";
-        
-        // Redirect to gallery page
-        setTimeout(() => {
-          router.push({ name: "sale-items-page" });
-        }, 1000);
+        setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
       } else {
         message.value = "Account is not active. Please verify your email first.";
-        // แสดง link ไป verify email
-        setTimeout(() => {
-          router.push({ name: "verify-email-page" });
-        }, 2000);
+        setTimeout(() => router.push({ name: "verify-email-page" }), 2000);
       }
+
     } else {
       message.value = "Invalid email or password";
     }
-    
+
   } catch (err) {
     message.value = err.message || "Login failed";
   } finally {
