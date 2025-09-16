@@ -25,7 +25,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/itb-mshop/v2/users/register",
                                 "/itb-mshop/v2/auth/verify-email",
-                                "/itb-mshop/v2/sale-items/**"
+                                "/itb-mshop/v2/sale-items/**",
+                                "/itb-mshop/v1/brands/**"
                         ).permitAll()
                         .requestMatchers(new AntPathRequestMatcher(
                                 "/itb-mshop/v2/sale-items/*/attachments/by-order", "DELETE")
