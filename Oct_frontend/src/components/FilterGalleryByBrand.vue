@@ -258,39 +258,25 @@ const selectedPriceRange = computed(() => {
   if (props.modelValue.priceMin === null && props.modelValue.priceMax === null) {
     return null;
   }
-  
-  // Check if it matches any predefined range
-  const predefinedRange = priceRanges.find(range => 
+
+  // เช็ค predefined ranges
+  const predefinedRange = priceRanges.find(range =>
     range.min === props.modelValue.priceMin && range.max === props.modelValue.priceMax
   );
-  
+
   if (predefinedRange) {
     return predefinedRange;
   }
-  
-  // If no predefined range matches, it's a custom range
-  let label;
-  
-  if (props.modelValue.priceMin === props.modelValue.priceMax && props.modelValue.priceMin !== null) {
-    // Exact price: 2000-2000 -> "2000 Baht"
-    label = `${props.modelValue.priceMin} Baht`;
-  } else if (props.modelValue.priceMin !== null && props.modelValue.priceMax !== null) {
-    // Range: min-max
-    label = `${props.modelValue.priceMin} - ${props.modelValue.priceMax} Baht`;
-  } else if (props.modelValue.priceMin !== null) {
-    // Only min: min-min (same value)
-    label = `${props.modelValue.priceMin} - ${props.modelValue.priceMin} Baht`;
-  } else if (props.modelValue.priceMax !== null) {
-    // Only max: 0-max
-    label = `0 - ${props.modelValue.priceMax} Baht`;
-  } else {
-    label = 'Custom Price Range';
-  }
-  
+
+  // Custom range
+  const min = props.modelValue.priceMin ?? 0;
+  const max = props.modelValue.priceMax ?? min;
+  let label = `${min} - ${max} Baht`;
+
   return {
     label: `Custom: ${label}`,
-    min: props.modelValue.priceMin,
-    max: props.modelValue.priceMax,
+    min,
+    max,
     isCustom: true
   };
 });
@@ -354,13 +340,17 @@ function selectPriceRange(range) {
 function applyCustomPriceRange() {
   const minPrice = customMinPrice.value ? parseInt(customMinPrice.value) : null;
   const maxPrice = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
-  
-  if (minPrice !== null || maxPrice !== null) {
-    const newValue = { ...props.modelValue, priceMin: minPrice, priceMax: maxPrice };
-    emit("update:modelValue", newValue);
-    saveToSessionStorage(newValue);
-    showCustomPriceInput.value = false;
-  }
+
+  // ถ้าใส่แค่ค่าเดียว ให้เริ่มจาก 0
+  const finalMin = minPrice !== null ? minPrice : 0;
+  const finalMax = maxPrice !== null ? maxPrice : finalMin;
+
+  const newValue = { ...props.modelValue, priceMin: finalMin, priceMax: finalMax };
+  emit("update:modelValue", newValue);
+  saveToSessionStorage(newValue);
+
+  // ปิด custom input
+  showCustomPriceInput.value = false;
 }
 
 function cancelCustomPriceRange() {
