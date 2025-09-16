@@ -1,6 +1,6 @@
 import { handleApiError } from "../api/client";
 
-const URL = "http://ip24or4.sit.kmutt.ac.th:8080";
+const URL = "";
 
 export async function registerUser(form) {
   try {
