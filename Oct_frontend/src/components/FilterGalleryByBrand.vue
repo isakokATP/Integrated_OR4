@@ -341,9 +341,23 @@ function applyCustomPriceRange() {
   const minPrice = customMinPrice.value ? parseInt(customMinPrice.value) : null;
   const maxPrice = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
 
-  // ถ้าใส่แค่ค่าเดียว ให้เริ่มจาก 0
-  const finalMin = minPrice !== null ? minPrice : 0;
-  const finalMax = maxPrice !== null ? maxPrice : finalMin;
+  let finalMin = 0;
+  let finalMax = 0;
+
+  if (minPrice !== null && maxPrice !== null) {
+    finalMin = minPrice;
+    finalMax = maxPrice;
+  } else if (minPrice !== null && maxPrice === null) {
+    finalMin = 0;
+    finalMax = minPrice;
+  } else if (minPrice === null && maxPrice !== null) {
+    finalMin = 0;
+    finalMax = maxPrice;
+  } else {
+    // ทั้ง Min และ Max ว่าง → ไม่กำหนด
+    finalMin = null;
+    finalMax = null;
+  }
 
   const newValue = { ...props.modelValue, priceMin: finalMin, priceMax: finalMax };
   emit("update:modelValue", newValue);
