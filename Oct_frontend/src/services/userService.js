@@ -1,6 +1,7 @@
 import { handleApiError } from "../api/client";
 
-const URL = "http://ip24or4.sit.kmutt.ac.th";
+// ใช้ path proxy ของ nginx แทน port 8080
+const URL = "ip24or4.sit.kmutt.ac.th/itb-mshop";
 
 export async function registerUser(form) {
   try {
@@ -15,14 +16,10 @@ export async function registerUser(form) {
     fd.append("idCardNumber", form.idCardNumber || "");
     fd.append("userType", form.userType);
 
-    if (form.idCardImageFront) {
-      fd.append("idCardImageFront", form.idCardImageFront);
-    }
-    if (form.idCardImageBack) {
-      fd.append("idCardImageBack", form.idCardImageBack);
-    }
+    if (form.idCardImageFront) fd.append("idCardImageFront", form.idCardImageFront);
+    if (form.idCardImageBack) fd.append("idCardImageBack", form.idCardImageBack);
 
-    const res = await fetch(`${URL}/itb-mshop/v2/users/register`, {
+    const res = await fetch(`${URL}/v2/users/register`, {
       method: "POST",
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
@@ -42,7 +39,7 @@ export async function registerUser(form) {
 
 export async function verifyEmail(token) {
   try {
-    const res = await fetch(`${URL}/itb-mshop/v2/auth/verify-email`, {
+    const res = await fetch(`${URL}/v2/auth/verify-email`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -50,6 +47,7 @@ export async function verifyEmail(token) {
       },
       body: JSON.stringify({ token }),
     });
+
     const text = await res.text();
     if (!res.ok) throw new Error(text || `Verify failed (${res.status})`);
     return text;
