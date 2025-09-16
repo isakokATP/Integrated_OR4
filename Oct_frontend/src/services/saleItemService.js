@@ -1,6 +1,6 @@
 import { handleApiError } from "../api/client";
 
-const URL = "";
+const URL = "http://ip24or4.sit.kmutt.ac.th:8080";
 
 // API URL loaded from environment variables
 
