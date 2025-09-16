@@ -59,7 +59,7 @@ public class Users {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime createdAt;
 
-    @Column(name = "updated_At", nullable = false, insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private ZonedDateTime updatedAt;
 
     public enum UserType {
