@@ -681,6 +681,7 @@ const handleDelete = async () => {
               class="w-full h-full object-cover"
             />
             <button
+            type="button"
               @click="removeExistingImage(index)"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
             >
@@ -712,6 +713,7 @@ const handleDelete = async () => {
               class="w-full h-full object-cover"
             />
             <button
+            type="button"
               @click="removeNewFile(index)"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
             >
