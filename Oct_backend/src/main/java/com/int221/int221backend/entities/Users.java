@@ -36,6 +36,9 @@ public class Users {
     @Column(name = "bank_account", length = 50)
     private String bankAccount;
 
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
+
     @Column(name = "id_card_number", length = 20)
     private String idCardNumber;
 
