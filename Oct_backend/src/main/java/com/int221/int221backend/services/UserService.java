@@ -75,7 +75,6 @@ public class UserService {
                     .password(passwordEncoder.encode(requestDto.getPassword())) // เข้ารหัส
                     .phoneNumber(requestDto.getPhoneNumber())
                     .bankAccount(requestDto.getBankAccount())
-                    .bankName(requestDto.getBankName())
                     .idCardNumber(requestDto.getIdCardNumber())
                     .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
                     .idCardImageFront(frontFilePath)
@@ -149,21 +148,10 @@ public class UserService {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .bankAccount(user.getBankAccount())
-                .bankName(user.getBankName())
                 .idCardNumber(user.getIdCardNumber())
                 .userType(user.getUserType().name())
-                .status(user.getStatus().name())
                 .idCardImageFront(user.getIdCardImageFront())
                 .idCardImageBack(user.getIdCardImageBack())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .build();
-    }
-
-    // Get User by Email
-    public UserResponseDto getUserByEmail(String email) {
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        return mapToDto(user);
     }
 }

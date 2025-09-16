@@ -21,7 +21,7 @@ public class UsersController {
     @Autowired
     private VerificationTokenRepository tokenRepo;
 
-    // Register User (POST /v2/users/register)do
+    // Register User (POST /v2/users/register)
     @PostMapping("/v2/users/register")
     public ResponseEntity<UserResponseDto> registerUser(
             @ModelAttribute UserRequestDto userRequest,
@@ -47,13 +47,6 @@ public class UsersController {
     @GetMapping("/v2/users/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Integer id) {
         UserResponseDto responseDto = userService.getUserById(id);
-        return ResponseEntity.ok(responseDto);
-    }
-
-    // Get User by Email (GET /itb-mshop/v2/users?email={email})
-    @GetMapping("/v2/users")
-    public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
-        UserResponseDto responseDto = userService.getUserByEmail(email);
         return ResponseEntity.ok(responseDto);
     }
 }

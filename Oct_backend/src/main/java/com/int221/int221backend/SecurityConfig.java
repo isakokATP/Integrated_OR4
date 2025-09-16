@@ -23,8 +23,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/itb-mshop/v2/users/register",
-                                "/itb-mshop/v2/auth/verify-email",
-                                "/itb-mshop/v2/users"
+                                "/itb-mshop/v2/auth/verify-email"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -1,6 +1,6 @@
 import { handleApiError } from "../api/client";
 
-const URL = import.meta.env.VITE_API_URL_PROD;
+const URL = "http://localhost:8080";
 
 export async function registerUser(form) {
   try {

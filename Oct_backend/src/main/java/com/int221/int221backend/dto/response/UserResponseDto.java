@@ -25,13 +25,9 @@ public class UserResponseDto {
 
     private String bankAccount;
 
-    private String bankName;
-
     private String idCardNumber;
 
     private String userType; // SELLER or BUYER
-
-    private String status; // ACTIVE or INACTIVE
 
     private String idCardImageFront;
 
@@ -49,14 +45,10 @@ public class UserResponseDto {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .bankAccount(user.getBankAccount())
-                .bankName(user.getBankName())
                 .idCardNumber(user.getIdCardNumber())
                 .userType(String.valueOf(user.getUserType()))
-                .status(String.valueOf(user.getStatus()))
                 .idCardImageFront(user.getIdCardImageFront())
                 .idCardImageBack(user.getIdCardImageBack())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
