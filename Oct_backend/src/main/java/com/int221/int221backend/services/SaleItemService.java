@@ -346,6 +346,11 @@ public class SaleItemService {
             storageList.add(null);
             System.out.println(storageList.size());
         }
+        if (filterPriceLower != null && filterPriceUpper == null) {
+            // ให้ช่วงราคาเป็น 0 ถึง filterPriceLower
+            filterPriceUpper = filterPriceLower;
+            filterPriceLower = 0;
+        }
 
         Page<SaleItem> saleItemPage;
 
