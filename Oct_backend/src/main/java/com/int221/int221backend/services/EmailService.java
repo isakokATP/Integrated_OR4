@@ -23,32 +23,29 @@ public class EmailService {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
+    @Value("${app.frontend.url}")
+    private String appFrontendUrl;
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     public void sendVerificationEmail(Users user, String token) {
-        try {
-            String toEmail = user.getEmail();
-            String username = user.getNickName();
-            String verificationUrl = "http://intproj24.sit.kmutt.ac.th/or4/verify-email/?token=" + token;
+        // สร้าง verification URL สำหรับ frontend
+        String verificationUrl = appFrontendUrl + "?token=" + token;
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        String subject = "Please verify your email";
+        String content = "Hello " + user.getFullName() + ",\n\n"
+                + "Thank you for registering. Please click the link below to verify your email:\n"
+                + verificationUrl + "\n\n"
+                + "If you did not register, please ignore this email.";
 
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("Please verify your email");
-            helper.setText(
-                    "<p>Hi " + username + ",</p>" +
-                            "<p>Please verify your email by clicking the link below:</p>" +
-                            "<a href=\"" + verificationUrl + "\">Verify Email</a>",
-                    true // true = HTML
-            );
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject(subject);
+        message.setText(content);
+        message.setFrom(fromEmail);
 
-            mailSender.send(message);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send verification email: " + e.getMessage(), e);
-        }
+        mailSender.send(message);
     }
 }
