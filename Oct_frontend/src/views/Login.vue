@@ -36,7 +36,7 @@ async function onSubmit(e){
     const credentials = btoa(`${email.value}:${password.value}`);
     
     // Try to authenticate by making a request to a protected endpoint
-    const response = await fetch(`http://localhost:8080/itb-mshop/v2/users?email=${email.value}`, {
+    const response = await fetch(`http://backend:8080/itb-mshop/v2/users?email=${email.value}`, {
       method: 'GET',
       headers: {
         'Authorization': `Basic ${credentials}`,

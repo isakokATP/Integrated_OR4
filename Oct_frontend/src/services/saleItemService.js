@@ -1,6 +1,6 @@
 import { handleApiError } from "../api/client";
 
-const URL = import.meta.env.VITE_API_URL_PROD;
+const URL = "http://backend:8080";
 
 // API URL loaded from environment variables
 
