@@ -155,6 +155,8 @@ public class UserService {
                 .status(user.getStatus().name())
                 .idCardImageFront(user.getIdCardImageFront())
                 .idCardImageBack(user.getIdCardImageBack())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
