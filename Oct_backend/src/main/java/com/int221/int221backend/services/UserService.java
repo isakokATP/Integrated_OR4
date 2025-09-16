@@ -154,4 +154,11 @@ public class UserService {
                 .idCardImageBack(user.getIdCardImageBack())
                 .build();
     }
+
+    // Get User by Email
+    public UserResponseDto getUserByEmail(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return mapToResponseDto(user);
+    }
 }

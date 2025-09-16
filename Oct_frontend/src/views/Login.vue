@@ -61,6 +61,10 @@ async function onSubmit(e){
         }, 1000);
       } else {
         message.value = "Account is not active. Please verify your email first.";
+        // แสดง link ไป verify email
+        setTimeout(() => {
+          router.push({ name: "verify-email-page" });
+        }, 2000);
       }
     } else {
       message.value = "Invalid email or password";
