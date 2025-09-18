@@ -51,8 +51,7 @@ public class SaleItemService {
     @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Value("/app/uploads")
-//    @Value("/Oct_backend/picture")
+    @Value("${file.upload-dir.saleitems}")
     private String uploadDir;
 
     public List<SaleItem> getAllSaleItem(){
