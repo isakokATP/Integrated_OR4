@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/itb-mshop/v1")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class BrandController {
     private final BrandService brandService;
 

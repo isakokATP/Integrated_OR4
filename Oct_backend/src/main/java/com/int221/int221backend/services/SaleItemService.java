@@ -1,6 +1,8 @@
 package com.int221.int221backend.services;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
+import com.int221.int221backend.dto.request.SaleItemImageInfo;
+import com.int221.int221backend.dto.request.SaleItemImageRequest;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.*;
 import com.int221.int221backend.entities.Attachment;
@@ -31,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -48,8 +51,9 @@ public class SaleItemService {
     @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Value("${file.upload-dir.saleitems}")
-    private String uploadDir; // รับค่าจาก application.properties
+    @Value("/app/uploads")
+//    @Value("/Oct_backend/picture")
+    private String uploadDir;
 
     public List<SaleItem> getAllSaleItem(){
         return saleItemRepository.findAll();
@@ -162,176 +166,201 @@ public class SaleItemService {
         }
     }
 
-    @Transactional
-    public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
-        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
-            saleItemsUpdateDto.setQuantity(1L);
+//    @Transactional
+//    public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
+//        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
+//            saleItemsUpdateDto.setQuantity(1L);
+//        }
+//        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
+//            saleItemsUpdateDto.setColor(null);
+//        }
+//        SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
+//        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
+//        if (brand.isPresent()) {
+//            Brand brandModel = brand.get();
+//            saleItem.setBrand(brandModel);
+//        }
+//        else {
+//            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
+//        }
+//        SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
+//        entityManager.refresh(updatedItem);
+//        return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
+//    }
+
+    private void addNewImage(SaleItem saleItem, MultipartFile file, Integer order) {
+        try {
+            String extension = getFileExtension(file.getOriginalFilename());
+            if (!extension.equalsIgnoreCase("jpg") &&
+                    !extension.equalsIgnoreCase("jpeg") &&
+                    !extension.equalsIgnoreCase("png")) {
+                throw new IllegalArgumentException("File must be JPEG or PNG");
+            }
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path path = Path.of(uploadDir, fileName);
+            Files.createDirectories(path.getParent());
+            Files.write(path, file.getBytes());
+
+            Attachment attachment = Attachment.builder()
+                    .saleItem(saleItem)
+                    .filename(fileName)
+                    .filePath(fileName)
+                    .fileType(getFileType(extension))
+                    .fileSize((int) file.getSize())
+                    .imageViewOrder(order != null ? order : saleItem.getAttachments().size() + 1)
+                    .build();
+
+            attachmentRepository.save(attachment);
+            saleItem.getAttachments().add(attachment);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
         }
-        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
-            saleItemsUpdateDto.setColor(null);
+    }
+
+    // ลบรูปตาม order
+    private void deleteImage(SaleItem saleItem, Integer order) {
+        Attachment attachment = saleItem.getAttachments().stream()
+                .filter(a -> a.getImageViewOrder() == order)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No image with order: " + order));
+
+        // ลบไฟล์จาก VM
+        Path path = Path.of(uploadDir, attachment.getFilePath());
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete file: " + attachment.getFilePath(), e);
         }
-        SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
-        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
-        if (brand.isPresent()) {
-            Brand brandModel = brand.get();
-            saleItem.setBrand(brandModel);
+        attachmentRepository.delete(attachment);
+        saleItem.getAttachments().remove(attachment);
+    }
+
+    // อัปเดตรูปภาพโดยเปลี่ยน order
+    private void updateImageOrder(SaleItem saleItem, Integer newOrder) {
+        // สมมติคุณส่ง newOrder = 1 และต้องการสลับรูปกับ order 1 ปัจจุบัน
+        if (newOrder == null || newOrder <= 0) return;
+
+        // ตัวอย่าง: swap first attachment กับ newOrder
+        List<Attachment> attachments = saleItem.getAttachments();
+        if (attachments.size() < 2) return;
+
+        // ตัวอย่าง swap logic
+        Attachment first = attachments.get(0);
+        Attachment target = attachments.stream()
+                .filter(a -> a.getImageViewOrder() == newOrder)
+                .findFirst()
+                .orElse(null);
+
+        if (target != null) {
+            int temp = first.getImageViewOrder();
+            first.setImageViewOrder(target.getImageViewOrder());
+            target.setImageViewOrder(temp);
+            attachmentRepository.save(first);
+            attachmentRepository.save(target);
         }
-        else {
-            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
-        }
-        SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
-        entityManager.refresh(updatedItem);
-        return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
     }
 
     @Transactional
-    public SaleItemUpdateResponseDto updateSaleItemWithImages(
-            Integer id,
-            SaleItemsUpdateDto saleItemsUpdateDto,
-            List<MultipartFile> images
-    ) {
-        // 1. หา SaleItem เก่าจาก DB
+    public SaleItemUpdateResponseDto updateSaleItemWithImages(Integer id, SaleItemImageInfo request) {
         SaleItem existingItem = saleItemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No SaleItem id = " + id));
-
-        // 2. อัปเดต field พื้นฐาน
-        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
-            saleItemsUpdateDto.setQuantity(1L);
-        }
-        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
-            saleItemsUpdateDto.setColor(null);
-        }
-
-        existingItem.setModel(saleItemsUpdateDto.getModel());
-        existingItem.setDescription(saleItemsUpdateDto.getDescription());
-        existingItem.setPrice(saleItemsUpdateDto.getPrice());
-        existingItem.setQuantity(saleItemsUpdateDto.getQuantity());
-        existingItem.setColor(saleItemsUpdateDto.getColor());
-        existingItem.setRamGb(saleItemsUpdateDto.getRamGb());
-        existingItem.setScreenSizeInch(saleItemsUpdateDto.getScreenSizeInch());
-        existingItem.setStorageGb(saleItemsUpdateDto.getStorageGb());
-
-        // 3. อัปเดต Brand
-        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
-        if (brand.isPresent()) {
-            existingItem.setBrand(brand.get());
-        } else {
-            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
-        }
-
-        // 4. อัปโหลดรูปภาพใหม่ถ้ามี
-        if (images != null && !images.isEmpty()) {
-            // **เช็คจำนวนรูปเก่า + รูปใหม่**
-            int existingCount = existingItem.getAttachments().size();
-            int newCount = images.size();
-            if (existingCount + newCount > 4) {
-                throw new IllegalArgumentException("You can upload a maximum of 4 images.");
+        SaleItemsUpdateDto saleItemDto = request.getSaleItem();
+        if (saleItemDto != null) {
+            if (saleItemDto.getQuantity() == null || saleItemDto.getQuantity() < 0L) {
+                saleItemDto.setQuantity(1L);
             }
+            existingItem.setModel(saleItemDto.getModel());
+            existingItem.setDescription(saleItemDto.getDescription());
+            existingItem.setPrice(saleItemDto.getPrice());
+            existingItem.setQuantity(saleItemDto.getQuantity());
+            existingItem.setColor(saleItemDto.getColor());
+            existingItem.setRamGb(saleItemDto.getRamGb());
+            existingItem.setScreenSizeInch(saleItemDto.getScreenSizeInch());
+            existingItem.setStorageGb(saleItemDto.getStorageGb());
 
-            // หา imageViewOrder ล่าสุด เพื่อจัดลำดับต่อเนื่อง
-            int nextOrder = existingItem.getAttachments().stream()
-                    .mapToInt(Attachment::getImageViewOrder)
-                    .max()
-                    .orElse(0) + 1;
-
-            for (MultipartFile file : images) {
-                long maxSize = 2 * 1024 * 1024; // 2MB
-                if (file.getSize() > maxSize) {
-                    throw new IllegalArgumentException(
-                            "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
-                }
-
-                String extension = getFileExtension(file.getOriginalFilename());
-                if (!extension.equalsIgnoreCase("jpg") &&
-                        !extension.equalsIgnoreCase("jpeg") &&
-                        !extension.equalsIgnoreCase("png")) {
-                    throw new IllegalArgumentException(
-                            "File " + file.getOriginalFilename() + " must be JPEG or PNG");
-                }
-
-                // ตั้งชื่อไฟล์ใหม่
-                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                Path path = Path.of(uploadDir, fileName);
-
-                try {
-                    Files.createDirectories(path.getParent());
-                    Files.write(path, file.getBytes());
-                    log.info("✅ Saved file: {}", path);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to save image: " + file.getOriginalFilename(), e);
-                }
-
-                Attachment attachment = Attachment.builder()
-                        .saleItem(existingItem)
-                        .filename(fileName)
-                        .filePath(fileName)  // ✅ เก็บเฉพาะชื่อไฟล์
-                        .fileType(getFileType(extension))
-                        .fileSize((int) file.getSize())
-                        .imageViewOrder(nextOrder++)
-                        .build();
-
-                attachmentRepository.save(attachment);
-                existingItem.getAttachments().add(attachment);
+            // อัพเดต brand
+            if (saleItemDto.getBrand() != null) {
+                Brand brand = brandRepository.findById(saleItemDto.getBrand().getId())
+                        .orElseThrow(() -> new NotFoundException("No Brand id = " + saleItemDto.getBrand().getId()));
+                existingItem.setBrand(brand);
             }
         }
 
-        // 5. Save & refresh
-        SaleItem updatedItem = saleItemRepository.saveAndFlush(existingItem);
-        entityManager.refresh(updatedItem);
+        if (request.getImagesInfos() != null) {
+            for (SaleItemImageRequest imgReq : request.getImagesInfos()) {
+                switch (imgReq.getStatus()) {
+                    case "add" -> {
+                        MultipartFile file = imgReq.getImageFile();
+                        if (file != null && !file.isEmpty()) {
+                            addNewImage(existingItem, file, imgReq.getOrder());
+                        }
+                    }
+                    case "delete" -> {
+                        deleteImage(existingItem, imgReq.getOrder());
+                    }
+                    case "updateOrder" -> {
+                        updateImageOrder(existingItem, imgReq.getOrder());
+                    }
+                    case "keep" -> {
+                    }
+                    default -> throw new IllegalArgumentException("Invalid image status: " + imgReq.getStatus());
+                }
+            }
+        }
 
-        // 6. Map เป็น DTO
-        List<AttachmentDto> imageDtos = updatedItem.getAttachments().stream()
+        SaleItem updated = saleItemRepository.saveAndFlush(existingItem);
+        entityManager.refresh(updated);
+
+        List<AttachmentDto> imageDtos = updated.getAttachments().stream()
                 .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
                 .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
                 .toList();
 
-        SaleItemUpdateResponseDto responseDto = modelMapper.map(updatedItem, SaleItemUpdateResponseDto.class);
-        responseDto.setSaleItemImages(imageDtos);
+        SaleItemUpdateResponseDto response = modelMapper.map(updated, SaleItemUpdateResponseDto.class);
+        response.setSaleItemImages(imageDtos);
 
-        return responseDto;
+        return response;
     }
 
-
-    public void deleteSaleItemById(Integer id) {
-        if (saleItemRepository.existsById(id)) {
-            saleItemRepository.deleteById(id);
-        } else {
-            throw new NotFoundException("No Item id = " + id);
-        }
-    }
+//    สำหรับ delete ทั้ง item
+//    public void deleteSaleItemById(Integer id) {
+//        SaleItem saleItem = saleItemRepository.findById(id)
+//                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
+//        if (saleItem.getAttachments() != null && !saleItem.getAttachments().isEmpty()) {
+//            for (Attachment attachment : saleItem.getAttachments()) {
+//                Path filePath = Path.of(uploadDir, attachment.getFilename());
+//                try {
+//                    Files.deleteIfExists(filePath); // ลบไฟล์จริง
+//                    log.info("Deleted file: {}", filePath);
+//                } catch (IOException e) {
+//                    log.error("Failed to delete file: {}", filePath, e);
+//                    throw new RuntimeException("Failed to delete file: " + filePath, e);
+//                }
+//            }
+//        }
+//        saleItemRepository.delete(saleItem);
+//    }
 
     @Transactional
-    public void deleteAttachmentByFileName(Integer saleItemId, Integer imageViewOrder) {
-        // หา SaleItem ก่อน
-        SaleItem saleItem = saleItemRepository.findById(saleItemId)
-                .orElseThrow(() -> new NotFoundException("SaleItem ID " + saleItemId + " not found"));
+    public void deleteSaleItemById(Integer id) {
+        SaleItem item = saleItemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
 
-        // หา attachment ตาม imageViewOrder
-        Attachment attachment = saleItem.getAttachments().stream()
-                .filter(a -> a.getImageViewOrder().equals(imageViewOrder))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(
-                        "Attachment with imageViewOrder " + imageViewOrder + " not found"));
-
-        // Path ของไฟล์ใน container
-        Path path = Paths.get(uploadDir, attachment.getFilePath());
-
-        try {
-            if (Files.exists(path)) {
-                Files.delete(path);
-                log.info("✅ Deleted file: {}", path);
-            } else {
-                log.warn("⚠️ File not found: {}", path);
+        for (Attachment att : item.getAttachments()) {
+            try {
+                Path path = Path.of(uploadDir, att.getFilePath());
+                Files.deleteIfExists(path);  // delete file ถ้ามี
+            } catch (IOException e) {
+                log.warn("Cannot delete file: {}", att.getFilePath(), e);
             }
-        } catch (IOException e) {
-            log.error("❌ Failed to delete file: {}", path, e);
-            throw new RuntimeException("Failed to delete attachment file: " + attachment.getFilename(), e);
         }
 
-        // ลบออกจาก DB
-        attachmentRepository.delete(attachment);
-    }
+        attachmentRepository.deleteAll(item.getAttachments());
 
+        saleItemRepository.delete(item);
+    }
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
                                               Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper, String searchKeyWord) {
@@ -346,16 +375,32 @@ public class SaleItemService {
             storageList.add(null);
             System.out.println(storageList.size());
         }
+//        if (filterPriceLower != null && filterPriceUpper == null) {
+//            filterPriceUpper = filterPriceLower;
+//        }
+        Integer minPrice = null;
+        Integer maxPrice = null;
+
         if (filterPriceLower != null && filterPriceUpper == null) {
-            // ให้ช่วงราคาเป็น 0 ถึง filterPriceLower
-            filterPriceUpper = filterPriceLower;
-            filterPriceLower = 0;
+            // ใช้ราคาตัวเดียว = priceLower
+            minPrice = filterPriceLower;
+            maxPrice = filterPriceLower;
+        } else if (filterPriceLower == null && filterPriceUpper != null) {
+            // ใช้ราคาตัวเดียว = priceUpper
+            minPrice = filterPriceUpper;
+            maxPrice = filterPriceUpper;
+        } else if (filterPriceLower != null && filterPriceUpper != null) {
+            // ช่วงราคา
+            minPrice = filterPriceLower;
+            maxPrice = filterPriceUpper;
         }
+        // ถ้า minPrice/maxPrice เป็น null จะไม่กรองราคา
 
-        Page<SaleItem> saleItemPage;
+        Page<SaleItem> saleItemPage = saleItemRepository.findByFiltersAndSearch(
+                brandList, storageList, pageable, minPrice, maxPrice, searchKeyWord
+        );
 
-
-        saleItemPage = saleItemRepository.findByFiltersAndSearch(brandList, storageList, pageable, filterPriceLower, filterPriceUpper, searchKeyWord);
+//        Page<SaleItem> saleItemPage;
 
         SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));

@@ -25,23 +25,40 @@ public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
                                       @Param("priceLower") Integer priceLower,
                                       @Param("priceUpper") Integer priceUpper);
 
-    @Query("SELECT st FROM SaleItem st " +
-            "WHERE (:brandList IS NULL OR st.brand.name IN :brandList) " +
-            "AND (:storageList IS NULL OR st.storageGb IN :storageList OR (-1 IN (:storageList) AND st.storageGb IS NULL)) " +
-            "AND (:priceLower IS NULL OR st.price >= :priceLower) " +
-            "AND (:priceUpper IS NULL OR st.price <= :priceUpper) " +
-            "AND (" +
-            "    :searchKeyWord IS NULL OR " +
-            "    LOWER(REPLACE(st.description, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%')) OR " +
-            "    LOWER(REPLACE(st.model, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%')) OR " +
-            "    LOWER(REPLACE(st.color, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%'))" +
-            ")")
+//    @Query("SELECT st FROM SaleItem st " +
+//            "WHERE (:brandList IS NULL OR st.brand.name IN :brandList) " +
+//            "AND (:storageList IS NULL OR st.storageGb IN :storageList OR (-1 IN (:storageList) AND st.storageGb IS NULL)) " +
+//            "AND (:priceLower IS NULL OR st.price >= :priceLower) " +
+//            "AND (:priceUpper IS NULL OR st.price <= :priceUpper) " +
+//            "AND (" +
+//            "    :searchKeyWord IS NULL OR " +
+//            "    LOWER(REPLACE(st.description, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%')) OR " +
+//            "    LOWER(REPLACE(st.model, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%')) OR " +
+//            "    LOWER(REPLACE(st.color, ' ', '')) LIKE LOWER(CONCAT('%', REPLACE(:searchKeyWord, ' ', ''), '%'))" +
+//            ")")
+//    Page<SaleItem> findByFiltersAndSearch(
+//            @Param("brandList") List<String> brandList,
+//            @Param("storageList") List<Integer> storageList,
+//            Pageable pageable,
+//            @Param("priceLower") Integer priceLower,
+//            @Param("priceUpper") Integer priceUpper,
+//            @Param("searchKeyWord") String searchKeyWord
+//    );
+
+    @Query("""
+        SELECT s FROM SaleItem s
+        WHERE (:brands IS NULL OR s.brand.name IN :brands)
+          AND (:storageSizes IS NULL OR s.storageGb IN :storageSizes)
+          AND (:minPrice IS NULL OR s.price >= :minPrice)
+          AND (:maxPrice IS NULL OR s.price <= :maxPrice)
+          AND (:search IS NULL OR LOWER(s.model) LIKE LOWER(CONCAT('%', :search, '%')))
+        """)
     Page<SaleItem> findByFiltersAndSearch(
-            @Param("brandList") List<String> brandList,
-            @Param("storageList") List<Integer> storageList,
+            @Param("brands") List<String> brands,
+            @Param("storageSizes") List<Integer> storageSizes,
             Pageable pageable,
-            @Param("priceLower") Integer priceLower,
-            @Param("priceUpper") Integer priceUpper,
-            @Param("searchKeyWord") String searchKeyWord
+            @Param("minPrice") Integer minPrice,
+            @Param("maxPrice") Integer maxPrice,
+            @Param("search") String search
     );
 }
