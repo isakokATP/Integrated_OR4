@@ -12,19 +12,19 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SaleItemsUpdateDto {
-    private Integer id;
+//    private Integer id;
     private String model;
     private BrandDto brand;
     private String description;
     private Integer price;
     private Integer ramGb;
     private BigDecimal screenSizeInch;
-
     @Min(value = 0, message = "Quantity must not be negative")
     private Long quantity;
-
     private Integer storageGb;
     private String color;
+
+
 
     public void setModel(String model) {
         this.model = model.trim();
