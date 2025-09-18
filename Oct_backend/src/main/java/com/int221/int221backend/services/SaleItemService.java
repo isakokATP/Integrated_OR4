@@ -349,7 +349,7 @@ public class SaleItemService {
 
         for (Attachment att : item.getAttachments()) {
             try {
-                Path path = Path.of(uploadDir, att.getFilePath());
+                Path path = Path.of("//apps//uploads", att.getFilePath());
                 Files.deleteIfExists(path);  // delete file ถ้ามี
             } catch (IOException e) {
                 log.warn("Cannot delete file: {}", att.getFilePath(), e);

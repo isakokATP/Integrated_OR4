@@ -43,7 +43,8 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./uploads:/usr/share/nginx/html/uploads
+      - ./uploads:/app/uploads
+      - ./users:/app/users
     networks:
       - int221-net
 
