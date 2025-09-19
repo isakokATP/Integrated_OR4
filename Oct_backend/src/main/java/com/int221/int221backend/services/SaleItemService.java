@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional
 public class SaleItemService {
     @Autowired
     private SaleItemRepository saleItemRepository;
@@ -325,22 +326,23 @@ public class SaleItemService {
     }
 
 //    สำหรับ delete ทั้ง item
+    @Transactional
     public void deleteSaleItemById(Integer id) {
         SaleItem saleItem = saleItemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No Item id = " + id));
-        if (saleItem.getAttachments() != null && !saleItem.getAttachments().isEmpty()) {
+
+        if (saleItem.getAttachments() != null) {
             for (Attachment attachment : saleItem.getAttachments()) {
                 Path filePath = Path.of(uploadDir, attachment.getFilename());
-                System.out.println(filePath.toAbsolutePath());
                 try {
-                    Files.deleteIfExists(filePath); // ลบไฟล์จริง
-                    log.info("Deleted file: {}", filePath);
+                    Files.deleteIfExists(filePath);
                 } catch (IOException e) {
                     log.error("Failed to delete file: {}", filePath, e);
-                    throw new RuntimeException("Failed to delete file: " + filePath, e);
                 }
             }
         }
+
+        // Delete from DB
         saleItemRepository.delete(saleItem);
     }
 
