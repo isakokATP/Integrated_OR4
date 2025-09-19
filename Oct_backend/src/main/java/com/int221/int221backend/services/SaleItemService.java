@@ -198,6 +198,7 @@ public class SaleItemService {
 
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             Path path = Path.of(uploadDir, fileName);
+            System.out.println("UploadDir = " + uploadDir);
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
 
