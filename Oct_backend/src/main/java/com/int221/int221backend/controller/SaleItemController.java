@@ -133,9 +133,7 @@ public class SaleItemController {
             }
             SaleItemUpdateResponseDto response =
                     saleItemService.updateSaleItemWithImages(id, request);
-
             return ResponseEntity.ok(response);
-
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (NotFoundException e) {
@@ -158,16 +156,11 @@ public class SaleItemController {
     @DeleteMapping("/v2/sale-items/{id}")
     public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
         try {
-            // เรียก Service ลบ SaleItem ตาม ID
             saleItemService.deleteSaleItemById(id);
             return ResponseEntity.noContent().build(); // 204 No Content
-
         } catch (NotFoundException e) {
-            // กรณีไม่พบ SaleItem
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-
         } catch (Exception e) {
-            // กรณีอื่น ๆ
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
         }
     }
