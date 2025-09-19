@@ -227,12 +227,14 @@ public class SaleItemService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No image with order: " + order));
 
-        // ลบไฟล์จาก VM
+        // ลบไฟล์จาก VM / container
         Path path = Path.of(uploadDir, attachment.getFilePath());
+        System.out.println("Deleting file at: " + path.toAbsolutePath());
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to delete file: " + attachment.getFilePath(), e);
+            // log error แต่ไม่ throw เพื่อไม่ให้ rollback DB
+            log.error("Failed to delete file: {}", path.toAbsolutePath(), e);
         }
         attachmentRepository.delete(attachment);
         saleItem.getAttachments().remove(attachment);
