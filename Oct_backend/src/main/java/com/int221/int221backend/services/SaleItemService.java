@@ -228,7 +228,7 @@ public class SaleItemService {
                 .orElseThrow(() -> new IllegalArgumentException("No image with order: " + order));
 
         // ลบไฟล์จาก VM / container
-        Path path = Path.of(uploadDir, attachment.getFilePath());
+        Path path = Path.of(uploadDir, attachment.getFilename());
         System.out.println("Deleting file at: " + path.toAbsolutePath());
         try {
             Files.deleteIfExists(path);
