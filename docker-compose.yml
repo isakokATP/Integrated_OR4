@@ -27,8 +27,8 @@ services:
     depends_on:
       - mysql
     volumes:
-      - ./uploads:/app/uploads
-      - ./users:/app/users
+      - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
+      - /home/shisanucha/Integrated_OR4/users:/app/users
     networks:
       - int221-net
 
@@ -43,8 +43,8 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./uploads:/app/uploads
-      - ./users:/app/users
+      - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
+      - /home/shisanucha/Integrated_OR4/users:/app/users
     networks:
       - int221-net
 

@@ -324,42 +324,43 @@ public class SaleItemService {
     }
 
 //    สำหรับ delete ทั้ง item
-//    public void deleteSaleItemById(Integer id) {
-//        SaleItem saleItem = saleItemRepository.findById(id)
-//                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
-//        if (saleItem.getAttachments() != null && !saleItem.getAttachments().isEmpty()) {
-//            for (Attachment attachment : saleItem.getAttachments()) {
-//                Path filePath = Path.of(uploadDir, attachment.getFilename());
-//                try {
-//                    Files.deleteIfExists(filePath); // ลบไฟล์จริง
-//                    log.info("Deleted file: {}", filePath);
-//                } catch (IOException e) {
-//                    log.error("Failed to delete file: {}", filePath, e);
-//                    throw new RuntimeException("Failed to delete file: " + filePath, e);
-//                }
-//            }
-//        }
-//        saleItemRepository.delete(saleItem);
-//    }
-
-    @Transactional
     public void deleteSaleItemById(Integer id) {
-        SaleItem item = saleItemRepository.findById(id)
+        SaleItem saleItem = saleItemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No Item id = " + id));
-
-        for (Attachment att : item.getAttachments()) {
-            try {
-                Path path = Path.of("//apps//uploads", att.getFilePath());
-                Files.deleteIfExists(path);  // delete file ถ้ามี
-            } catch (IOException e) {
-                log.warn("Cannot delete file: {}", att.getFilePath(), e);
+        if (saleItem.getAttachments() != null && !saleItem.getAttachments().isEmpty()) {
+            for (Attachment attachment : saleItem.getAttachments()) {
+                Path filePath = Path.of(uploadDir, attachment.getFilename());
+                System.out.println(filePath.toAbsolutePath());
+                try {
+                    Files.deleteIfExists(filePath); // ลบไฟล์จริง
+                    log.info("Deleted file: {}", filePath);
+                } catch (IOException e) {
+                    log.error("Failed to delete file: {}", filePath, e);
+                    throw new RuntimeException("Failed to delete file: " + filePath, e);
+                }
             }
         }
-
-        attachmentRepository.deleteAll(item.getAttachments());
-
-        saleItemRepository.delete(item);
+        saleItemRepository.delete(saleItem);
     }
+
+//    @Transactional
+//    public void deleteSaleItemById(Integer id) {
+//        SaleItem item = saleItemRepository.findById(id)
+//                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
+//
+//        for (Attachment att : item.getAttachments()) {
+//            try {
+//                Path path = Path.of("//apps//uploads", att.getFilePath());
+//                System.out.println(path);
+//                Files.deleteIfExists(path);  // delete file ถ้ามี
+//            } catch (IOException e) {
+//                log.warn("Cannot delete file: {}", att.getFilePath(), e);
+//            }
+//        }
+//
+//        attachmentRepository.deleteAll(item.getAttachments());
+//        saleItemRepository.delete(item);
+//    }
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
                                               Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper, String searchKeyWord) {
@@ -374,9 +375,6 @@ public class SaleItemService {
             storageList.add(null);
             System.out.println(storageList.size());
         }
-//        if (filterPriceLower != null && filterPriceUpper == null) {
-//            filterPriceUpper = filterPriceLower;
-//        }
         Integer minPrice = null;
         Integer maxPrice = null;
 
@@ -393,14 +391,10 @@ public class SaleItemService {
             minPrice = filterPriceLower;
             maxPrice = filterPriceUpper;
         }
-        // ถ้า minPrice/maxPrice เป็น null จะไม่กรองราคา
 
         Page<SaleItem> saleItemPage = saleItemRepository.findByFiltersAndSearch(
                 brandList, storageList, pageable, minPrice, maxPrice, searchKeyWord
         );
-
-//        Page<SaleItem> saleItemPage;
-
         SaleItemPaginateDto response = new SaleItemPaginateDto();
         response.setContent(listMapper.mapList(saleItemPage.getContent(), SaleItemByIdDto.class, modelMapper));
         response.setLast(saleItemPage.isLast());
