@@ -43,14 +43,24 @@ async function fetchSaleItemsV2(
       });
     }
     
-    // Price filter - Fixed parameter names to match Backend
-    if (filters.priceMin !== null && filters.priceMin !== undefined) {
-      params.append('filterPriceLower', filters.priceMin);
+    const min = filters.priceMin;
+    const max = filters.priceMax;
+
+    if (min !== null && min !== undefined) {
+      if (max === null || max === undefined) {
+        // ถ้าใส่แค่ min เท่านั้น → ให้ถือเป็นค่าเดียว (exact match)
+        params.append('filterPriceLower', min);
+        params.append('filterPriceUpper', min);
+      } else {
+        // ทั้ง min และ max มีค่า → ปกติเป็นช่วง
+        params.append('filterPriceLower', min);
+      }
     }
-    if (filters.priceMax !== null && filters.priceMax !== undefined) {
-      params.append('filterPriceUpper', filters.priceMax);
+
+    if (max !== null && max !== undefined) {
+      params.append('filterPriceUpper', max);
     }
-    
+
     // Storage filter - Fixed parameter name to match Backend
     if (filters.storageSizes && filters.storageSizes.length > 0) {
       filters.storageSizes.forEach(storage => {

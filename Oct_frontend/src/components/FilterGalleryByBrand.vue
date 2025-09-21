@@ -255,29 +255,25 @@ const priceRanges = [
 ];
 
 const selectedPriceRange = computed(() => {
-  if (props.modelValue.priceMin === null && props.modelValue.priceMax === null) {
-    return null;
+  const min = props.modelValue.priceMin;
+  const max = props.modelValue.priceMax;
+
+  if (min === null && max === null) return null;
+
+  let label = "";
+  if (min !== null && max !== null) {
+    label = min === max ? `${min}` : `${min} - ${max}`;
+  } else if (min !== null) {
+    label = `${min}`;
+  } else if (max !== null) {
+    label = `0 - ${max}`;
   }
-
-  // เช็ค predefined ranges
-  const predefinedRange = priceRanges.find(range =>
-    range.min === props.modelValue.priceMin && range.max === props.modelValue.priceMax
-  );
-
-  if (predefinedRange) {
-    return predefinedRange;
-  }
-
-  // Custom range
-  const min = props.modelValue.priceMin ?? 0;
-  const max = props.modelValue.priceMax ?? min;
-  let label = `${min} - ${max} Baht`;
 
   return {
-    label: `Custom: ${label}`,
+    label: label + " Baht",
     min,
     max,
-    isCustom: true
+    isCustom: true,
   };
 });
 
@@ -341,29 +337,18 @@ function applyCustomPriceRange() {
   const minPrice = customMinPrice.value ? parseInt(customMinPrice.value) : null;
   const maxPrice = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
 
-  let finalMin = 0;
-  let finalMax = 0;
+  let finalMin = minPrice;
+  let finalMax = maxPrice;
 
-  if (minPrice !== null && maxPrice !== null) {
-    finalMin = minPrice;
-    finalMax = maxPrice;
-  } else if (minPrice !== null && maxPrice === null) {
+  // ถ้าใส่แค่ max → min = 0
+  if (minPrice === null && maxPrice !== null) {
     finalMin = 0;
-    finalMax = minPrice;
-  } else if (minPrice === null && maxPrice !== null) {
-    finalMin = 0;
-    finalMax = maxPrice;
-  } else {
-    // ทั้ง Min และ Max ว่าง → ไม่กำหนด
-    finalMin = null;
-    finalMax = null;
   }
 
   const newValue = { ...props.modelValue, priceMin: finalMin, priceMax: finalMax };
   emit("update:modelValue", newValue);
   saveToSessionStorage(newValue);
 
-  // ปิด custom input
   showCustomPriceInput.value = false;
 }
 
