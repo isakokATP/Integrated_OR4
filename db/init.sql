@@ -109,7 +109,7 @@ VALUES
     (64, 'ROG Phone 6', 12, 'Previous gaming flagship', 29700, 12, 6.78, 256, 'Storm White', 6, NOW(), NOW()),
     (65, 'Zenfone 8', 12, 'Previous compact flagship', 19800, 8, 5.9, 128, 'Obsidian Black', 7, NOW(), NOW()),
     (66, 'ROG Phone 5s', 12, 'Gaming performance', 26400, 12, 6.78, 256, 'Phantom Black', 5, NOW(), NOW()),
-    (67, 'Zenfone 8 Flip', 12, 'Flip camera flagship', 19800, 8, 6.67, 256, 'Galactic Black', 4, NOW(), NOW()),
+    (67, 'Zenfone 8 Flip', 12, 'Flip camera flagship', 26400, 8, 6.67, 256, 'Galactic Black', 4, NOW(), NOW()),
     (68, 'ROG Phone 5', 12, 'Classic gaming phone', 23100, 12, 6.78, 256, 'Storm White', 6, NOW(), NOW()),
     (69, 'Zenfone 7', 12, 'Flip camera classic', 19800, 8, 6.67, 128, 'Aurora Black', 5, NOW(), NOW()),
     (70, 'ROG Phone 3', 12, 'Legacy gaming phone', 16500, 12, 6.59, 256, 'Black Glare', 3, NOW(), NOW()),
