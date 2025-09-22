@@ -639,9 +639,8 @@ async function handleSave() {
     selectedFiles.value = [];
     fileErrors.value = [];
     
-    alert("สร้างรายการขายสำเร็จ!");
     router.push({
-      name: "sale-items-list-page",
+      name: "sale-items-page",
       query: { message: "The sale item has been successfully added." },
     });
   } catch (err) {
