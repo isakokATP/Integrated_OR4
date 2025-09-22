@@ -240,6 +240,23 @@ public class SaleItemService {
         saleItem.getAttachments().remove(attachment);
     }
 
+    // ลบรูปตาม fileName
+    private void deleteImageByFileName(SaleItem saleItem, String fileName) {
+        Attachment attachment = saleItem.getAttachments().stream()
+                .filter(a -> Objects.equals(a.getFilename(), fileName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No image with filename: " + fileName));
+
+        Path path = Path.of(uploadDir, attachment.getFilename());
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            log.error("Failed to delete file: {}", path.toAbsolutePath(), e);
+        }
+        attachmentRepository.delete(attachment);
+        saleItem.getAttachments().remove(attachment);
+    }
+
     // อัปเดตรูปภาพโดยเปลี่ยน order
     private void updateImageOrder(SaleItem saleItem, Integer newOrder) {
         // สมมติคุณส่ง newOrder = 1 และต้องการสลับรูปกับ order 1 ปัจจุบัน
@@ -292,24 +309,54 @@ public class SaleItemService {
         }
 
         if (request.getImagesInfos() != null) {
+            // 1) Collect desired orders for existing images (by fileName)
+            Map<String, Integer> desiredOrderByFile = new HashMap<>();
+
+            // 2) First pass: handle deletes and adds; collect order mapping for keep/updateOrder
             for (SaleItemImageRequest imgReq : request.getImagesInfos()) {
-                switch (imgReq.getStatus()) {
-                    case "add" -> {
-                        MultipartFile file = imgReq.getImageFile();
-                        if (file != null && !file.isEmpty()) {
-                            addNewImage(existingItem, file, imgReq.getOrder());
-                        }
-                    }
-                    case "delete" -> {
+                String status = imgReq.getStatus();
+                if ("delete".equalsIgnoreCase(status)) {
+                    String fileName = imgReq.getFileName();
+                    if (fileName != null) {
+                        deleteImageByFileName(existingItem, fileName);
+                    } else {
+                        // fallback to delete by order if filename absent
                         deleteImage(existingItem, imgReq.getOrder());
                     }
-                    case "updateOrder" -> {
-                        updateImageOrder(existingItem, imgReq.getOrder());
+                } else if ("add".equalsIgnoreCase(status)) {
+                    MultipartFile file = imgReq.getImageFile();
+                    if (file != null && !file.isEmpty()) {
+                        addNewImage(existingItem, file, imgReq.getOrder());
                     }
-                    case "keep" -> {
+                } else if ("keep".equalsIgnoreCase(status) || "updateOrder".equalsIgnoreCase(status)) {
+                    if (imgReq.getFileName() != null && imgReq.getOrder() != null) {
+                        desiredOrderByFile.put(imgReq.getFileName(), imgReq.getOrder());
                     }
-                    default -> throw new IllegalArgumentException("Invalid image status: " + imgReq.getStatus());
+                } else {
+                    throw new IllegalArgumentException("Invalid image status: " + status);
                 }
+            }
+
+            // 3) Apply desired orders to existing attachments by filename
+            for (Attachment a : new ArrayList<>(existingItem.getAttachments())) {
+                Integer desired = desiredOrderByFile.get(a.getFilename());
+                if (desired != null) {
+                    a.setImageViewOrder(desired);
+                    attachmentRepository.save(a);
+                }
+            }
+
+            // 4) Normalize orders to 1..N without gaps
+            List<Attachment> normalized = existingItem.getAttachments().stream()
+                    .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
+                    .collect(Collectors.toList());
+            int orderCounter = 1;
+            for (Attachment a : normalized) {
+                if (a.getImageViewOrder() != orderCounter) {
+                    a.setImageViewOrder(orderCounter);
+                    attachmentRepository.save(a);
+                }
+                orderCounter++;
             }
         }
 
