@@ -4,7 +4,6 @@ import {
   fetchSaleItemById,
   updateSaleItem,
   deleteSaleItem,
-  deleteAttachment,
 } from "../services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import { fetchBrands } from "../services/saleItemService";
@@ -518,19 +517,6 @@ const handleSave = async () => {
   errorMsg.value = "";
 
   try {
-    // First, delete existing images marked for deletion
-    for (const fileToDelete of filesToDelete.value) {
-      if (fileToDelete.isExisting) {
-        try {
-          await deleteAttachment(id, fileToDelete.imageViewOrder);
-        } catch (error) {
-          console.error('Failed to delete existing image:', error);
-          errorMsg.value = "Failed to delete image: " + (error.message || "Unknown error");
-          return;
-        }
-      }
-    }
-
     const dataToSend = {
       model: form.value.model.trim(),
       // Ensure brand object is correctly structured for the backend
@@ -559,8 +545,71 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    // Send data and images together to Backend
-    await updateSaleItem(id, dataToSend, selectedFiles.value);
+    // Build imagesinfos payload according to BE contract (orders 1..N must be complete)
+    const originalImages = (originalData.value?.saleItemImages || [])
+      .slice()
+      .sort((a, b) => (a.imageViewOrder || 0) - (b.imageViewOrder || 0));
+    const originalCount = originalImages.length;
+
+    // Map of deleted existing images by original order
+    const deletedByOrder = new Map(
+      filesToDelete.value
+        .filter(f => f.isExisting)
+        .map(f => [f.imageViewOrder, f])
+    );
+
+    // Kept existing images in NEW order as currently shown in UI
+    const keptExisting = existingImages.value.slice();
+
+    // Prepare first segment: orders 1..originalCount filled with delete or keep
+    const imagesinfos = [];
+    let keepCursor = 0; // index into keptExisting
+    for (let order = 1; order <= originalCount; order++) {
+      const deleted = deletedByOrder.get(order);
+      if (deleted) {
+        imagesinfos.push({
+          order,
+          status: "delete",
+          fileName: deleted.fileName || deleted.filename,
+        });
+      } else {
+        const kept = keptExisting[keepCursor];
+        if (!kept) {
+          errorMsg.value = `Internal error: missing kept image for order ${order}`;
+          return;
+        }
+        imagesinfos.push({
+          order,
+          status: "keep",
+          fileName: kept.fileName || kept.filename,
+        });
+        keepCursor++;
+      }
+    }
+
+    // Second segment: new images appended after originalCount
+    // Only include files that are not marked for deletion
+    const newFiles = selectedFiles.value.filter(
+      f => !filesToDelete.value.some(d => !d.isExisting && d.name === f.name)
+    );
+    newFiles.forEach((file, index) => {
+      const order = originalCount + index + 1; // 1-based
+      imagesinfos.push({
+        order,
+        status: "add",
+        imageFile: file,
+      });
+    });
+
+    // Validate continuous orders 1..N
+    const maxOrder = imagesinfos.reduce((m, i) => Math.max(m, i.order), 0);
+    if (imagesinfos.length !== maxOrder) {
+      errorMsg.value = "Images info orders are not continuous 1..N. Please review changes.";
+      return;
+    }
+
+    // Send data and imagesinfos together to Backend in one request
+    await updateSaleItem(id, dataToSend, imagesinfos);
     
     // Clear deletion list (files were already removed from arrays when × was clicked)
     filesToDelete.value = [];

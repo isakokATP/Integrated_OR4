@@ -172,27 +172,38 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-export const updateSaleItem = async (id, saleItemData, images = null) => {
+export const updateSaleItem = async (id, saleItemData, imagesInfos = null) => {
   try {
     // Backend uses @ModelAttribute which requires FormData
     // Always use FormData regardless of whether images are provided
     const formData = new FormData();
     
-    // Add sale item data
+    // Add nested sale item data under 'saleItem.*' to match @ModelAttribute SaleItemImageInfo
     Object.keys(saleItemData).forEach(key => {
-      // Handle nested objects like brand
       if (key === 'brand' && saleItemData[key]) {
-        formData.append('brand.id', saleItemData[key].id);
+        formData.append('saleItem.brand.id', saleItemData[key].id);
       } else {
-        formData.append(key, saleItemData[key]);
+        formData.append(`saleItem.${key}`, saleItemData[key]);
       }
     });
-    
-    // Add images if provided
-    if (images && images.length > 0) {
-      images.forEach((image, index) => {
-        formData.append('SaleItemImages', image);
-      });
+
+    // Add imagesInfos if provided according to BE contract (camelCase)
+    if (imagesInfos && imagesInfos.length > 0) {
+      imagesInfos
+        .sort((a, b) => a.order - b.order)
+        .forEach((info, idx) => {
+          // Send as imagesInfos[idx].order/status/fileName and attach file as imagesInfos[idx].imageFile when add
+          formData.append(`imagesInfos[${idx}].order`, String(info.order));
+          formData.append(`imagesInfos[${idx}].status`, info.status);
+          if (info.status === 'keep' || info.status === 'delete') {
+            if (info.fileName) {
+              formData.append(`imagesInfos[${idx}].fileName`, info.fileName);
+            }
+          }
+          if (info.status === 'add' && info.imageFile) {
+            formData.append(`imagesInfos[${idx}].imageFile`, info.imageFile, info.imageFile.name);
+          }
+        });
     }
 
     const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
