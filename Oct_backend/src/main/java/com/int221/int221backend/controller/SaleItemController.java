@@ -1,7 +1,7 @@
 package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.NewSaleItemDto;
-import com.int221.int221backend.dto.request.SaleItemUpdateRequest;
+import com.int221.int221backend.dto.request.SaleItemImageInfo;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
 import com.int221.int221backend.dto.response.*;
 
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/itb-mshop")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class SaleItemController {
     @Autowired
     private SaleItemService saleItemService;
@@ -63,29 +63,6 @@ public class SaleItemController {
         saleItemByIdDto.setBrandName(saleItem.getBrand().getName());
         return saleItemByIdDto;
     }
-
-//    //  PBI3
-//    @PostMapping("/v1/sale-items")
-//    public ResponseEntity<NewSaleItemResponseDto> addSaleItem(@Valid @RequestBody NewSaleItemDto newSaleItemDto) {
-//        NewSaleItemResponseDto createdItem = saleItemService.createSaleItem(newSaleItemDto);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
-//    }
-
-    //  PBI4
-//    @PutMapping("/v1/sale-items/{id}")
-//    public ResponseEntity<SaleItemsUpdateResponseDto> updateSaleItem(@RequestBody SaleItemsUpdateDto saleItemsUpdateDto, @PathVariable Integer id) {
-//        saleItemsUpdateDto.setId(id);
-//        SaleItemsUpdateResponseDto response = saleItemService.updateSaleItem(saleItemsUpdateDto);
-//        System.out.println("Mapped SaleItemsUpdateResponseDto: " + response);
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
-//    }
-
-    //  PBI5
-//    @DeleteMapping("/v1/sale-items/{id}")
-//    public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
-//        saleItemService.deleteSaleItemById(id);
-//        return ResponseEntity.noContent().build();
-//    }
 
     //  PBI 10
     @GetMapping("/v2/sale-items")
@@ -143,49 +120,47 @@ public class SaleItemController {
 
 //  pbi16
     @PutMapping("/v2/sale-items/{id}")
-    public ResponseEntity<SaleItemUpdateResponseDto> updateSaleItemWithImages(
+    public ResponseEntity<SaleItemUpdateResponseDto> updateSaleItem(
             @PathVariable Integer id,
-            @ModelAttribute SaleItemsUpdateDto saleItemsUpdateDto,
-            @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
-    ) {
+            @ModelAttribute SaleItemImageInfo request
+            ){
         try {
-            // เรียก Service เพื่ออัปเดต SaleItem และรูปภาพ
-            SaleItemUpdateResponseDto response = saleItemService.updateSaleItemWithImages(id, saleItemsUpdateDto, images);
-
+// check at least one or more request to edit
+            if (request.getSaleItem() == null &&
+                    (request.getImagesInfos() == null || request.getImagesInfos().isEmpty())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Request must contain either saleItem data or imagesInfos (or both).");
+            }
+            SaleItemUpdateResponseDto response =
+                    saleItemService.updateSaleItemWithImages(id, request);
             return ResponseEntity.ok(response);
-
         } catch (IllegalArgumentException e) {
-            // กรณีไฟล์ไม่ผ่าน validation
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-
+        } catch (NotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
-            // กรณีอื่น ๆ
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update SaleItem", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to update SaleItem", e);
         }
     }
 
-    @DeleteMapping("/v2/sale-items/{saleItemId}/attachments/by-order")
-    public ResponseEntity<Void> deleteAttachmentByFileName(
-            @PathVariable Integer saleItemId,
-            @RequestParam Integer imageViewOrder) {
-
-        saleItemService.deleteAttachmentByFileName(saleItemId, imageViewOrder);
-        return ResponseEntity.noContent().build();
-    }
+//    @DeleteMapping("/v2/sale-items/{saleItemId}/attachments/by-order")
+//    public ResponseEntity<Void> deleteAttachmentByFileName(
+//            @PathVariable Integer saleItemId,
+//            @RequestParam Integer imageViewOrder) {
+//
+//        saleItemService.deleteAttachmentByFileName(saleItemId, imageViewOrder);
+//        return ResponseEntity.noContent().build();
+//    }
 
     @DeleteMapping("/v2/sale-items/{id}")
     public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
         try {
-            // เรียก Service ลบ SaleItem ตาม ID
             saleItemService.deleteSaleItemById(id);
             return ResponseEntity.noContent().build(); // 204 No Content
-
         } catch (NotFoundException e) {
-            // กรณีไม่พบ SaleItem
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-
         } catch (Exception e) {
-            // กรณีอื่น ๆ
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
         }
     }

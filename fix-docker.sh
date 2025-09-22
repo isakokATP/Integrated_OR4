@@ -28,3 +28,5 @@ echo "📊 Checking container status..."
 docker ps
 
 echo "✅ Done! Check logs with: docker logs int221-backend"
+
+

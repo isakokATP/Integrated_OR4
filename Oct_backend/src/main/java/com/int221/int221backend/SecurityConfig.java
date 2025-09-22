@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-
 @Configuration
 public class SecurityConfig {
     @Bean
@@ -17,23 +16,34 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .authorizeHttpRequests(auth -> auth
+////                        .requestMatchers(
+//////                                "/itb-mshop/v2/users/register"
+//////                                "/itb-mshop/v2/sale-items/**",
+//////                                "/itb-mshop/v1/brands/**"
+////                        ).permitAll()
+////                        .requestMatchers(new AntPathRequestMatcher(
+////                                "/itb-mshop/v2/sale-items/*/attachments/by-order", "DELETE")
+////                        ).permitAll()
+//                        .anyRequest().authenticated()
+//                )
+//                .httpBasic(Customizer.withDefaults());
+//        return http.build();
+//    }
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // ปิด CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/itb-mshop/v2/users/register",
-                                "/itb-mshop/v2/auth/verify-email",
-                                "/itb-mshop/v2/sale-items/**",
-                                "/itb-mshop/v1/brands/**"
-                        ).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher(
-                                "/itb-mshop/v2/sale-items/*/attachments/by-order", "DELETE")
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // อนุญาตทุก request
                 )
-                .httpBasic(Customizer.withDefaults());
+                .formLogin(form -> form.disable()) // ปิด login form
+                .httpBasic(basic -> basic.disable()); // ปิด basic auth
 
         return http.build();
     }

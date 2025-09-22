@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/itb-mshop")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class VerificationController {
     @Autowired
     private VerificationTokenRepository tokenRepository;

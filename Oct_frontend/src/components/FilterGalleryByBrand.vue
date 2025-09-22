@@ -259,19 +259,39 @@ const selectedPriceRange = computed(() => {
     return null;
   }
 
-  // เช็ค predefined ranges
-  const predefinedRange = priceRanges.find(range =>
-    range.min === props.modelValue.priceMin && range.max === props.modelValue.priceMax
+  // เช็ค predefined ranges ก่อน
+  const predefinedRange = priceRanges.find(
+    range =>
+      range.min === props.modelValue.priceMin &&
+      range.max === props.modelValue.priceMax
   );
 
   if (predefinedRange) {
     return predefinedRange;
   }
 
-  // Custom range
-  const min = props.modelValue.priceMin ?? 0;
-  const max = props.modelValue.priceMax ?? min;
-  let label = `${min} - ${max} Baht`;
+  const min = props.modelValue.priceMin;
+  const max = props.modelValue.priceMax;
+
+  // ถ้า min=max → แสดงว่าเป็นราคาตรงๆ
+  if (min !== null && max !== null && min === max) {
+    return {
+      label: `Price: ${min} Baht`,
+      min,
+      max,
+      isCustom: true
+    };
+  }
+
+  // ถ้าเป็นช่วง custom
+  let label = "";
+  if (min !== null && max !== null) {
+    label = `${min} - ${max} Baht`;
+  } else if (min !== null) {
+    label = `From ${min} Baht`;
+  } else if (max !== null) {
+    label = `Up to ${max} Baht`;
+  }
 
   return {
     label: `Custom: ${label}`,
@@ -341,20 +361,23 @@ function applyCustomPriceRange() {
   const minPrice = customMinPrice.value ? parseInt(customMinPrice.value) : null;
   const maxPrice = customMaxPrice.value ? parseInt(customMaxPrice.value) : null;
 
-  let finalMin = 0;
-  let finalMax = 0;
+  let finalMin = null;
+  let finalMax = null;
 
   if (minPrice !== null && maxPrice !== null) {
+    // ทั้งสองค่า -> ใช้เป็นช่วง
     finalMin = minPrice;
     finalMax = maxPrice;
   } else if (minPrice !== null && maxPrice === null) {
-    finalMin = 0;
+    // มีแค่ min -> ต้องการให้เท่ากับ min เท่านั้น
+    finalMin = minPrice;
     finalMax = minPrice;
   } else if (minPrice === null && maxPrice !== null) {
-    finalMin = 0;
+    // มีแค่ max -> ต้องการให้เท่ากับ max เท่านั้น
+    finalMin = maxPrice;
     finalMax = maxPrice;
   } else {
-    // ทั้ง Min และ Max ว่าง → ไม่กำหนด
+    // ไม่มีค่า -> reset
     finalMin = null;
     finalMax = null;
   }

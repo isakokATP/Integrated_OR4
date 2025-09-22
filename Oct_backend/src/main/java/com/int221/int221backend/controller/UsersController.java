@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/itb-mshop")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class UsersController {
     @Autowired
     private UserService userService;
