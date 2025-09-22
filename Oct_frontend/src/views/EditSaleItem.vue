@@ -156,12 +156,21 @@ const isFormValid = computed(() => {
   return !hasValidationErrors && hasChanges.value;
 });
 
-// Check if there are any changes including file changes
+// Check if there are any changes including file changes (add/delete/reorder)
 const hasFileChanges = computed(() => {
-  return selectedFiles.value.length > 0 || 
-         filesToDelete.value.length > 0 ||
-         (originalData.value && originalData.value.saleItemImages && 
-          existingImages.value.length !== originalData.value.saleItemImages.length);
+  // additions or deletions queued
+  if (selectedFiles.value.length > 0 || filesToDelete.value.length > 0) return true;
+
+  // compare current existing images order/filenames with original
+  const original = originalData.value?.saleItemImages || [];
+  const originalNames = original.map(i => i.fileName || i.filename);
+  const currentNames = existingImages.value.map(i => i.fileName || i.filename);
+
+  if (originalNames.length !== currentNames.length) return true;
+  for (let idx = 0; idx < originalNames.length; idx++) {
+    if (originalNames[idx] !== currentNames[idx]) return true; // order or item changed
+  }
+  return false;
 });
 
 // Combined changes check
@@ -545,70 +554,75 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    // Build imagesinfos payload according to BE contract (orders 1..N must be complete)
+    // Build imagesInfos payload according to BE contract (keep/delete/add/updateOrder)
     const originalImages = (originalData.value?.saleItemImages || [])
       .slice()
       .sort((a, b) => (a.imageViewOrder || 0) - (b.imageViewOrder || 0));
-    const originalCount = originalImages.length;
 
-    // Map of deleted existing images by original order
-    const deletedByOrder = new Map(
-      filesToDelete.value
-        .filter(f => f.isExisting)
-        .map(f => [f.imageViewOrder, f])
+    // Index original by fileName -> originalOrder
+    const originalOrderByName = new Map(
+      originalImages.map(img => [String(img.fileName || img.filename), img.imageViewOrder])
     );
 
-    // Kept existing images in NEW order as currently shown in UI
+    // Files marked for deletion (existing only) by fileName
+    const deletedNames = new Set(
+      filesToDelete.value
+        .filter(f => f.isExisting)
+        .map(f => String(f.fileName || f.filename))
+    );
+
+    // Current kept existing images in NEW order (after user reordering)
     const keptExisting = existingImages.value.slice();
 
-    // Prepare first segment: orders 1..originalCount filled with delete or keep
     const imagesinfos = [];
-    let keepCursor = 0; // index into keptExisting
-    for (let order = 1; order <= originalCount; order++) {
-      const deleted = deletedByOrder.get(order);
-      if (deleted) {
-        imagesinfos.push({
-          order,
-          status: "delete",
-          fileName: deleted.fileName || deleted.filename,
-        });
-      } else {
-        const kept = keptExisting[keepCursor];
-        if (!kept) {
-          errorMsg.value = `Internal error: missing kept image for order ${order}`;
-          return;
-        }
-        imagesinfos.push({
-          order,
-          status: "keep",
-          fileName: kept.fileName || kept.filename,
-        });
-        keepCursor++;
-      }
-    }
 
-    // Second segment: new images appended after originalCount
-    // Only include files that are not marked for deletion
+    // 1) Handle existing images: decide keep vs updateOrder vs delete
+    //   - For images still present (not in deletedNames), compare new order vs original
+    keptExisting.forEach((img, idx) => {
+      const name = String(img.fileName || img.filename);
+      const newOrder = idx + 1; // 1-based in current UI
+      const originalOrder = originalOrderByName.get(name);
+      if (originalOrder == null) {
+        // Safety: treat as keep at this order if original not found
+        imagesinfos.push({ order: newOrder, status: "keep", fileName: name });
+      } else if (newOrder !== originalOrder) {
+        imagesinfos.push({ order: newOrder, status: "updateOrder", fileName: name });
+      } else {
+        imagesinfos.push({ order: originalOrder, status: "keep", fileName: name });
+      }
+    });
+
+    //   - For deleted images: send delete with their original order
+    originalImages.forEach(img => {
+      const name = String(img.fileName || img.filename);
+      if (deletedNames.has(name)) {
+        imagesinfos.push({ order: img.imageViewOrder, status: "delete", fileName: name });
+      }
+    });
+
+    // 2) Handle new files to be added (exclude ones marked for deletion in temp list)
     const newFiles = selectedFiles.value.filter(
       f => !filesToDelete.value.some(d => !d.isExisting && d.name === f.name)
     );
+    const finalBaseCount = keptExisting.length; // orders already taken by kept/reordered
     newFiles.forEach((file, index) => {
-      const order = originalCount + index + 1; // 1-based
-      imagesinfos.push({
-        order,
-        status: "add",
-        imageFile: file,
-      });
+      const order = finalBaseCount + index + 1; // append after kepts
+      imagesinfos.push({ order, status: "add", imageFile: file });
     });
 
-    // Validate continuous orders 1..N
-    const maxOrder = imagesinfos.reduce((m, i) => Math.max(m, i.order), 0);
-    if (imagesinfos.length !== maxOrder) {
-      errorMsg.value = "Images info orders are not continuous 1..N. Please review changes.";
+    // Validate: non-delete orders must cover 1..finalCount with no gaps
+    const finalCount = finalBaseCount + newFiles.length;
+    const nonDeleteOrders = new Set(imagesinfos.filter(i => i.status !== "delete").map(i => i.order));
+    let ok = true;
+    for (let o = 1; o <= finalCount; o++) {
+      if (!nonDeleteOrders.has(o)) { ok = false; break; }
+    }
+    if (!ok) {
+      errorMsg.value = "Images order must be continuous 1..N for non-deleted items.";
       return;
     }
 
-    // Send data and imagesinfos together to Backend in one request
+    // Send data and imagesInfos together to Backend in one request
     await updateSaleItem(id, dataToSend, imagesinfos);
     
     // Clear deletion list (files were already removed from arrays when × was clicked)
