@@ -195,7 +195,7 @@ export const updateSaleItem = async (id, saleItemData, imagesInfos = null) => {
           // Send as imagesInfos[idx].order/status/fileName and attach file as imagesInfos[idx].imageFile when add
           formData.append(`imagesInfos[${idx}].order`, String(info.order));
           formData.append(`imagesInfos[${idx}].status`, info.status);
-          if (info.status === 'keep' || info.status === 'delete') {
+          if (info.status === 'keep' || info.status === 'delete' || info.status === 'updateOrder') {
             if (info.fileName) {
               formData.append(`imagesInfos[${idx}].fileName`, info.fileName);
             }
