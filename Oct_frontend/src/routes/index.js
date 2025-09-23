@@ -8,6 +8,9 @@ import SaleItemList from "../views/SaleItemsList.vue";
 import BrandsList from "../views/BrandsList.vue";
 import NewBrand from "../views/NewBrand.vue";
 import EditBrand from "../views/EditBrand.vue";
+import Register from "../views/Register.vue";
+import Login from "../views/Login.vue";
+import VerifyEmail from "../views/VerifyEmail.vue";
 const routes = [
   {
     path: "/",
@@ -53,6 +56,21 @@ const routes = [
     path: "/brands/:id",
     name: "edit-brand-page",
     component: EditBrand,
+  },
+  {
+    path: "/register",
+    name: "register-page",
+    component: Register,
+  },
+  {
+    path: "/login",
+    name: "login-page",
+    component: Login,
+  },
+  {
+    path: "/verify-email",
+    name: "verify-email-page",
+    component: VerifyEmail,
   },
 ];
 

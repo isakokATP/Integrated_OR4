@@ -61,10 +61,10 @@ public class SaleItemService {
 
     public SaleItem getSaleItemById(Integer id) {
         return saleItemRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("No Item id = " + id));   
+                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
     }
 
-//    pbi15 upload picture
+    //    pbi15 upload picture
     @Transactional
     public NewSaleItemResponseDto createSaleItem(NewSaleItemDto newSaleItemDto, List<MultipartFile> images) {
 
@@ -141,7 +141,7 @@ public class SaleItemService {
                 .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
                 .toList();
 
-      // Map SaleItem → DTO
+        // Map SaleItem → DTO
         NewSaleItemResponseDto responseDto = modelMapper.map(reload, NewSaleItemResponseDto.class);
         responseDto.setSaleItemImages(imageDtos);
 
@@ -165,28 +165,6 @@ public class SaleItemService {
             default: throw new IllegalArgumentException("Unsupported file type: " + extension);
         }
     }
-
-//    @Transactional
-//    public SaleItemsUpdateResponseDto updateSaleItem(SaleItemsUpdateDto saleItemsUpdateDto) {
-//        if (saleItemsUpdateDto.getQuantity() == null || saleItemsUpdateDto.getQuantity() < 0L) {
-//            saleItemsUpdateDto.setQuantity(1L);
-//        }
-//        if (saleItemsUpdateDto.getColor() == null || saleItemsUpdateDto.getColor().trim().isEmpty()) {
-//            saleItemsUpdateDto.setColor(null);
-//        }
-//        SaleItem saleItem = modelMapper.map(saleItemsUpdateDto, SaleItem.class);
-//        Optional<Brand> brand = brandRepository.findById(saleItemsUpdateDto.getBrand().getId());
-//        if (brand.isPresent()) {
-//            Brand brandModel = brand.get();
-//            saleItem.setBrand(brandModel);
-//        }
-//        else {
-//            throw new NotFoundException("No Brand id = " + saleItemsUpdateDto.getBrand().getId());
-//        }
-//        SaleItem updatedItem = saleItemRepository.saveAndFlush(saleItem);
-//        entityManager.refresh(updatedItem);
-//        return modelMapper.map(updatedItem, SaleItemsUpdateResponseDto.class);
-//    }
 
     private void addNewImage(SaleItem saleItem, MultipartFile file, Integer order) {
         try {
@@ -240,16 +218,30 @@ public class SaleItemService {
         saleItem.getAttachments().remove(attachment);
     }
 
+    // ลบรูปตาม fileName
+    private void deleteImageByFileName(SaleItem saleItem, String fileName) {
+        Attachment attachment = saleItem.getAttachments().stream()
+                .filter(a -> Objects.equals(a.getFilename(), fileName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No image with filename: " + fileName));
+
+        Path path = Path.of(uploadDir, attachment.getFilename());
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            log.error("Failed to delete file: {}", path.toAbsolutePath(), e);
+        }
+        attachmentRepository.delete(attachment);
+        saleItem.getAttachments().remove(attachment);
+    }
+
     // อัปเดตรูปภาพโดยเปลี่ยน order
     private void updateImageOrder(SaleItem saleItem, Integer newOrder) {
-        // สมมติคุณส่ง newOrder = 1 และต้องการสลับรูปกับ order 1 ปัจจุบัน
         if (newOrder == null || newOrder <= 0) return;
 
-        // ตัวอย่าง: swap first attachment กับ newOrder
         List<Attachment> attachments = saleItem.getAttachments();
         if (attachments.size() < 2) return;
 
-        // ตัวอย่าง swap logic
         Attachment first = attachments.get(0);
         Attachment target = attachments.stream()
                 .filter(a -> a.getImageViewOrder() == newOrder)
@@ -283,7 +275,6 @@ public class SaleItemService {
             existingItem.setScreenSizeInch(saleItemDto.getScreenSizeInch());
             existingItem.setStorageGb(saleItemDto.getStorageGb());
 
-            // อัพเดต brand
             if (saleItemDto.getBrand() != null) {
                 Brand brand = brandRepository.findById(saleItemDto.getBrand().getId())
                         .orElseThrow(() -> new NotFoundException("No Brand id = " + saleItemDto.getBrand().getId()));
@@ -292,24 +283,53 @@ public class SaleItemService {
         }
 
         if (request.getImagesInfos() != null) {
+            // 1) Collect desired orders for existing images (by fileName)
+            Map<String, Integer> desiredOrderByFile = new HashMap<>();
+
+            // 2) First pass: handle deletes and adds; collect order mapping for keep/updateOrder
             for (SaleItemImageRequest imgReq : request.getImagesInfos()) {
-                switch (imgReq.getStatus()) {
-                    case "add" -> {
-                        MultipartFile file = imgReq.getImageFile();
-                        if (file != null && !file.isEmpty()) {
-                            addNewImage(existingItem, file, imgReq.getOrder());
-                        }
-                    }
-                    case "delete" -> {
+                String status = imgReq.getStatus();
+                if ("delete".equalsIgnoreCase(status)) {
+                    String fileName = imgReq.getFileName();
+                    if (fileName != null) {
+                        deleteImageByFileName(existingItem, fileName);
+                    } else {
                         deleteImage(existingItem, imgReq.getOrder());
                     }
-                    case "updateOrder" -> {
-                        updateImageOrder(existingItem, imgReq.getOrder());
+                } else if ("add".equalsIgnoreCase(status)) {
+                    MultipartFile file = imgReq.getImageFile();
+                    if (file != null && !file.isEmpty()) {
+                        addNewImage(existingItem, file, imgReq.getOrder());
                     }
-                    case "keep" -> {
+                } else if ("keep".equalsIgnoreCase(status) || "updateOrder".equalsIgnoreCase(status)) {
+                    if (imgReq.getFileName() != null && imgReq.getOrder() != null) {
+                        desiredOrderByFile.put(imgReq.getFileName(), imgReq.getOrder());
                     }
-                    default -> throw new IllegalArgumentException("Invalid image status: " + imgReq.getStatus());
+                } else {
+                    throw new IllegalArgumentException("Invalid image status: " + status);
                 }
+            }
+
+            // 3) Apply desired orders to existing attachments by filename
+            for (Attachment a : new ArrayList<>(existingItem.getAttachments())) {
+                Integer desired = desiredOrderByFile.get(a.getFilename());
+                if (desired != null) {
+                    a.setImageViewOrder(desired);
+                    attachmentRepository.save(a);
+                }
+            }
+
+            // 4) Normalize orders to 1..N without gaps
+            List<Attachment> normalized = existingItem.getAttachments().stream()
+                    .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
+                    .collect(Collectors.toList());
+            int orderCounter = 1;
+            for (Attachment a : normalized) {
+                if (a.getImageViewOrder() != orderCounter) {
+                    a.setImageViewOrder(orderCounter);
+                    attachmentRepository.save(a);
+                }
+                orderCounter++;
             }
         }
 
@@ -327,7 +347,6 @@ public class SaleItemService {
         return response;
     }
 
-//    สำหรับ delete ทั้ง item
     @Transactional
     public void deleteSaleItemById(Integer id) {
         SaleItem saleItem = saleItemRepository.findById(id)
@@ -344,28 +363,8 @@ public class SaleItemService {
             }
         }
 
-        // Delete from DB
         saleItemRepository.delete(saleItem);
     }
-
-//    @Transactional
-//    public void deleteSaleItemById(Integer id) {
-//        SaleItem item = saleItemRepository.findById(id)
-//                .orElseThrow(() -> new NotFoundException("No Item id = " + id));
-//
-//        for (Attachment att : item.getAttachments()) {
-//            try {
-//                Path path = Path.of("//apps//uploads", att.getFilePath());
-//                System.out.println(path);
-//                Files.deleteIfExists(path);  // delete file ถ้ามี
-//            } catch (IOException e) {
-//                log.warn("Cannot delete file: {}", att.getFilePath(), e);
-//            }
-//        }
-//
-//        attachmentRepository.deleteAll(item.getAttachments());
-//        saleItemRepository.delete(item);
-//    }
 
     public SaleItemPaginateDto getAllSaleItem(String sortDirection, String sortBy, Integer page, Integer pageSize, String[] filterBrands,
                                               Integer[] storageSize,Integer filterPriceLower, Integer filterPriceUpper, String searchKeyWord) {
@@ -384,15 +383,12 @@ public class SaleItemService {
         Integer maxPrice = null;
 
         if (filterPriceLower != null && filterPriceUpper == null) {
-            // ใช้ราคาตัวเดียว = priceLower
             minPrice = filterPriceLower;
             maxPrice = filterPriceLower;
         } else if (filterPriceLower == null && filterPriceUpper != null) {
-            // ใช้ราคาตัวเดียว = priceUpper
             minPrice = filterPriceUpper;
             maxPrice = filterPriceUpper;
         } else if (filterPriceLower != null && filterPriceUpper != null) {
-            // ช่วงราคา
             minPrice = filterPriceLower;
             maxPrice = filterPriceUpper;
         }

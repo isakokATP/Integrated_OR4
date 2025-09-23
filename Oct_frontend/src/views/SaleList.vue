@@ -19,7 +19,8 @@ const filterSettings = ref({
   brands: [],
   priceMin: null,
   priceMax: null,
-  storageSizes: []
+  storageSizes: [],
+  searchKeyWord: null
 });
 
 // เพิ่ม state สำหรับ sortType และโหลดค่าจาก sessionStorage
@@ -66,10 +67,33 @@ watch(
   { immediate: true }
 );
 
+// ดึง search query จาก URL และ apply search
+watch(
+  () => route.query.search,
+  (newSearch) => {
+    if (newSearch) {
+      filterSettings.value.searchKeyWord = newSearch;
+      // Clear search from URL after applying
+      router.replace({ query: { ...route.query, search: undefined } });
+      loadSaleItems();
+    }
+  },
+  { immediate: true }
+);
+
 // Handle filter updates from FilterGalleryByBrand
 function handleFilterUpdate(newFilters) {
   filterSettings.value = newFilters;
   // Reset to first page when filters change
+  currentPage.value = 1;
+  sessionStorage.setItem("currentPage", 1);
+  loadSaleItems();
+}
+
+// Handle search updates from Header
+function handleSearchUpdate(searchQuery) {
+  filterSettings.value.searchKeyWord = searchQuery;
+  // Reset to first page when search changes
   currentPage.value = 1;
   sessionStorage.setItem("currentPage", 1);
   loadSaleItems();
@@ -119,7 +143,8 @@ onMounted(async () => {
           brands: [],
           priceMin: null,
           priceMax: null,
-          storageSizes: []
+          storageSizes: [],
+          searchKeyWord: null
         };
         const mergedSettings = { ...defaultSettings, ...parsedSettings };
         filterSettings.value = mergedSettings;
@@ -143,12 +168,12 @@ async function loadSaleItems() {
     // Temporarily store the requested page before fetching
     const requestedPage = currentPage.value;
 
-    const response = await fetchSaleItemsV2(
-      requestedPage, // Use the potentially loaded page
-      itemsPerPage.value,
-      sortType.value,
-      filterSettings.value  // ส่ง filter ทั้งหมดไป Backend
-    );
+      const response = await fetchSaleItemsV2(
+    requestedPage, // Use the potentially loaded page
+    itemsPerPage.value,
+    sortType.value,
+    filterSettings.value  // ส่ง filter ทั้งหมดไป Backend รวมถึง searchKeyWord
+  );
     allItems.value = response.content;
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
@@ -237,23 +262,29 @@ function goToPrevPage() {
 </script>
 
 <template>
-  <Header />
+  <Header 
+    :searchValue="filterSettings.searchKeyWord" 
+    @search="handleSearchUpdate" 
+  />
   <div class="max-w-6xl mx-auto mt-2">
     <Notification :message="message" />
 
     <!-- ปุ่ม Add -->
-    <div class="mb-4">
+    <div class="mb-6">
       <button
-        class="itbms-sale-item-add bg-blue-900 hover:bg-blue-500 text-white px-6 py-3 rounded text-lg transition-colors duration-300"
+        class="itbms-sale-item-add bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-3"
         @click="goToAddSaleItem"
       >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+        </svg>
         Add Sale Item
       </button>
     </div>
 
     <!-- Filter + Sort Bar -->
-    <div class="flex items-center justify-between mb-6">
-      <!-- Filter -->
+    <div class="flex items-center gap-6 mb-8">
+      <!-- Filter Container -->
       <div class="flex-1">
         <FilterGalleryByBrand
           :modelValue="filterSettings"
@@ -261,32 +292,35 @@ function goToPrevPage() {
         />
       </div>
 
-      <!-- Size -->
-      <div class="flex items-center gap-2 ml-4">
-        Show
-        <select
-          class="itbms-page-size border border-gray-300 rounded-md px-2 py-1"
-          v-model="itemsPerPage"
-          @change="setItemsPerPage(itemsPerPage)"
-        >
-          <option
-            v-for="option in itemsPerPageOptions"
-            :key="option"
-            :value="option"
+      <!-- Right Side Controls -->
+      <div class="flex items-center gap-4">
+        <!-- Size -->
+        <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl">
+          <span class="text-sm font-medium text-gray-700">Show</span>
+          <select
+            class="itbms-page-size border-2 border-gray-200 rounded-lg px-3 py-2 bg-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+            v-model="itemsPerPage"
+            @change="setItemsPerPage(itemsPerPage)"
           >
-            {{ option }}
-          </option>
-        </select>
-      </div>
-      <!-- Sort Buttons -->
-      <div class="flex items-center gap-2 ml-4">
+            <option
+              v-for="option in itemsPerPageOptions"
+              :key="option"
+              :value="option"
+            >
+              {{ option }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Sort Buttons -->
+        <div class="flex items-center gap-2">
         <button
           :class="
             sortType === 'asc'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           "
-          class="itbms-brand-asc p-2 rounded transition-colors"
+          class="itbms-brand-asc p-3 rounded-xl transition-all duration-300 transform hover:scale-105"
           @click="setSort('asc')"
           title="Sort by Brand A-Z"
         >
@@ -308,10 +342,10 @@ function goToPrevPage() {
         <button
           :class="
             sortType === 'desc'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           "
-          class="itbms-brand-desc p-2 rounded transition-colors"
+          class="itbms-brand-desc p-3 rounded-xl transition-all duration-300 transform hover:scale-105"
           @click="setSort('desc')"
           title="Sort by Brand Z-A"
         >
@@ -333,10 +367,10 @@ function goToPrevPage() {
         <button
           :class="
             sortType === 'default'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           "
-          class="itbms-brand-none p-2 rounded transition-colors"
+          class="itbms-brand-none p-3 rounded-xl transition-all duration-300 transform hover:scale-105"
           @click="setSort('default')"
           title="No Sort"
         >
@@ -357,24 +391,25 @@ function goToPrevPage() {
         </button>
       </div>
     </div>
+  </div>
 
     <!-- แสดงรายการสินค้า -->
     <ItemsGallary :items="filteredItems" />
 
     <!-- Pagination -->
-    <div v-show="totalPages > 1" class="flex justify-center mt-4 px-3 py-1">
-      <nav class="bg-gray-200 flex items-center space-x-2">
+    <div v-show="totalPages > 1" class="flex justify-center mt-8">
+      <nav class="bg-white flex items-center space-x-1 p-2 rounded-2xl shadow-lg border border-gray-100">
         <button
           @click="goToPage(1)"
           :disabled="currentPage === 1"
-          class="itbms-page-first px-3 py-1 rounded text-gray-700 disabled:opacity-50"
+          class="itbms-page-first px-4 py-2 rounded-xl text-gray-700 disabled:opacity-50 hover:bg-gray-100 transition-all duration-200 font-medium"
         >
           First
         </button>
         <button
           @click="goToPrevPage"
           :disabled="currentPage === 1"
-          class="itbms-page-prev px-3 py-1 text-gray-700 disabled:opacity-50"
+          class="itbms-page-prev px-4 py-2 rounded-xl text-gray-700 disabled:opacity-50 hover:bg-gray-100 transition-all duration-200 font-medium"
         >
           Prev
         </button>
@@ -383,10 +418,10 @@ function goToPrevPage() {
             @click="goToPage(pageNumber)"
             :disabled="currentPage === pageNumber"
             :class="[
-              `px-3 py-1 rounded itbms-page-${pageNumber - 1}`,
+              `px-4 py-2 rounded-xl itbms-page-${pageNumber - 1} font-medium transition-all duration-200`,
               currentPage === pageNumber
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700',
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
             ]"
           >
             {{ pageNumber }}
@@ -395,14 +430,14 @@ function goToPrevPage() {
         <button
           @click="goToNextPage"
           :disabled="currentPage === totalPages"
-          class="itbms-page-next px-3 py-1 rounded text-gray-700 disabled:opacity-50"
+          class="itbms-page-next px-4 py-2 rounded-xl text-gray-700 disabled:opacity-50 hover:bg-gray-100 transition-all duration-200 font-medium"
         >
           Next
         </button>
         <button
           @click="goToPage(totalPages)"
           :disabled="currentPage === totalPages"
-          class="itbms-page-last px-3 py-1 rounded text-gray-700 disabled:opacity-50"
+          class="itbms-page-last px-4 py-2 rounded-xl text-gray-700 disabled:opacity-50 hover:bg-gray-100 transition-all duration-200 font-medium"
         >
           Last
         </button>

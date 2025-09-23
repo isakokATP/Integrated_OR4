@@ -15,4 +15,5 @@ public class SaleItemImageRequest {
     private String status;
     private SaleItemsUpdateDto saleItemsUpdateDto;
     private MultipartFile imageFile;
+    private String fileName;
 }
