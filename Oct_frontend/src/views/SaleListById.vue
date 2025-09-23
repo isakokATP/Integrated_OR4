@@ -21,7 +21,9 @@ const hasImages = computed(() => images.value.length > 0);
 
 function getImageUrl(fileNameOrFilename) {
   const name = fileNameOrFilename ?? "";
-  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(name)}`;
+  // Use Nginx to serve images directly from shared volume
+  // Frontend is served at /or4/ base path
+  return `/or4/uploads/${encodeURIComponent(name)}`;
 }
 
 const mainImageUrl = computed(() => {

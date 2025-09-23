@@ -4,7 +4,6 @@ import {
   fetchSaleItemById,
   updateSaleItem,
   deleteSaleItem,
-  uploadAttachment,
 } from "../services/saleItemService";
 import { useRoute, useRouter } from "vue-router";
 import { fetchBrands } from "../services/saleItemService";
@@ -24,6 +23,7 @@ const fileInput = ref(null);
 const selectedFiles = ref([]);
 const fileErrors = ref([]);
 const existingImages = ref([]);
+const filesToDelete = ref([]); // New: track files marked for deletion
 
 const form = ref({
   brandId: "",
@@ -156,11 +156,21 @@ const isFormValid = computed(() => {
   return !hasValidationErrors && hasChanges.value;
 });
 
-// Check if there are any changes including file changes
+// Check if there are any changes including file changes (add/delete/reorder)
 const hasFileChanges = computed(() => {
-  return selectedFiles.value.length > 0 || 
-         (originalData.value && originalData.value.saleItemImages && 
-          existingImages.value.length !== originalData.value.saleItemImages.length);
+  // additions or deletions queued
+  if (selectedFiles.value.length > 0 || filesToDelete.value.length > 0) return true;
+
+  // compare current existing images order/filenames with original
+  const original = originalData.value?.saleItemImages || [];
+  const originalNames = original.map(i => i.fileName || i.filename);
+  const currentNames = existingImages.value.map(i => i.fileName || i.filename);
+
+  if (originalNames.length !== currentNames.length) return true;
+  for (let idx = 0; idx < originalNames.length; idx++) {
+    if (originalNames[idx] !== currentNames[idx]) return true; // order or item changed
+  }
+  return false;
 });
 
 // Combined changes check
@@ -298,60 +308,129 @@ function handleFileSelect(event) {
   const files = Array.from(event.target.files);
   fileErrors.value = [];
   
-  // Validate file count
-  if (existingImages.value.length + selectedFiles.value.length + files.length > 4) {
-    fileErrors.value.push("Maximum 4 pictures are allowed.");
+  // Calculate how many files we can actually add
+  const currentTotal = existingImages.value.length + selectedFiles.value.length;
+  const maxAllowed = 4;
+  const availableSlots = maxAllowed - currentTotal;
+  
+  // If no slots available, don't add any files
+  if (availableSlots <= 0) {
+    fileErrors.value.push("Maximum 4 pictures are allowed. Please remove some images first.");
     return;
   }
   
-  // Validate each file and check for duplicates
-  files.forEach(file => {
+  // Limit files to available slots (take only the first N files)
+  const filesToAdd = files.slice(0, availableSlots);
+  const filesRejected = files.slice(availableSlots);
+  
+  // Validate each file to be added
+  const validFiles = [];
+  const invalidFiles = [];
+  
+  filesToAdd.forEach(file => {
+    let isValid = true;
+    let errorMessage = '';
+    
     // Check file type
     if (!file.type.startsWith('image/')) {
-      fileErrors.value.push(`${file.name} is not an image file.`);
-      return;
+      errorMessage = `${file.name} is not an image file.`;
+      isValid = false;
     }
     
     // Check file size (2MB = 2 * 1024 * 1024 bytes)
-    if (file.size > 2 * 1024 * 1024) {
-      fileErrors.value.push(`${file.name} is larger than 2MB.`);
-      return;
+    if (isValid && file.size > 2 * 1024 * 1024) {
+      errorMessage = `${file.name} is larger than 2MB.`;
+      isValid = false;
     }
     
     // Check for duplicate file names in existing images
-    // BE returns attachment DTO with fileName or filename? Fall back to both.
-    const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
-    if (existingImage) {
-      fileErrors.value.push(`${file.name} already exists in existing images.`);
-      return;
+    if (isValid) {
+      const existingImage = existingImages.value.find(img => (img.fileName || img.filename) === file.name);
+      if (existingImage) {
+        errorMessage = `${file.name} already exists in existing images.`;
+        isValid = false;
+      }
     }
     
     // Check for duplicate file names in new files
-    const existingFile = selectedFiles.value.find(f => f.name === file.name);
-    if (existingFile) {
-      fileErrors.value.push(`${file.name} already exists in new files. Please choose a different file.`);
-      return;
+    if (isValid) {
+      const existingFile = selectedFiles.value.find(f => f.name === file.name);
+      if (existingFile) {
+        errorMessage = `${file.name} already exists in new files. Please choose a different file.`;
+        isValid = false;
+      }
+    }
+    
+    // Check for duplicate file names in files marked for deletion
+    if (isValid) {
+      const fileToDelete = filesToDelete.value.find(f => f.name === file.name);
+      if (fileToDelete) {
+        errorMessage = `${file.name} is marked for deletion. Please restore it first or choose a different file.`;
+        isValid = false;
+      }
+    }
+    
+    // Categorize file
+    if (isValid) {
+      validFiles.push(file);
+    } else {
+      invalidFiles.push(file);
+      fileErrors.value.push(errorMessage);
     }
   });
   
-  // If there are errors, don't add files
+  // If there are validation errors, don't add files
   if (fileErrors.value.length > 0) {
     return;
   }
   
-  // Add valid files
-  selectedFiles.value.push(...files);
+  // Add valid files (limited to available slots)
+  selectedFiles.value.push(...validFiles);
+  
+  // Show message if some files were rejected due to limit
+  if (filesRejected.length > 0) {
+    const rejectedNames = filesRejected.map(f => f.name).join(', ');
+    fileErrors.value.push(`Only ${availableSlots} files added. ${filesRejected.length} files rejected due to limit: ${rejectedNames}`);
+  }
   
   // Clear the input
   event.target.value = '';
 }
 
 function removeFile(index) {
-  selectedFiles.value.splice(index, 1);
+  // Mark the file for deletion instead of removing immediately
+  const fileToDelete = selectedFiles.value[index];
+  filesToDelete.value.push({
+    ...fileToDelete,
+    isExisting: false, // Mark as new file
+    originalIndex: index
+  });
+  // Don't remove from selectedFiles until save - just mark as deleted
   fileErrors.value = [];
 }
 
+// New function: same logic as removeExistingImage but for new files
+function removeNewFile(index) {
+  // Mark the file for deletion instead of removing immediately
+  const fileToDelete = selectedFiles.value[index];
+  filesToDelete.value.push({
+    ...fileToDelete,
+    isExisting: false, // Mark as new file
+    originalIndex: index
+  });
+  // Remove from selectedFiles list to hide it from UI
+  selectedFiles.value.splice(index, 1);
+}
+
 function removeExistingImage(index) {
+  // Mark the existing image for deletion instead of removing immediately
+  const image = existingImages.value[index];
+  filesToDelete.value.push({
+    ...image,
+    isExisting: true, // Mark as existing image for backend deletion
+    originalIndex: index
+  });
+  // Remove from existingImages list to hide it from UI
   existingImages.value.splice(index, 1);
 }
 
@@ -360,9 +439,9 @@ function getImagePreview(file) {
 }
 
 function getImageUrl(fileName) {
-  // Backend exposes GET /attachments/{id}; current BE expects filename here.
-  // Adjusted to use filename directly per BE.
-  return `${import.meta.env.VITE_API_URL_PROD}/api/attachments/${encodeURIComponent(fileName)}`;
+  // Use Nginx to serve images directly from shared volume
+  // Frontend is served at /or4/ base path
+  return `/or4/uploads/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {
@@ -396,6 +475,38 @@ function moveFileDown(index) {
     [files[index], files[index + 1]] = [files[index + 1], files[index]];
     selectedFiles.value = files;
   }
+}
+
+function moveExistingImageUp(index) {
+  if (index > 0) {
+    const images = [...existingImages.value];
+    [images[index], images[index - 1]] = [images[index - 1], images[index]];
+    existingImages.value = images;
+  }
+}
+
+function moveExistingImageDown(index) {
+  if (index < existingImages.value.length - 1) {
+    const images = [...existingImages.value];
+    [images[index], images[index + 1]] = [images[index + 1], images[index]];
+    existingImages.value = images;
+  }
+}
+
+function restoreFile(index) {
+  // Restore file from deletion list
+  const fileToRestore = filesToDelete.value[index];
+  
+  if (fileToRestore.isExisting) {
+    // Restore existing image back to existingImages
+    existingImages.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
+  } else {
+    // Restore new file back to selectedFiles
+    selectedFiles.value.splice(fileToRestore.originalIndex, 0, fileToRestore);
+  }
+  
+  // Remove from deletion list
+  filesToDelete.value.splice(index, 1);
 }
 
 const handleBlur = (field) => {
@@ -443,12 +554,79 @@ const handleSave = async () => {
           : 1, // Default quantity to 1 if not provided/null/empty string
     };
 
-    await updateSaleItem(id, dataToSend);
-    
-    // Upload new files if any
-    if (selectedFiles.value.length > 0) {
-      await uploadFiles(id);
+    // Build imagesInfos payload according to BE contract (keep/delete/add/updateOrder)
+    const originalImages = (originalData.value?.saleItemImages || [])
+      .slice()
+      .sort((a, b) => (a.imageViewOrder || 0) - (b.imageViewOrder || 0));
+
+    // Index original by fileName -> originalOrder
+    const originalOrderByName = new Map(
+      originalImages.map(img => [String(img.fileName || img.filename), img.imageViewOrder])
+    );
+
+    // Files marked for deletion (existing only) by fileName
+    const deletedNames = new Set(
+      filesToDelete.value
+        .filter(f => f.isExisting)
+        .map(f => String(f.fileName || f.filename))
+    );
+
+    // Current kept existing images in NEW order (after user reordering)
+    const keptExisting = existingImages.value.slice();
+
+    const imagesinfos = [];
+
+    // 1) Handle existing images: decide keep vs updateOrder vs delete
+    //   - For images still present (not in deletedNames), compare new order vs original
+    keptExisting.forEach((img, idx) => {
+      const name = String(img.fileName || img.filename);
+      const newOrder = idx + 1; // 1-based in current UI
+      const originalOrder = originalOrderByName.get(name);
+      if (originalOrder == null) {
+        // Safety: treat as keep at this order if original not found
+        imagesinfos.push({ order: newOrder, status: "keep", fileName: name });
+      } else if (newOrder !== originalOrder) {
+        imagesinfos.push({ order: newOrder, status: "updateOrder", fileName: name });
+      } else {
+        imagesinfos.push({ order: originalOrder, status: "keep", fileName: name });
+      }
+    });
+
+    //   - For deleted images: send delete with their original order
+    originalImages.forEach(img => {
+      const name = String(img.fileName || img.filename);
+      if (deletedNames.has(name)) {
+        imagesinfos.push({ order: img.imageViewOrder, status: "delete", fileName: name });
+      }
+    });
+
+    // 2) Handle new files to be added (exclude ones marked for deletion in temp list)
+    const newFiles = selectedFiles.value.filter(
+      f => !filesToDelete.value.some(d => !d.isExisting && d.name === f.name)
+    );
+    const finalBaseCount = keptExisting.length; // orders already taken by kept/reordered
+    newFiles.forEach((file, index) => {
+      const order = finalBaseCount + index + 1; // append after kepts
+      imagesinfos.push({ order, status: "add", imageFile: file });
+    });
+
+    // Validate: non-delete orders must cover 1..finalCount with no gaps
+    const finalCount = finalBaseCount + newFiles.length;
+    const nonDeleteOrders = new Set(imagesinfos.filter(i => i.status !== "delete").map(i => i.order));
+    let ok = true;
+    for (let o = 1; o <= finalCount; o++) {
+      if (!nonDeleteOrders.has(o)) { ok = false; break; }
     }
+    if (!ok) {
+      errorMsg.value = "Images order must be continuous 1..N for non-deleted items.";
+      return;
+    }
+
+    // Send data and imagesInfos together to Backend in one request
+    await updateSaleItem(id, dataToSend, imagesinfos);
+    
+    // Clear deletion list (files were already removed from arrays when × was clicked)
+    filesToDelete.value = [];
     
     router.push({
       name: "sale-items-page-byId",
@@ -461,24 +639,7 @@ const handleSave = async () => {
   }
 };
 
-async function uploadFiles(saleItemId) {
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const file = selectedFiles.value[i];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('saleItemId', saleItemId);
-    
-    try {
-      await uploadAttachment(formData);
-      // รอสักครู่ระหว่างการอัปโหลดเพื่อไม่ให้ Backend ทำงานหนักเกินไป
-      if (i < selectedFiles.value.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.error(`Failed to upload file ${file.name}:`, error);
-    }
-  }
-}
+
 
 const handleCancel = () => {
   if (hasAnyChanges.value) {
@@ -486,6 +647,15 @@ const handleCancel = () => {
       router.push({ name: "sale-items-page" });
   } else {
     router.push({ name: "sale-items-page" });
+  }
+  
+  // Clear all temporary changes and restore original state
+  selectedFiles.value = [];
+  filesToDelete.value = [];
+  
+  // Reload original data to restore existing images
+  if (originalData.value && originalData.value.saleItemImages) {
+    existingImages.value = [...originalData.value.saleItemImages];
   }
 };
 
@@ -561,7 +731,12 @@ const handleDelete = async () => {
           <div
             v-for="(image, index) in existingImages"
             :key="`existing-${index}`"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
+            :class="[
+              'w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden',
+              filesToDelete.some(f => f.isExisting && (f.fileName || f.filename) === (image.fileName || image.filename)) 
+                ? 'opacity-50 border-red-300' 
+                : ''
+            ]"
           >
             <img
               :src="getImageUrl(image.fileName || image.filename)"
@@ -569,18 +744,31 @@ const handleDelete = async () => {
               class="w-full h-full object-cover"
             />
             <button
+            type="button"
               @click="removeExistingImage(index)"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
             >
               ×
             </button>
+            <!-- Mark for deletion indicator -->
+            <div
+              v-if="filesToDelete.some(f => f.isExisting && (f.fileName || f.filename) === (image.fileName || image.filename))"
+              class="absolute inset-0 bg-red-100 bg-opacity-50 flex items-center justify-center"
+            >
+              <span class="text-red-600 text-xs font-bold">DEL</span>
+            </div>
           </div>
           
           <!-- New selected files -->
           <div
             v-for="(file, index) in selectedFiles.slice(0, 4 - existingImages.length)"
             :key="`new-${index}`"
-            class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
+            :class="[
+              'w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden',
+              filesToDelete.some(f => !f.isExisting && f.name === file.name) 
+                ? 'opacity-50 border-red-300' 
+                : ''
+            ]"
           >
             <img
               :src="getImagePreview(file)"
@@ -588,11 +776,19 @@ const handleDelete = async () => {
               class="w-full h-full object-cover"
             />
             <button
-              @click="removeFile(index)"
+            type="button"
+              @click="removeNewFile(index)"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
             >
               ×
             </button>
+            <!-- Mark for deletion indicator -->
+            <div
+              v-if="filesToDelete.some(f => !f.isExisting && f.name === file.name)"
+              class="absolute inset-0 bg-red-100 bg-opacity-50 flex items-center justify-center"
+            >
+              <span class="text-red-600 text-xs font-bold">DEL</span>
+            </div>
           </div>
           
           <!-- Empty slots -->
@@ -629,26 +825,26 @@ const handleDelete = async () => {
           class="hidden"
         />
 
-        <!-- File list with reorder controls -->
-        <div v-if="selectedFiles.length > 0" class="mb-4">
-          <h4 class="text-sm font-medium mb-2">New Files:</h4>
+        <!-- Existing images list with reorder controls -->
+        <div v-if="existingImages.length > 0" class="mb-4">
+          <h4 class="text-sm font-medium mb-2">Existing Images:</h4>
           <div class="space-y-2">
             <div
-              v-for="(file, index) in selectedFiles"
-              :key="`new-file-${index}-${file.name}`"
+              v-for="(image, index) in existingImages"
+              :key="`existing-file-${index}-${image.fileName || image.filename}`"
               class="flex items-center justify-between bg-gray-50 p-2 rounded"
             >
               <div class="flex items-center space-x-2">
-                <span class="text-sm font-medium">{{ existingImages.length + index + 1 }}.</span>
-                <span class="text-sm">{{ file.name }}</span>
-                <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+                <span class="text-sm font-medium">{{ index + 1 }}.</span>
+                <span class="text-sm">{{ image.fileName || image.filename }}</span>
+                <span class="text-xs text-gray-500">(Existing)</span>
               </div>
               <div class="flex items-center space-x-1">
                 <!-- Move up button -->
                 <button
                   v-if="index > 0"
                   type="button"
-                  @click="moveFileUp(index)"
+                  @click="moveExistingImageUp(index)"
                   class="text-blue-500 hover:text-blue-700 p-1"
                   title="Move up"
                 >
@@ -656,9 +852,9 @@ const handleDelete = async () => {
                 </button>
                 <!-- Move down button -->
                 <button
-                  v-if="index < selectedFiles.length - 1"
+                  v-if="index < existingImages.length - 1"
                   type="button"
-                  @click="moveFileDown(index)"
+                  @click="moveExistingImageDown(index)"
                   class="text-blue-500 hover:text-blue-700 p-1"
                   title="Move down"
                 >
@@ -667,23 +863,102 @@ const handleDelete = async () => {
                 <!-- Remove button -->
                 <button
                   type="button"
-                  @click="removeFile(index)"
+                  @click="removeExistingImage(index)"
                   class="text-red-500 hover:text-red-700 p-1"
-                  title="Remove file"
+                  title="Remove image"
                 >
                   ×
                 </button>
               </div>
             </div>
           </div>
-          
-          <!-- Warning for too many files -->
-          <div v-if="existingImages.length + selectedFiles.length >= 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
-            <p class="text-sm text-yellow-800">
-              ⚠️ Maximum 4 pictures reached. First image will be used as thumbnail.
-            </p>
-          </div>
         </div>
+
+                 <!-- File list with reorder controls -->
+         <div v-if="selectedFiles.length > 0" class="mb-4">
+           <h4 class="text-sm font-medium mb-2">New Files:</h4>
+           <div class="space-y-2">
+             <div
+               v-for="(file, index) in selectedFiles"
+               :key="`new-file-${index}-${file.name}`"
+               class="flex items-center justify-between bg-gray-50 p-2 rounded"
+             >
+               <div class="flex items-center space-x-2">
+                 <span class="text-sm font-medium">{{ existingImages.length + index + 1 }}.</span>
+                 <span class="text-sm">{{ file.name }}</span>
+                 <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <!-- Move up button -->
+                 <button
+                   v-if="index > 0"
+                   type="button"
+                   @click="moveFileUp(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move up"
+                 >
+                   ↑
+                 </button>
+                 <!-- Move down button -->
+                 <button
+                   v-if="index < selectedFiles.length - 1"
+                   type="button"
+                   @click="moveFileDown(index)"
+                   class="text-blue-500 hover:text-blue-700 p-1"
+                   title="Move down"
+                 >
+                   ↓
+                 </button>
+                 <!-- Remove button -->
+                 <button
+                   type="button"
+                   @click="removeNewFile(index)"
+                   class="text-red-500 hover:text-red-700 p-1"
+                   title="Remove file"
+                 >
+                   ×
+                 </button>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Warning for too many files -->
+           <div v-if="existingImages.length + selectedFiles.length > 4" class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded">
+             <p class="text-sm text-yellow-800">
+               Maximum 4 pictures are allowed.
+             </p>
+           </div>
+         </div>
+
+         <!-- Files marked for deletion -->
+         <div v-if="filesToDelete.length > 0" class="mb-4">
+           <h4 class="text-sm font-medium mb-2 text-red-600">Files to be removed:</h4>
+           <div class="space-y-2">
+             <div
+               v-for="(file, index) in filesToDelete"
+               :key="`delete-file-${index}-${file.name}`"
+               class="flex items-center justify-between bg-red-50 p-2 rounded border border-red-200"
+             >
+               <div class="flex items-center space-x-2">
+                 <span class="text-sm font-medium text-red-700">{{ file.fileName || file.filename || file.name }}</span>
+                 <span class="text-xs text-red-500">({{ formatFileSize(file.fileSize || file.size) }})</span>
+                 <span class="text-xs text-red-500">{{ file.isExisting ? '(Existing)' : '(New)' }}</span>
+                 <span class="text-xs text-red-500">(Will be removed)</span>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <!-- Restore button -->
+                 <button
+                   type="button"
+                   @click="restoreFile(index)"
+                   class="text-green-600 hover:text-green-800 p-1"
+                   title="Restore file"
+                 >
+                   ↺
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
 
         <!-- Error messages -->
         <div v-if="fileErrors.length > 0" class="mb-4">

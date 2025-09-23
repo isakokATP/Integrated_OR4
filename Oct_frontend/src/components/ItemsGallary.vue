@@ -17,9 +17,15 @@ function goToSaleItem(id) {
     <div>
       <div
         v-if="Array.isArray(items) && items.length === 0"
-        class="flex justify-center w-full"
+        class="flex justify-center w-full py-12"
       >
-        no sale item
+        <div class="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-400 mx-auto mb-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+          <p class="text-xl text-gray-500 font-medium">No sale items found</p>
+          <p class="text-gray-400 mt-2">Try adjusting your filters or search terms</p>
+        </div>
       </div>
 
       <div
@@ -30,27 +36,44 @@ function goToSaleItem(id) {
           v-for="item in items"
           :key="item.id"
           @click="goToSaleItem(item.id)"
-          class="itbms-row bg-white rounded-lg overflow-hidden cursor-pointer transition duration-300 custom-shadow"
+          class="itbms-row bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-2xl border border-gray-100 group"
         >
-          <img
-            src="../assets/iphone.png"
-            alt="Product"
-            class="w-full h-56 object-cover"
-          />
-          <div class="p-4 text-center" style="background-color: #e3f2fd">
-            <strong class="itbms-brand lock text-lg">{{
+          <div class="relative overflow-hidden">
+            <img
+              src="../assets/iphone.png"
+              alt="Product"
+              class="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <!-- Hover overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+          
+          <div class="p-6 text-center bg-gradient-to-br from-blue-50 to-indigo-50">
+            <strong class="itbms-brand text-lg font-bold text-gray-800 mb-2 block">{{
               item.brandName
             }}</strong>
-            <p class="itbms-model text-gray-600">{{ item.model }}</p>
-            <span class="itbms-ramGb text-sm text-gray-500">
-              {{ item.ramGb ?? "-" }}
-            </span>
-            <span class="itbms-storageGb text-sm text-gray-500">
-              / {{ item.storageGb ?? "-" }}
-            </span>
-            <span class="itbms-storageGb-unit text-sm text-gray-500"> GB </span>
-            <div class="itbms-price text-blue-800 font-bold mt-2">
-              Baht {{ item.price.toLocaleString() }}
+            <p class="itbms-model text-gray-600 mb-3 font-medium">{{ item.model }}</p>
+            
+            <div class="flex items-center justify-center gap-2 mb-4 text-sm text-gray-500">
+              <span class="bg-white px-2 py-1 rounded-lg shadow-sm">
+                {{ item.ramGb ?? "-" }}
+              </span>
+              <span class="text-gray-400">/</span>
+              <span class="bg-white px-2 py-1 rounded-lg shadow-sm">
+                {{ item.storageGb ?? "-" }}
+              </span>
+              <span class="text-gray-400">GB</span>
+            </div>
+            
+            <div class="itbms-price text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              ฿{{ item.price.toLocaleString() }}
+            </div>
+            
+            <!-- View Details Button -->
+            <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span class="inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md">
+                View Details →
+              </span>
             </div>
           </div>
         </div>
@@ -60,11 +83,35 @@ function goToSaleItem(id) {
 </template>
 
 <style scoped>
-.custom-shadow {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.11);
-  transition: box-shadow 0.3s ease;
+/* Enhanced card animations */
+.itbms-row {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.custom-shadow:hover {
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+
+.itbms-row:hover {
+  transform: translateY(-8px);
+}
+
+/* Smooth image zoom effect */
+.itbms-row img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced price styling */
+.itbms-price {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 </style>

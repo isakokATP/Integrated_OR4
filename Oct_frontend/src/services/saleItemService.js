@@ -1,6 +1,6 @@
 import { handleApiError } from "../api/client";
 
-const URL = import.meta.env.VITE_API_URL_PROD;
+const URL = "http://ip24or4.sit.kmutt.ac.th";
 
 // API URL loaded from environment variables
 
@@ -12,17 +12,18 @@ async function fetchSaleItemsV2(
     brands: [],
     priceMin: null,
     priceMax: null,
-    storageSizes: []
+    storageSizes: [],
+    searchKeyWord: null
   }
 ) {
   try {
     const params = new URLSearchParams();
     
-    // Basic pagination
+    // Basic pagination - Backend expects 0-based indexing
     params.append('page', page - 1);
     params.append('size', size);
     
-    // Sort parameters
+    // Sort parameters - Fixed to match Backend
     if (sortType === "asc") {
       params.append('sortField', 'brand.name');
       params.append('sortDirection', 'asc');
@@ -35,14 +36,14 @@ async function fetchSaleItemsV2(
       params.append('sortDirection', 'asc');
     }
     
-    // Brand filter
+    // Brand filter - Fixed parameter name to match Backend
     if (filters.brands && filters.brands.length > 0) {
       filters.brands.forEach(brand => {
         params.append('filterBrands', brand);
       });
     }
     
-    // Price filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    // Price filter - Fixed parameter names to match Backend
     if (filters.priceMin !== null && filters.priceMin !== undefined) {
       params.append('filterPriceLower', filters.priceMin);
     }
@@ -50,16 +51,21 @@ async function fetchSaleItemsV2(
       params.append('filterPriceUpper', filters.priceMax);
     }
     
-    // Storage filter - ใช้ชื่อ parameter ที่ Backend รองรับ
+    // Storage filter - Fixed parameter name to match Backend
     if (filters.storageSizes && filters.storageSizes.length > 0) {
       filters.storageSizes.forEach(storage => {
         if (storage === 'not_specified') {
-          // Handle not specified case - send null to backend
-          params.append('storageSize', 'null');
+          // Handle not specified case - send -1 to backend (matches JPQL logic)
+          params.append('filterStorages', -1);
         } else {
-          params.append('storageSize', storage);
+          params.append('filterStorages', storage);
         }
       });
+    }
+
+    // Search keyword - Added to match Backend
+    if (filters.searchKeyWord && filters.searchKeyWord.trim() !== '') {
+      params.append('searchKeyWord', filters.searchKeyWord.trim());
     }
     
     const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
@@ -78,7 +84,7 @@ async function fetchSaleItemsV2(
 
 async function fetchSaleItemById(id) {
   try {
-    // Prefer v2 (has saleItemImages); if not available in BE, v1 still works for core fields
+    // Use V2 endpoint for detailed view with images
     const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "GET",
       headers: {
@@ -96,18 +102,35 @@ async function fetchSaleItemById(id) {
   }
 }
 
-async function createSaleItem(saleItemData) {
+async function createSaleItem(saleItemData, images = null) {
   try {
     console.log("API URL:", URL);
-    console.log("Full URL:", `${URL}/itb-mshop/v1/sale-items`);
+    console.log("Full URL:", `${URL}/itb-mshop/v2/sale-items`);
 
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items`, {
+    // Backend uses @ModelAttribute which requires FormData
+    // Always use FormData regardless of whether images are provided
+    const formData = new FormData();
+    
+    // Add sale item data
+    Object.keys(saleItemData).forEach(key => {
+      // Handle nested objects like brand
+      if (key === 'brand' && saleItemData[key]) {
+        formData.append('brand.id', saleItemData[key].id);
+      } else {
+        formData.append(key, saleItemData[key]);
+      }
+    });
+    
+    // Add images if provided
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        formData.append('SaleItemImages', image);
+      });
+    }
+
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(saleItemData),
+      body: formData, // Don't set Content-Type for FormData
     });
 
     if (!response.ok) {
@@ -129,7 +152,7 @@ async function createSaleItem(saleItemData) {
 
 export const deleteSaleItem = async (id) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -149,27 +172,55 @@ export const deleteSaleItem = async (id) => {
   }
 };
 
-export const updateSaleItem = async (id, saleItemData) => {
+export const updateSaleItem = async (id, saleItemData, imagesInfos = null) => {
   try {
-    const response = await fetch(`${URL}/itb-mshop/v1/sale-items/${id}`, {
+    // Backend uses @ModelAttribute which requires FormData
+    // Always use FormData regardless of whether images are provided
+    const formData = new FormData();
+    
+    // Add nested sale item data under 'saleItem.*' to match @ModelAttribute SaleItemImageInfo
+    Object.keys(saleItemData).forEach(key => {
+      if (key === 'brand' && saleItemData[key]) {
+        formData.append('saleItem.brand.id', saleItemData[key].id);
+      } else {
+        formData.append(`saleItem.${key}`, saleItemData[key]);
+      }
+    });
+
+    // Add imagesInfos if provided according to BE contract (camelCase)
+    if (imagesInfos && imagesInfos.length > 0) {
+      imagesInfos
+        .sort((a, b) => a.order - b.order)
+        .forEach((info, idx) => {
+          // Send as imagesInfos[idx].order/status/fileName and attach file as imagesInfos[idx].imageFile when add
+          formData.append(`imagesInfos[${idx}].order`, String(info.order));
+          formData.append(`imagesInfos[${idx}].status`, info.status);
+          if (info.status === 'keep' || info.status === 'delete' || info.status === 'updateOrder') {
+            if (info.fileName) {
+              formData.append(`imagesInfos[${idx}].fileName`, info.fileName);
+            }
+          }
+          if (info.status === 'add' && info.imageFile) {
+            formData.append(`imagesInfos[${idx}].imageFile`, info.imageFile, info.imageFile.name);
+          }
+        });
+    }
+
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(saleItemData),
+      body: formData, // Don't set Content-Type for FormData
     });
 
     if (!response.ok) {
       throw new Error("Failed to update item");
     }
-
     return await response.json();
   } catch (error) {
     throw error;
   }
 };
 
-// Brand related functions
+// Brand related functions - Updated to use correct endpoints
 async function fetchBrands() {
   try {
     const response = await fetch(`${URL}/itb-mshop/v1/brands`, {
@@ -302,22 +353,27 @@ async function deleteBrand(id) {
   }
 }
 
-async function uploadAttachment(formData) {
+// Function to delete attachment
+const deleteAttachment = async (saleItemId, imageViewOrder) => {
   try {
-    const response = await fetch(`${URL}/api/attachments/upload`, {
-      method: "POST",
-      body: formData, // Don't set Content-Type header for FormData
+    const response = await fetch(`${URL}/itb-mshop/v2/sale-items/${saleItemId}/attachments/by-order?imageViewOrder=${imageViewOrder}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error("Failed to delete attachment");
     }
-    return await response.json();
+    return true;
   } catch (error) {
-    console.error("Upload attachment error:", error);
+    console.error("Delete attachment error:", error);
     throw handleApiError(error);
   }
-}
+};
+
+
 
 export {
   fetchSaleItemsV2,
@@ -329,5 +385,5 @@ export {
   createBrand,
   updateBrand,
   deleteBrand,
-  uploadAttachment,
+  deleteAttachment,
 };
