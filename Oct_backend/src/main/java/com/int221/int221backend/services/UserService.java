@@ -6,6 +6,7 @@ import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.entities.VerificationToken;
 import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
+import com.int221.int221backend.security.JwtTokenProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,8 @@ public class UserService {
     @Value("${file.upload-dir.users}")
     private String uploadDir;
 
-
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     // Register User
     @Transactional
@@ -56,7 +58,6 @@ public class UserService {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new RuntimeException("Email already exists: " + requestDto.getEmail());
         }
-
         // 2. เช็ค ID card number ซ้ำ
         if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
             throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
@@ -67,43 +68,35 @@ public class UserService {
             String frontFilePath = saveFile(idCardImageFront);
             String backFilePath = saveFile(idCardImageBack);
 
-            // 4. สร้าง entity user
+            // 4. สร้าง entity user - กำหนดค่าให้กับทุกคอลัมน์ที่ 'nullable = false'
             Users user = Users.builder()
                     .nickName(requestDto.getNickName())
                     .email(requestDto.getEmail())
                     .fullName(requestDto.getFullName())
-                    .password(passwordEncoder.encode(requestDto.getPassword())) // เข้ารหัส
+                    .password(passwordEncoder.encode(requestDto.getPassword()))
                     .phoneNumber(requestDto.getPhoneNumber())
                     .bankAccount(requestDto.getBankAccount())
                     .idCardNumber(requestDto.getIdCardNumber())
                     .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
                     .idCardImageFront(frontFilePath)
                     .idCardImageBack(backFilePath)
-                    .status(Users.Status.INACTIVE) // default = INACTIVE
+                    .status(Users.Status.INACTIVE)
                     .build();
 
-            // 5. บันทึก user ลง DB
             Users savedUser = userRepository.saveAndFlush(user);
             entityManager.refresh(savedUser);
 
-            // 6. สร้าง Verification Token
-            String token = UUID.randomUUID().toString();
-            VerificationToken verificationToken = VerificationToken.builder()
-                    .token(token)
-                    .expiryDate(LocalDateTime.now().plusHours(24))
-                    .user(savedUser)
-                    .build();
-            tokenRepository.save(verificationToken);
+            String jwtToken = jwtTokenProvider.generateToken(
+                    savedUser.getId().longValue(),
+                    savedUser.getEmail()
+            );
 
-            // 7. ส่ง Email Verification (จับ exception ภายใน)
             try {
-                emailService.sendVerificationEmail(savedUser, token);
+                emailService.sendVerificationEmail(savedUser, jwtToken);
             } catch (Exception e) {
-                // log หรือ throw runtime ถ้าต้องการ
                 throw new RuntimeException("Failed to send verification email: " + e.getMessage(), e);
             }
 
-            // 8. map → DTO และ return
             return UserResponseDto.fromEntity(savedUser);
 
         } catch (IOException e) {
