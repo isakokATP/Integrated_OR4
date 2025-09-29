@@ -26,8 +26,8 @@ const password = ref("");
 const loading = ref(false);
 const message = ref("");
 
-// ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE
-const LOGIN_URL = '/itb-mshop/v2/users/authentications'
+// ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE (ต้องมี /or4 เพราะ FE อยู่ใต้ base path)
+const LOGIN_URL = '/or4/itb-mshop/v2/users/authentications'
 
 async function onSubmit(e){
   e.preventDefault();
