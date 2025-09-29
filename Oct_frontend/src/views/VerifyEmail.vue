@@ -43,8 +43,8 @@ const loading = ref(false)
 const message = ref('')
 const messageType = ref('')
 
-// API ผ่าน nginx proxy (ลดปัญหา CORS)
-const VERIFY_URL = '/itb-mshop/v2/auth/verify-email'
+// ชี้ตรงไปยัง BE ที่ ip24or4 เพื่อหลีกเลี่ยง 404 บน intproj24
+const VERIFY_URL = 'http://ip24or4.sit.kmutt.ac.th/itb-mshop/v2/auth/verify-email'
 
 async function verifyToken(token) {
   try {
