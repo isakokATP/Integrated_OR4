@@ -68,6 +68,11 @@ const routes = [
     component: Login,
   },
   {
+    path: "/signin",
+    name: "signin-page",
+    component: Login,
+  },
+  {
     path: "/verify-email",
     name: "verify-email-page",
     component: VerifyEmail,
