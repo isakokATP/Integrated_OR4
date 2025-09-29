@@ -39,13 +39,11 @@ export async function registerUser(form) {
 
 export async function verifyEmail(token) {
   try {
-    const res = await fetch(`${URL}/v2/auth/verify-email`, {
+    const res = await fetch(`${URL}/v2/auth/verify-email?token=${encodeURIComponent(token)}`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
+      headers: {
         'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ token }),
+      }
     });
 
     const text = await res.text();

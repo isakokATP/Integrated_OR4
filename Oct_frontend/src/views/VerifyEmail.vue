@@ -48,9 +48,9 @@ const VERIFY_URL = '/itb-mshop/v2/auth/verify-email'
 
 async function verifyToken(token) {
   try {
-    // ใช้ GET แทน POST เพื่อแค่ตรวจสอบ token
-    const res = await fetch(`${VERIFY_URL}?token=${token}`, {
-      method: 'GET',
+    // ใช้ POST ตาม BE ปัจจุบัน โดยส่ง token เป็น query param
+    const res = await fetch(`${VERIFY_URL}?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
       headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
 

@@ -72,6 +72,11 @@ const routes = [
     name: "verify-email-page",
     component: VerifyEmail,
   },
+  {
+    path: "/v2/auth/verify-email",
+    name: "verify-email-legacy",
+    component: VerifyEmail,
+  },
 ];
 
 const router = createRouter({
