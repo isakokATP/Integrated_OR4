@@ -1,7 +1,7 @@
 import { handleApiError } from "../api/client";
 
-// ใช้ path proxy ของ nginx แทน port 8080
-const URL = "ip24or4.sit.kmutt.ac.th/itb-mshop";
+// ใช้ path proxy ของ nginx แทน port 8080 (relative path เพื่อหลีกเลี่ยงปัญหา protocol/CORS)
+const URL = "/itb-mshop";
 
 export async function registerUser(form) {
   try {

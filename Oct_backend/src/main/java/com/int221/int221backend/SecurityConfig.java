@@ -54,6 +54,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // Public POST
                     .requestMatchers(HttpMethod.POST,
                             "/itb-mshop/v2/auth/verify-email",
