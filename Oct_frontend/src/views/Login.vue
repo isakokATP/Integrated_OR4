@@ -26,8 +26,8 @@ const password = ref("");
 const loading = ref(false);
 const message = ref("");
 
-// ใช้ nginx proxy (ไม่เรียก port 8080 ตรง ๆ)
-const LOGIN_URL = '/itb-mshop/v2/users'
+// ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE
+const LOGIN_URL = '/itb-mshop/v2/users/authentications'
 
 async function onSubmit(e){
   e.preventDefault();
@@ -35,31 +35,22 @@ async function onSubmit(e){
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
 
-    const credentials = btoa(`${email.value}:${password.value}`);
-
-    const response = await fetch(`${LOGIN_URL}?email=${email.value}`, {
-      method: 'GET',
+    const response = await fetch(`${LOGIN_URL}`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
-      }
+      },
+      body: JSON.stringify({ email: email.value, password: password.value })
     });
 
     if (response.ok) {
-      const userData = await response.json();
-
-      if (userData.status === 'ACTIVE') {
-        sessionStorage.setItem('userEmail', email.value);
-        sessionStorage.setItem('userPassword', password.value);
-        message.value = "Logged in successfully!";
-        setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
-      } else {
-        message.value = "Account is not active. Please verify your email first.";
-        setTimeout(() => router.push({ name: "verify-email-page" }), 2000);
-      }
-
-    } else {
+      message.value = "Logged in successfully!";
+      setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
+    } else if (response.status === 401) {
       message.value = "Invalid email or password";
+    } else {
+      message.value = `Login failed (${response.status})`;
     }
 
   } catch (err) {
