@@ -33,6 +33,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Nickname *</label>
           <input 
+            v-trim
             v-model="form.nickName" 
             type="text" 
             class="w-full border p-2 rounded"
@@ -43,6 +44,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Email *</label>
           <input 
+            v-trim
             v-model="form.email" 
             type="email" 
             class="w-full border p-2 rounded"
@@ -55,6 +57,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Password *</label>
           <input 
+            v-trim
             v-model="form.password" 
             type="password" 
             :class="[
@@ -80,6 +83,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Full Name *</label>
           <input 
+            v-trim
             v-model="form.fullName" 
             type="text" 
             :class="[
@@ -108,6 +112,7 @@
           <div>
             <label class="block text-sm font-medium mb-1">Mobile Number *</label>
             <input 
+              v-trim
               v-model="form.phoneNumber" 
               type="tel" 
               class="w-full border p-2 rounded"
@@ -118,6 +123,7 @@
           <div>
             <label class="block text-sm font-medium mb-1">Bank Account Number *</label>
             <input 
+              v-trim
               v-model="form.bankAccount" 
               type="text" 
               class="w-full border p-2 rounded"
@@ -129,6 +135,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Bank Name *</label>
           <input 
+            v-trim
             v-model="form.bankName" 
             type="text" 
             class="w-full border p-2 rounded"
@@ -139,6 +146,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">National ID Number *</label>
           <input 
+            v-trim
             v-model="form.idCardNumber" 
             type="text" 
             class="w-full border p-2 rounded"
@@ -282,40 +290,33 @@ function handleFileChange(event, type) {
 // Form submission
 async function onSubmit() {
   if (!isFormValid.value) return
-
+  
   loading.value = true
   message.value = ''
-
-  // Trim all string fields
-  const trimmedForm = { ...form.value }
-  Object.keys(trimmedForm).forEach(key => {
-    if (typeof trimmedForm[key] === 'string') {
-      trimmedForm[key] = trimmedForm[key].trim()
-    }
-  })
-
+  
   try {
-    const formData = new FormData()
-    Object.keys(trimmedForm).forEach(key => {
-      if (trimmedForm[key] !== null) {
-        formData.append(key, trimmedForm[key])
-      }
-    })
-
-    await registerUser(formData) // registerUser ต้องรองรับ FormData
+    await registerUser(form.value)
     message.value = 'The user account has been successfully registered.'
     messageType.value = 'success'
-
+    
+    // Redirect to gallery page after 2 seconds
     setTimeout(() => {
       router.push({ name: 'sale-items-page' })
     }, 2000)
+    
   } catch (error) {
     let errorMessage = 'Registration failed'
+    
     if (error.message) {
-      if (error.message.includes('email')) errorMessage = 'Email already exists.'
-      else if (error.message.includes('idCardNumber')) errorMessage = 'National ID number exists.'
-      else errorMessage = error.message
+      if (error.message.includes('email')) {
+        errorMessage = 'Email already exists. Please use a different email.'
+      } else if (error.message.includes('idCardNumber')) {
+        errorMessage = 'National ID number already exists. Please use a different ID number.'
+      } else {
+        errorMessage = error.message
+      }
     }
+    
     message.value = errorMessage
     messageType.value = 'error'
   } finally {
