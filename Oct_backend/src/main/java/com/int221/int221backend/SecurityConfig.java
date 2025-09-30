@@ -70,7 +70,8 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     .requestMatchers(HttpMethod.GET,
                             "/itb-mshop/v2/sale-items",       // list
                             "/itb-mshop/v2/sale-items/",     // single item
-                            "/itb-mshop/v1/brands/"          // single brand
+                            "/itb-mshop/v1/brands/",
+                            "itb-mshop/v1/brands"// single brand
                     ).permitAll()
                     .requestMatchers(
                             "/swagger-ui/",
