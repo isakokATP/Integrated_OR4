@@ -36,55 +36,55 @@ public class SecurityConfig {
 //        return http.build();
 //    }
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable()) // ปิด CSRF
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll() // อนุญาตทุก request
-//                )
-//                .formLogin(form -> form.disable()) // ปิด login form
-//                .httpBasic(basic -> basic.disable()); // ปิด basic auth
-//
-//        return http.build();
-//    }
+   @Bean
+   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+       http
+               .csrf(csrf -> csrf.disable()) // ปิด CSRF
+               .authorizeHttpRequests(auth -> auth
+                       .anyRequest().permitAll() // อนุญาตทุก request
+               )
+               .formLogin(form -> form.disable()) // ปิด login form
+               .httpBasic(basic -> basic.disable()); // ปิด basic auth
 
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                    // Public POST
-                    .requestMatchers(HttpMethod.POST,
-                            "/itb-mshop/v2/auth/verify-email",
-                            "/itb-mshop/v2/users/register",
-                            "/itb-mshop/v2/users/authentications",
-                            "/itb-mshop/v2/sale-items"
-                    ).permitAll()
-                    .requestMatchers(HttpMethod.PUT,
-                            "/itb-mshop/v2/sale-items/",
-                            "/itb-mshop/v1/brands/")
-                    .permitAll()
+       return http.build();
+   }
 
-                    // Public GET
-                    .requestMatchers(HttpMethod.GET,
-                            "/itb-mshop/v2/sale-items",       // list
-                            "/itb-mshop/v2/sale-items/",     // single item
-                            "/itb-mshop/v1/brands/",
-                            "itb-mshop/v1/brands"// single brand
-                    ).permitAll()
-                    .requestMatchers(
-                            "/swagger-ui/",
-                            "/v3/api-docs/",
-                            "/h2-console/**"
-                    ).permitAll()
+// @Bean
+// public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//     http
+//             .csrf(csrf -> csrf.disable())
+//             .authorizeHttpRequests(auth -> auth
+//                     // Public POST
+//                     .requestMatchers(HttpMethod.POST,
+//                             "/itb-mshop/v2/auth/verify-email",
+//                             "/itb-mshop/v2/users/register",
+//                             "/itb-mshop/v2/users/authentications",
+//                             "/itb-mshop/v2/sale-items"
+//                     ).permitAll()
+//                     .requestMatchers(HttpMethod.PUT,
+//                             "/itb-mshop/v2/sale-items/",
+//                             "/itb-mshop/v1/brands/")
+//                     .permitAll()
 
-                    // ที่เหลือ authenticated
-                    .anyRequest().authenticated()
-            )
-            .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable());
+//                     // Public GET
+//                     .requestMatchers(HttpMethod.GET,
+//                             "/itb-mshop/v2/sale-items",       // list
+//                             "/itb-mshop/v2/sale-items/",     // single item
+//                             "/itb-mshop/v1/brands/",
+//                             "itb-mshop/v1/brands"// single brand
+//                     ).permitAll()
+//                     .requestMatchers(
+//                             "/swagger-ui/",
+//                             "/v3/api-docs/",
+//                             "/h2-console/**"
+//                     ).permitAll()
 
-    return http.build();
-}
+//                     // ที่เหลือ authenticated
+//                     .anyRequest().authenticated()
+//             )
+//             .formLogin(form -> form.disable())
+//             .httpBasic(basic -> basic.disable());
+
+//     return http.build();
+// }
 }
