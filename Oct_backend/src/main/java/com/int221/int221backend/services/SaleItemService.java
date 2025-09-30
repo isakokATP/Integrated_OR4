@@ -205,13 +205,11 @@ public class SaleItemService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No image with order: " + order));
 
-        // ลบไฟล์จาก VM / container
         Path path = Path.of(uploadDir, attachment.getFilename());
         System.out.println("Deleting file at: " + path.toAbsolutePath());
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            // log error แต่ไม่ throw เพื่อไม่ให้ rollback DB
             log.error("Failed to delete file: {}", path.toAbsolutePath(), e);
         }
         attachmentRepository.delete(attachment);
@@ -283,10 +281,7 @@ public class SaleItemService {
         }
 
         if (request.getImagesInfos() != null) {
-            // 1) Collect desired orders for existing images (by fileName)
             Map<String, Integer> desiredOrderByFile = new HashMap<>();
-
-            // 2) First pass: handle deletes and adds; collect order mapping for keep/updateOrder
             for (SaleItemImageRequest imgReq : request.getImagesInfos()) {
                 String status = imgReq.getStatus();
                 if ("delete".equalsIgnoreCase(status)) {
@@ -318,8 +313,6 @@ public class SaleItemService {
                     attachmentRepository.save(a);
                 }
             }
-
-            // 4) Normalize orders to 1..N without gaps
             List<Attachment> normalized = existingItem.getAttachments().stream()
                     .sorted(Comparator.comparingInt(Attachment::getImageViewOrder))
                     .collect(Collectors.toList());

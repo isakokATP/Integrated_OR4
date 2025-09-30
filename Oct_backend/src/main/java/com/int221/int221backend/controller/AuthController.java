@@ -1,10 +1,15 @@
 package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.AuthRequestDto;
+import com.int221.int221backend.dto.response.ErrorResponse;
+import com.int221.int221backend.enums.AuthStatus;
 import com.int221.int221backend.services.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,24 +19,25 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/v2/users/authentications")
-    public ResponseEntity<Void> authenticateUser(@RequestBody AuthRequestDto authRequest) {
+    @PostMapping("/v2/auth/login")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody AuthRequestDto authRequest) {
 
-        // 1. เรียกใช้ Service เพื่อตรวจสอบ Email และ Password
-        boolean isAuthenticated = authService.matchPassword(
+        AuthStatus status = authService.authenticate(
                 authRequest.getEmail(),
                 authRequest.getPassword()
         );
 
-        // 2. ตอบกลับตามผลลัพธ์
-        if (isAuthenticated) {
-            // 4.1 If the record exists and the password matches, returns 200
-            // Note: ใช้ ResponseEntity.ok().build() เพื่อคืนค่า Status 200 OK โดยไม่มี Body
-            return ResponseEntity.ok().build();
-        } else {
-            // 4.2 If not, returns 401 (Unauthorized)
-            // Note: FE จะแสดงข้อความ "Email or Password is incorrect."
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        return switch (status) {
+            case SUCCESS ->
+                    ResponseEntity.ok().build();
+            case INVALID_CREDENTIALS ->
+                    ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                            new ErrorResponse("Invalid email/password")
+                    );
+            case INACTIVE_ACCOUNT ->
+                    ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                            new ErrorResponse("account not activated")
+                    );
+        };
     }
 }
