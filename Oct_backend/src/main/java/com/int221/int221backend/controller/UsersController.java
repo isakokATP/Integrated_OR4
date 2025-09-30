@@ -6,6 +6,7 @@ import com.int221.int221backend.repositories.VerificationTokenRepository;
 import com.int221.int221backend.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,9 @@ public class UsersController {
     @Autowired
     private VerificationTokenRepository tokenRepo;
 
-    // Register User (POST /v2/users/register)
     @PostMapping("/v2/users/register")
     public ResponseEntity<UserResponseDto> registerUser(
+            @Valid
             @ModelAttribute UserRequestDto userRequest,
             @RequestPart(value = "idCardImageFront", required = false) MultipartFile idCardImageFront,
             @RequestPart(value = "idCardImageBack", required = false) MultipartFile idCardImageBack
@@ -40,7 +41,7 @@ public class UsersController {
         // บันทึกข้อมูลผู้ใช้
         UserResponseDto savedUser = userService.registerUser(userRequest, idCardImageFront, idCardImageBack);
 
-        return ResponseEntity.ok(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
     // Get User by ID (GET /itb-mshop/v2/users/{id})

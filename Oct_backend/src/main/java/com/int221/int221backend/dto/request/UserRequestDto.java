@@ -27,11 +27,7 @@ public class UserRequestDto {
     private String fullName;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 255, message = "Password must be at least 8 characters")
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "Password must contain at least one lowercase, one uppercase, one number, and one special character"
-    )
+    @Size(min = 8, max = 14, message = "Password must be between 8 and 14 characters")
     private String password;
 
     @NotBlank(message = "Phone number is required")
@@ -53,7 +49,31 @@ public class UserRequestDto {
     @Pattern(regexp = "SELLER|BUYER", message = "User type must be either SELLER or BUYER")
     private String userType;
 
-//    private String idCardImageFront;
-//
-//    private String idCardImageBack;
+    public void setNickName(String nickName) {
+        this.nickName = nickName == null ? null : nickName.trim();
+    }
+
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName == null ? null : fullName.trim();
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber == null ? null : phoneNumber.trim();
+    }
+
+    public void setBankAccount(String bankAccount) {
+        this.bankAccount = bankAccount == null ? null : bankAccount.trim();
+    }
+
+    public void setIdCardNumber(String idCardNumber) {
+        this.idCardNumber = idCardNumber == null ? null : idCardNumber.trim();
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType != null ? userType.trim() : null;
+    }
 }

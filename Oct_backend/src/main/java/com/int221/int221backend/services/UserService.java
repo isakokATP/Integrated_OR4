@@ -4,6 +4,7 @@ import com.int221.int221backend.dto.request.UserRequestDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
 import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.entities.VerificationToken;
+import com.int221.int221backend.exception.DuplicateResourceException;
 import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
 import com.int221.int221backend.security.JwtTokenProvider;
@@ -48,27 +49,22 @@ public class UserService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    // Register User
     @Transactional
     public UserResponseDto registerUser(UserRequestDto requestDto,
                                         MultipartFile idCardImageFront,
                                         MultipartFile idCardImageBack) {
 
-        // 1. เช็ค email ซ้ำ
         if (userRepository.existsByEmail(requestDto.getEmail())) {
-            throw new RuntimeException("Email already exists: " + requestDto.getEmail());
+            throw new DuplicateResourceException("Email already exists: " + requestDto.getEmail());
         }
-        // 2. เช็ค ID card number ซ้ำ
         if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
             throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
         }
 
         try {
-            // 3. บันทึกไฟล์รูป
             String frontFilePath = saveFile(idCardImageFront);
             String backFilePath = saveFile(idCardImageBack);
 
-            // 4. สร้าง entity user - กำหนดค่าให้กับทุกคอลัมน์ที่ 'nullable = false'
             Users user = Users.builder()
                     .nickName(requestDto.getNickName())
                     .email(requestDto.getEmail())
