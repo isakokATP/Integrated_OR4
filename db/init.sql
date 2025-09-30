@@ -177,38 +177,6 @@ CREATE TABLE users (
                        updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (
-    id,
-    nick_name,
-    email,
-    full_name,
-    password,
-    phone_number,
-    bank_account,
-    id_card_number,
-    user_type,
-    id_card_image_front,
-    id_card_image_back,
-    status,
-    created_at,
-    updated_at
-) VALUES (
-             1,
-             'Somsuan',
-             'itbkk.somsuan@ad.sit.kmutt.ac.th',
-             'Somsuan Hundee',
-             'itProj24/SOM',
-             '083-456-7890',
-             '0371234567',
-             '1000111100222',
-             'SELLER',
-             '1000111100222_front.png',
-             '1000111100222_back.png',
-             'ACTIVE',
-             NOW(),
-             NOW()
-         );
-
 CREATE TABLE verification_tokens (
                                      id           INT AUTO_INCREMENT PRIMARY KEY,
                                      token        VARCHAR(255) NOT NULL UNIQUE,

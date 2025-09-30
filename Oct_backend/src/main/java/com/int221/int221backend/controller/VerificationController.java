@@ -28,41 +28,6 @@ public class VerificationController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-
-//    @PostMapping("/v2/auth/verify-email")
-//    public ResponseEntity<?> verifyEmail(@RequestBody TokenRequest tokenRequest) {
-//        String token = tokenRequest.getToken();
-//        VerificationToken verificationToken = tokenRepository.findByToken(token);
-//
-//        if (verificationToken == null) {
-//            return ResponseEntity.badRequest().body(
-//                    "An error occurred, or the verification link has expired. Please request a new verification email."
-//            );
-//        }
-//
-//        // ตรวจสอบว่า token หมดอายุหรือยัง
-//        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-//            return ResponseEntity.badRequest().body(
-//                    "An error occurred, or the verification link has expired. Please request a new verification email."
-//            );
-//        }
-//
-//        // ถ้า valid → เปลี่ยน status ของ user เป็น ACTIVE
-//        Users user = verificationToken.getUser();
-//        user.setStatus(Users.Status.ACTIVE);
-//        userRepository.save(user);
-//
-//        // ลบ token หลังจากใช้แล้ว
-//        tokenRepository.delete(verificationToken);
-//
-//        // **จุดที่แก้ไข:**
-//        // 1. Map Users entity ไปเป็น DTO (เหมือนที่ทำในเมธอด GET)
-//        UserResponseVerDto responseDto = UserResponseVerDto.fromEntity(user);
-//
-//        // 2. คืนค่า DTO ด้วย ResponseEntity.ok()
-//        return ResponseEntity.ok(responseDto);
-//    }
-
     @PostMapping("/v2/auth/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
         Long jwtUserId;

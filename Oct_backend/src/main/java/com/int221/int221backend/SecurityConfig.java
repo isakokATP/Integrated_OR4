@@ -58,8 +58,13 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     .requestMatchers(HttpMethod.POST,
                             "/itb-mshop/v2/auth/verify-email",
                             "/itb-mshop/v2/users/register",
-                            "/itb-mshop/v2/users/authentications"
+                            "/itb-mshop/v2/users/authentications",
+                            "/itb-mshop/v2/sale-items"
                     ).permitAll()
+                    .requestMatchers(HttpMethod.PUT,
+                            "/itb-mshop/v2/sale-items/**",
+                            "/itb-mshop/v1/brands/**")
+                    .permitAll()
 
                     // Public GET
                     .requestMatchers(HttpMethod.GET,
