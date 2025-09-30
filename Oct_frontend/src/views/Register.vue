@@ -242,24 +242,25 @@ const isFormValid = computed(() => {
 })
 
 // Password validation
+function validatePassword(password) {
+  return {
+    hasLower: /[a-z]/.test(password),
+    hasUpper: /[A-Z]/.test(password),
+    hasNumber: /\d/.test(password),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>/]/.test(password), // เพิ่ม /
+    minLength: password.length >= 8
+  }
+}
+
 const isPasswordValid = computed(() => {
-  const password = form.value.password
-  if (!password) return false
-  
-  const hasLower = /[a-z]/.test(password)
-  const hasUpper = /[A-Z]/.test(password)
-  const hasNumber = /\d/.test(password)
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-  const hasMinLength = password.length >= 8
-  
-  return hasLower && hasUpper && hasNumber && hasSpecial && hasMinLength
+  if (!form.value.password) return false
+  const v = validatePassword(form.value.password)
+  return v.hasLower && v.hasUpper && v.hasNumber && v.hasSpecial && v.minLength
 })
 
-// Special character check for template
 const hasSpecialChar = computed(() => {
-  const password = form.value.password
-  if (!password) return false
-  return /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  if (!form.value.password) return false
+  return /[!@#$%^&*(),.?":{}|<>/]/.test(form.value.password)
 })
 
 // Full name validation
@@ -281,33 +282,40 @@ function handleFileChange(event, type) {
 // Form submission
 async function onSubmit() {
   if (!isFormValid.value) return
-  
+
   loading.value = true
   message.value = ''
-  
+
+  // Trim all string fields
+  const trimmedForm = { ...form.value }
+  Object.keys(trimmedForm).forEach(key => {
+    if (typeof trimmedForm[key] === 'string') {
+      trimmedForm[key] = trimmedForm[key].trim()
+    }
+  })
+
   try {
-    await registerUser(form.value)
+    const formData = new FormData()
+    Object.keys(trimmedForm).forEach(key => {
+      if (trimmedForm[key] !== null) {
+        formData.append(key, trimmedForm[key])
+      }
+    })
+
+    await registerUser(formData) // registerUser ต้องรองรับ FormData
     message.value = 'The user account has been successfully registered.'
     messageType.value = 'success'
-    
-    // Redirect to gallery page after 2 seconds
+
     setTimeout(() => {
       router.push({ name: 'sale-items-page' })
     }, 2000)
-    
   } catch (error) {
     let errorMessage = 'Registration failed'
-    
     if (error.message) {
-      if (error.message.includes('email')) {
-        errorMessage = 'Email already exists. Please use a different email.'
-      } else if (error.message.includes('idCardNumber')) {
-        errorMessage = 'National ID number already exists. Please use a different ID number.'
-      } else {
-        errorMessage = error.message
-      }
+      if (error.message.includes('email')) errorMessage = 'Email already exists.'
+      else if (error.message.includes('idCardNumber')) errorMessage = 'National ID number exists.'
+      else errorMessage = error.message
     }
-    
     message.value = errorMessage
     messageType.value = 'error'
   } finally {
