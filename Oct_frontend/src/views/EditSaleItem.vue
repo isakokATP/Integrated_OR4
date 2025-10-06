@@ -416,6 +416,10 @@ function removeImage(index) {
 }
 
 function getImagePreview(file) {
+  if (!file || !(file instanceof File || file instanceof Blob)) {
+    console.warn('Invalid file object passed to getImagePreview:', file);
+    return null;
+  }
   return URL.createObjectURL(file);
 }
 
@@ -431,7 +435,8 @@ function getMainImagePreview() {
     if (firstImage.isExisting) {
       return getImageUrl(firstImage.fileName || firstImage.filename);
     } else {
-      return getImagePreview(firstImage);
+      const preview = getImagePreview(firstImage);
+      return preview || null;
     }
   }
   return null;
@@ -677,10 +682,14 @@ const handleDelete = async () => {
             class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
           >
             <img
+              v-if="image.isExisting ? true : getImagePreview(image)"
               :src="image.isExisting ? getImageUrl(image.fileName || image.filename) : getImagePreview(image)"
               :alt="image.isExisting ? 'Existing thumbnail' : 'New thumbnail'"
               class="w-full h-full object-cover"
             />
+            <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+              Invalid
+            </div>
             <button
               type="button"
               @click="removeImage(index)"

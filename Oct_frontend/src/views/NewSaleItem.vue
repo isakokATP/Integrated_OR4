@@ -33,10 +33,14 @@
            </div>
            <div v-else class="w-full h-full relative">
              <img
+               v-if="getImagePreview(selectedFiles[0])"
                :src="getImagePreview(selectedFiles[0])"
                alt="Main preview"
                class="w-full h-full object-cover rounded"
              />
+             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+               Invalid Image
+             </div>
            </div>
          </div>
          
@@ -49,10 +53,14 @@
              class="w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-300 rounded relative overflow-hidden"
            >
              <img
+               v-if="getImagePreview(file)"
                :src="getImagePreview(file)"
                alt="Thumbnail"
                class="w-full h-full object-cover"
              />
+             <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+               Invalid
+             </div>
              <button
                @click="removeFile(index)"
                class="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl"
@@ -548,6 +556,10 @@ function removeFile(index) {
 }
 
 function getImagePreview(file) {
+  if (!file || !(file instanceof File || file instanceof Blob)) {
+    console.warn('Invalid file object passed to getImagePreview:', file);
+    return null;
+  }
   return URL.createObjectURL(file);
 }
 
