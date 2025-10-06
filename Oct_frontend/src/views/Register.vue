@@ -36,6 +36,7 @@
             v-model="form.nickName" 
             type="text" 
             class="w-full border p-2 rounded"
+            @blur="trimField('nickName')"
             required
           />
         </div>
@@ -46,6 +47,7 @@
             v-model="form.email" 
             type="email" 
             class="w-full border p-2 rounded"
+            @blur="trimField('email')"
             required
           />
         </div>
@@ -61,18 +63,16 @@
               'w-full border p-2 rounded',
               form.password && !isPasswordValid ? 'border-red-500' : 'border-gray-300'
             ]"
+            @blur="trimField('password')"
             required
           />
           <p class="text-xs mt-1" :class="form.password && !isPasswordValid ? 'text-red-600' : 'text-gray-600'">
-            Minimum 8 characters, include lower, upper, number, and special character
+            8-14 characters
           </p>
           <div v-if="form.password && !isPasswordValid" class="text-xs text-red-600 mt-1">
             <ul class="list-disc list-inside">
               <li v-if="form.password.length < 8">At least 8 characters</li>
-              <li v-if="!/[a-z]/.test(form.password)">Include lowercase letter</li>
-              <li v-if="!/[A-Z]/.test(form.password)">Include uppercase letter</li>
-              <li v-if="!/\d/.test(form.password)">Include number</li>
-              <li v-if="!hasSpecialChar">Include special character</li>
+              <li v-if="form.password.length > 14">Maximum 14 characters</li>
             </ul>
           </div>
         </div>
@@ -86,6 +86,7 @@
               'w-full border p-2 rounded',
               form.fullName && !isFullNameValid ? 'border-red-500' : 'border-gray-300'
             ]"
+            @blur="trimField('fullName')"
             required
           />
           <p class="text-xs mt-1" :class="form.fullName && !isFullNameValid ? 'text-red-600' : 'text-gray-600'">
@@ -111,6 +112,7 @@
               v-model="form.phoneNumber" 
               type="tel" 
               class="w-full border p-2 rounded"
+              @blur="trimField('phoneNumber')"
               :required="form.userType === 'SELLER'"
             />
           </div>
@@ -121,6 +123,7 @@
               v-model="form.bankAccount" 
               type="text" 
               class="w-full border p-2 rounded"
+              @blur="trimField('bankAccount')"
               :required="form.userType === 'SELLER'"
             />
           </div>
@@ -132,6 +135,7 @@
             v-model="form.bankName" 
             type="text" 
             class="w-full border p-2 rounded"
+            @blur="trimField('bankName')"
             :required="form.userType === 'SELLER'"
           />
         </div>
@@ -142,6 +146,7 @@
             v-model="form.idCardNumber" 
             type="text" 
             class="w-full border p-2 rounded"
+            @blur="trimField('idCardNumber')"
             :required="form.userType === 'SELLER'"
           />
         </div>
@@ -241,18 +246,12 @@ const isFormValid = computed(() => {
   }
 })
 
-// Password validation
+// Password validation - ตรงกับ Backend: 8-14 ตัวอักษร
 const isPasswordValid = computed(() => {
   const password = form.value.password
   if (!password) return false
   
-  const hasLower = /[a-z]/.test(password)
-  const hasUpper = /[A-Z]/.test(password)
-  const hasNumber = /\d/.test(password)
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-  const hasMinLength = password.length >= 8
-  
-  return hasLower && hasUpper && hasNumber && hasSpecial && hasMinLength
+  return password.length >= 8 && password.length <= 14
 })
 
 // Special character check for template
@@ -275,6 +274,13 @@ function handleFileChange(event, type) {
     form.value.idCardImageFront = file
   } else {
     form.value.idCardImageBack = file
+  }
+}
+
+// Trim function for lost focus
+function trimField(fieldName) {
+  if (form.value[fieldName]) {
+    form.value[fieldName] = form.value[fieldName].trim()
   }
 }
 
