@@ -12,10 +12,10 @@
       <p>{{ message }}</p>
       <div v-if="messageType === 'success'" class="mt-4">
         <router-link 
-          to="/login" 
+          to="/signin" 
           class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          Go to Login
+          Go to Sign In
         </router-link>
       </div>
     </div>

@@ -63,18 +63,18 @@ const routes = [
     component: Register,
   },
   {
-    path: "/login",
-    name: "login-page",
-    component: Login,
-  },
-  {
     path: "/signin",
-    name: "signin-page",
+    name: "login-page",
     component: Login,
   },
   {
     path: "/verify-email",
     name: "verify-email-page",
+    component: VerifyEmail,
+  },
+  {
+    path: "/verify-email/",
+    name: "verify-email-with-slash",
     component: VerifyEmail,
   },
   {
