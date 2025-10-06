@@ -28,41 +28,6 @@ public class VerificationController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-
-//    @PostMapping("/v2/auth/verify-email")
-//    public ResponseEntity<?> verifyEmail(@RequestBody TokenRequest tokenRequest) {
-//        String token = tokenRequest.getToken();
-//        VerificationToken verificationToken = tokenRepository.findByToken(token);
-//
-//        if (verificationToken == null) {
-//            return ResponseEntity.badRequest().body(
-//                    "An error occurred, or the verification link has expired. Please request a new verification email."
-//            );
-//        }
-//
-//        // ตรวจสอบว่า token หมดอายุหรือยัง
-//        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-//            return ResponseEntity.badRequest().body(
-//                    "An error occurred, or the verification link has expired. Please request a new verification email."
-//            );
-//        }
-//
-//        // ถ้า valid → เปลี่ยน status ของ user เป็น ACTIVE
-//        Users user = verificationToken.getUser();
-//        user.setStatus(Users.Status.ACTIVE);
-//        userRepository.save(user);
-//
-//        // ลบ token หลังจากใช้แล้ว
-//        tokenRepository.delete(verificationToken);
-//
-//        // **จุดที่แก้ไข:**
-//        // 1. Map Users entity ไปเป็น DTO (เหมือนที่ทำในเมธอด GET)
-//        UserResponseVerDto responseDto = UserResponseVerDto.fromEntity(user);
-//
-//        // 2. คืนค่า DTO ด้วย ResponseEntity.ok()
-//        return ResponseEntity.ok(responseDto);
-//    }
-
     @PostMapping("/v2/auth/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
         Long jwtUserId;
@@ -70,7 +35,7 @@ public class VerificationController {
 
         if (!jwtTokenProvider.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    "Invalid or expired verification token (JWT validation failed)."
+                    "An error occured, or the verification link has expired. Please request a new verification email"
             );
         }
 
@@ -78,15 +43,13 @@ public class VerificationController {
             jwtUserId = jwtTokenProvider.getUserIdFromToken(token);
             email = jwtTokenProvider.getEmailFromToken(token);
         } catch (Exception e) {
-            // Catch การ Parse Token ที่มีปัญหา
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     "Token is valid but claims (userId/email) are missing or invalid."
             );
         }
 
         if (jwtUserId == null) {
-            // หากไม่มี Claim 'userId' อยู่ใน Token เลย
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                     "Verification token is missing the required 'userId' claim."
             );
         }
@@ -98,6 +61,11 @@ public class VerificationController {
         if (user == null || !user.getEmail().equalsIgnoreCase(email)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     "User not found or email mismatch."
+            );
+        }
+        if (user.getStatus() == Users.Status.ACTIVE) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    "User is already active."
             );
         }
 

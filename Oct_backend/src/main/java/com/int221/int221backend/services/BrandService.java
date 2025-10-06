@@ -87,7 +87,7 @@ public class BrandService {
             brandRepository.deleteById(id);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,  // เปลี่ยนตรงนี้ จาก INTERNAL_SERVER_ERROR → BAD_REQUEST
+                    HttpStatus.BAD_REQUEST,
                     "Cannot delete brand because it is referenced by other records.",
                     ex
             );
