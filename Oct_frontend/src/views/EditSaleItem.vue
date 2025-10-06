@@ -377,13 +377,15 @@ function handleFileSelect(event) {
     return;
   }
   
-  // Add valid files to allImages as new files
+  // Add valid files to allImages as new files; preserve the original File in imageFile
   const newImageObjects = validFiles.map(file => ({
-    ...file,
+    imageFile: file,
     isNew: true,
     isExisting: false,
     fileName: file.name,
-    filename: file.name
+    filename: file.name,
+    size: file.size,
+    type: file.type
   }));
   
   allImages.value.push(...newImageObjects);
@@ -415,12 +417,14 @@ function removeImage(index) {
   fileErrors.value = [];
 }
 
-function getImagePreview(file) {
-  if (!file || !(file instanceof File || file instanceof Blob)) {
-    console.warn('Invalid file object passed to getImagePreview:', file);
+function getImagePreview(fileOrWrapper) {
+  // Accept either a raw File/Blob or our wrapper { imageFile: File }
+  const candidate = fileOrWrapper && fileOrWrapper.imageFile ? fileOrWrapper.imageFile : fileOrWrapper;
+  if (!candidate || !(candidate instanceof File || candidate instanceof Blob)) {
+    console.warn('Invalid file object passed to getImagePreview:', fileOrWrapper);
     return null;
   }
-  return URL.createObjectURL(file);
+  return URL.createObjectURL(candidate);
 }
 
 function getImageUrl(fileName) {
@@ -541,8 +545,8 @@ const handleSave = async () => {
           imagesinfos.push({ order: originalOrder, status: "keep", fileName: name });
         }
       } else {
-        // New file: add at current position
-        imagesinfos.push({ order: newOrder, status: "add", imageFile: img });
+        // New file: add at current position; send the original File object
+        imagesinfos.push({ order: newOrder, status: "add", imageFile: img.imageFile || img });
       }
     });
 
