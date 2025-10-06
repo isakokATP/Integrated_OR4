@@ -30,17 +30,14 @@ public class UserRequestDto {
     @Size(min = 8, max = 14, message = "Password must be between 8 and 14 characters")
     private String password;
 
-    @NotBlank(message = "Phone number is required")
     @Size(max = 20, message = "Phone number must not exceed 20 characters")
     @Pattern(regexp = "^[0-9]*$", message = "Phone number must contain only digits")
     private String phoneNumber;
 
-    @NotBlank(message = "Bank account is required")
     @Size(max = 50, message = "Bank account must not exceed 50 characters")
     @Pattern(regexp = "^[0-9]*$", message = "Bank account must contain only digits")
     private String bankAccount;
 
-    @NotBlank(message = "National ID number is required")
     @Size(max = 20, message = "ID card number must not exceed 20 characters")
     @Pattern(regexp = "^[0-9]*$", message = "ID card number must contain only digits")
     private String idCardNumber;

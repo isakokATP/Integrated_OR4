@@ -54,10 +54,30 @@ public class UserService {
                                         MultipartFile idCardImageFront,
                                         MultipartFile idCardImageBack) {
 
+        // Validate SELLER-specific fields
+        if ("SELLER".equals(requestDto.getUserType())) {
+            if (requestDto.getPhoneNumber() == null || requestDto.getPhoneNumber().trim().isEmpty()) {
+                throw new RuntimeException("Phone number is required for SELLER");
+            }
+            if (requestDto.getBankAccount() == null || requestDto.getBankAccount().trim().isEmpty()) {
+                throw new RuntimeException("Bank account is required for SELLER");
+            }
+            if (requestDto.getIdCardNumber() == null || requestDto.getIdCardNumber().trim().isEmpty()) {
+                throw new RuntimeException("National ID number is required for SELLER");
+            }
+            if (idCardImageFront == null || idCardImageFront.isEmpty()) {
+                throw new RuntimeException("ID card front image is required for SELLER");
+            }
+            if (idCardImageBack == null || idCardImageBack.isEmpty()) {
+                throw new RuntimeException("ID card back image is required for SELLER");
+            }
+        }
+
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new DuplicateResourceException("Email already exists: " + requestDto.getEmail());
         }
-        if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
+        if (requestDto.getIdCardNumber() != null && !requestDto.getIdCardNumber().trim().isEmpty() 
+            && userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
             throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
         }
 
