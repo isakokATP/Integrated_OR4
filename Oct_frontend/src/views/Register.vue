@@ -47,8 +47,9 @@
             v-model="form.email" 
             type="email" 
             class="w-full border p-2 rounded"
-            @blur="trimField('email')"
             required
+            v-trim
+            autocomplete="email"
           />
         </div>
       </div>
