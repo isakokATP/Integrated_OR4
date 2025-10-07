@@ -91,7 +91,7 @@ async function onSubmit(e){
       message.value = "You need to activate your account before signing in.";
       messageType.value = "error";
     } else {
-      message.value = `Login failed (${response.status})`;
+      message.value = `There is a problem. Please try again later.`;
       messageType.value = "error";
     }
 
