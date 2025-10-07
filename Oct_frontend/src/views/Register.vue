@@ -176,8 +176,8 @@
         </div>
       </div>
 
-      <!-- Submit and Cancel Buttons -->
-      <div class="flex space-x-4 pt-4">
+      <!-- Submit Button -->
+      <div class="pt-4">
         <button 
           type="submit" 
           :disabled="!isFormValid || loading"
@@ -185,16 +185,19 @@
         >
           {{ loading ? 'Registering...' : 'Submit' }}
         </button>
-        
-        <button 
-          type="button" 
-          @click="onCancel"
-          class="px-6 py-2 bg-gray-500 text-white rounded"
-        >
-          Cancel
-        </button>
       </div>
     </form>
+
+    <!-- Cancel Button (outside form) -->
+    <div class="mt-4">
+      <button 
+        type="button" 
+        @click="onCancel"
+        class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
 
     <!-- Success/Error Messages -->
     <div v-if="message" class="mt-4 p-3 rounded" :class="messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
@@ -323,6 +326,6 @@ async function onSubmit() {
 
 // Cancel registration
 function onCancel() {
-  router.push({ name: 'home' })
+  router.push({ name: 'home-page' })
 }
 </script>
