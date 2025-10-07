@@ -45,7 +45,7 @@ const isFormValid = computed(() => {
 });
 
 // ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE (ต้องมี /or4 เพราะ FE อยู่ใต้ base path)
-const LOGIN_URL = '/or4/itb-mshop/v2/users/authentications'
+const LOGIN_URL = '/or4/itb-mshop/v2/auth/login'
 
 async function onSubmit(e){
   e.preventDefault();
