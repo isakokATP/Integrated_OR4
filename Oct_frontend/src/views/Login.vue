@@ -15,7 +15,10 @@
         <label class="block text-sm font-medium">Password</label>
         <input v-model="password" type="password" class="w-full border p-2 rounded" />
       </div>
-      <button :disabled="loading" class="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50">
+      <button 
+        :disabled="!isFormValid || loading" 
+        class="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         {{ loading ? 'Signing In...' : 'Sign In' }}
       </button>
     </form>
@@ -26,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -35,6 +38,11 @@ const password = ref("");
 const loading = ref(false);
 const message = ref("");
 const messageType = ref("");
+
+// Check if form is valid (both email and password are filled)
+const isFormValid = computed(() => {
+  return email.value.trim() && password.value.trim();
+});
 
 // ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE (ต้องมี /or4 เพราะ FE อยู่ใต้ base path)
 const LOGIN_URL = '/or4/itb-mshop/v2/users/authentications'
@@ -77,7 +85,7 @@ async function onSubmit(e){
         setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
       }
     } else if (response.status === 401) {
-      message.value = "Invalid email or password";
+      message.value = "Email or Password is incorrect.";
       messageType.value = "error";
     } else if (response.status === 403) {
       message.value = "You need to activate your account before signing in.";
