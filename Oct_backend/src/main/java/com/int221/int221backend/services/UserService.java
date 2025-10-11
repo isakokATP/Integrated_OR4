@@ -57,8 +57,12 @@ public class UserService {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new DuplicateResourceException("Email already exists: " + requestDto.getEmail());
         }
-        if (userRepository.existsByIdCardNumber(requestDto.getIdCardNumber())) {
-            throw new RuntimeException("ID card number already exists: " + requestDto.getIdCardNumber());
+        
+        String idCardNumber = requestDto.getIdCardNumber();
+        if (idCardNumber != null && !idCardNumber.trim().isEmpty()) {
+            if (userRepository.existsByIdCardNumber(idCardNumber.trim())) {
+                throw new RuntimeException("ID card number already exists: " + idCardNumber);
+            }
         }
 
         try {
@@ -104,7 +108,6 @@ public class UserService {
     private String saveFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return null;
 
-        // สร้าง folder ถ้ายังไม่มี
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
@@ -113,10 +116,8 @@ public class UserService {
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(filename);
 
-        // บันทึกไฟล์จริง
         file.transferTo(filePath.toFile());
 
-        // คืนค่าเป็น path เต็ม (absolute path)
         return filePath.toAbsolutePath().toString();
     }
 
@@ -128,7 +129,6 @@ public class UserService {
         return UserResponseDto.fromEntity(user);
     }
 
-    // Mapping Entity -> ResponseDto
     private UserResponseDto mapToDto(Users user) {
         return UserResponseDto.builder()
                 .id(user.getId())
