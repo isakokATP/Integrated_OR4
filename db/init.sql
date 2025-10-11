@@ -144,22 +144,6 @@ CREATE TABLE attachments (
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
-INSERT INTO attachments (
-    saleItem_id,
-    filename,
-    file_path,
-    file_size,
-    file_type,
-    image_view_order
-) VALUES (
-             1,
-             'iphone15.png',
-             '\Oct_backend\picture\iphone_15_pro.png',
-             204800,  -- ขนาดไฟล์เป็นไบต์ (200 KB)
-             'png',
-             1
-         );
-
 CREATE TABLE users (
                        id                 INT AUTO_INCREMENT PRIMARY KEY,
                        nick_name          VARCHAR(50) NOT NULL,
@@ -168,19 +152,11 @@ CREATE TABLE users (
                        password           VARCHAR(255) NOT NULL,
                        phone_number       VARCHAR(15) DEFAULT NULL,
                        bank_account       VARCHAR(30) DEFAULT NULL,
-                       id_card_number     VARCHAR(20) DEFAULT NULL UNIQUE,
+                       id_card_number     VARCHAR(20) DEFAULT NULL,
                        user_type          ENUM('SELLER', 'BUYER') NOT NULL,
                        id_card_image_front VARCHAR(255) DEFAULT NULL,
                        id_card_image_back  VARCHAR(255) DEFAULT NULL,
                        status ENUM('INACTIVE','ACTIVE') NOT NULL DEFAULT 'INACTIVE',
                        created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE verification_tokens (
-                                     id           INT AUTO_INCREMENT PRIMARY KEY,
-                                     token        VARCHAR(255) NOT NULL UNIQUE,
-                                     expiry_date  DATETIME NOT NULL,
-                                     user_id      INT NOT NULL,
-                                     CONSTRAINT fk_user_token FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
