@@ -114,20 +114,28 @@ public class JwtTokenProvider {
         return claimsResolver.apply(claims);
     }
 
-    public Integer extractId(String token) {
-        // ใช้ "id" ให้ตรงกับตอนสร้าง และ get เป็น Integer
-        return extractClaim(token, claims -> claims.get("id", Integer.class));
+//    public Integer extractId(String token) {
+//        // ใช้ "id" ให้ตรงกับตอนสร้าง และ get เป็น Integer
+//        return extractClaim(token, claims -> claims.get("id", Integer.class));
+//    }
+//
+//    public String extractEmail(String token) {
+//        return extractClaim(token, claims -> claims.get("email", String.class));
+//    }
+//    public Long getUserIdFromToken(String token) {
+//        // เรียกใช้ method ใหม่แล้วแปลง Integer เป็น Long
+//        return extractId(token).longValue();
+//    }
+//    public String getEmailFromToken(String token) {
+//        // เรียกใช้ method ใหม่โดยตรง
+//        return extractEmail(token);
+//    }
+
+    public Long getUserIdFromToken(String token) {
+        return extractAllClaims(token).get("userId", Long.class);
     }
 
-    public String extractEmail(String token) {
-        return extractClaim(token, claims -> claims.get("email", String.class));
-    }
-    public Long getUserIdFromToken(String token) {
-        // เรียกใช้ method ใหม่แล้วแปลง Integer เป็น Long
-        return extractId(token).longValue();
-    }
     public String getEmailFromToken(String token) {
-        // เรียกใช้ method ใหม่โดยตรง
-        return extractEmail(token);
+        return extractAllClaims(token).get("email", String.class);
     }
 }
