@@ -35,6 +35,9 @@ public class UserRequestDto {
     @Pattern(regexp = "^[0-9]*$", message = "Phone number must contain only digits")
     private String phoneNumber;
 
+    @Size(max = 150, message = "Back name not exceed 150 characters")
+    private String bankName;
+
 //    @NotBlank(message = "Bank account is required")
     @Size(max = 50, message = "Bank account must not exceed 50 characters")
     @Pattern(regexp = "^[0-9]*$", message = "Bank account must contain only digits")
@@ -71,6 +74,10 @@ public class UserRequestDto {
 
     public void setPassword(String password) {
         this.password = password == null ? null : password.trim();
+    }
+
+    public void setBackName(String backName) {
+        this.bankName = backName == null ? null : backName.trim();
     }
 
     public void setBankAccount(String bankAccount) {
