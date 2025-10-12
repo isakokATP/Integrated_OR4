@@ -53,7 +53,23 @@ public class UserService {
     public UserResponseDto registerUser(UserRequestDto requestDto,
                                         MultipartFile idCardImageFront,
                                         MultipartFile idCardImageBack) {
-
+        if ("SELLER".equals(requestDto.getUserType())) {
+            if (requestDto.getPhoneNumber() == null || requestDto.getPhoneNumber().trim().isEmpty()) {
+                throw new RuntimeException("Phone number is required for SELLER");
+            }
+            if (requestDto.getBankAccount() == null || requestDto.getBankAccount().trim().isEmpty()) {
+                throw new RuntimeException("Bank account is required for SELLER");
+            }
+            if (requestDto.getIdCardNumber() == null || requestDto.getIdCardNumber().trim().isEmpty()) {
+                throw new RuntimeException("National ID number is required for SELLER");
+            }
+            if (idCardImageFront == null || idCardImageFront.isEmpty()) {
+                throw new RuntimeException("ID card front image is required for SELLER");
+            }
+            if (idCardImageBack == null || idCardImageBack.isEmpty()) {
+                throw new RuntimeException("ID card back image is required for SELLER");
+            }
+        }
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new DuplicateResourceException("Email already exists: " + requestDto.getEmail());
         }
@@ -75,6 +91,7 @@ public class UserService {
                     .fullName(requestDto.getFullName())
                     .password(passwordEncoder.encode(requestDto.getPassword()))
                     .phoneNumber(requestDto.getPhoneNumber())
+                    .bankName(requestDto.getBankName())
                     .bankAccount(requestDto.getBankAccount())
                     .idCardNumber(requestDto.getIdCardNumber())
                     .userType(Users.UserType.valueOf(requestDto.getUserType().toUpperCase()))
@@ -136,6 +153,7 @@ public class UserService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
+                .bankName(user.getBankName())
                 .bankAccount(user.getBankAccount())
                 .idCardNumber(user.getIdCardNumber())
                 .userType(user.getUserType().name())

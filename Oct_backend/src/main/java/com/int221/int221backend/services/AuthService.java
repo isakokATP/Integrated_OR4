@@ -4,6 +4,8 @@ import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.enums.AuthStatus;
 import com.int221.int221backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,20 +29,24 @@ public class AuthService {
         return passwordMatches;
     }
 
-    public AuthStatus authenticate(String email, String password){
-        Optional<Users> usersOptional = userRepository.findByEmail(email);
+    public Users authenticate(String email, String password) {
+        // 1. ค้นหาผู้ใช้ด้วยอีเมล ถ้าไม่เจอ โยน Exception ทันที
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Invalid email/password"));
 
-        if(usersOptional.isEmpty()) {
-            return AuthStatus.INVALID_CREDENTIALS;
+        // 2. ตรวจสอบรหัสผ่าน ถ้าไม่ตรง โยน Exception เดียวกัน
+        // (เราใช้ Exception เดียวกันเพื่อป้องกันการเดาว่าอีเมลไหนมีในระบบ)
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BadCredentialsException("Invalid email/password");
         }
 
-        Users users = usersOptional.get();
-        if (!passwordEncoder.matches(password, users.getPassword())) {
-            return AuthStatus.INVALID_CREDENTIALS;
+        // 3. ตรวจสอบสถานะบัญชี ถ้าไม่ใช่ ACTIVE โยน Exception
+        if (user.getStatus() != Users.Status.ACTIVE) {
+            throw new DisabledException("You need to activate your account before signing in.");
         }
-        if (users.getStatus() != Users.Status.ACTIVE) {
-            return AuthStatus.INACTIVE_ACCOUNT;
-        }
-        return AuthStatus.SUCCESS;
+
+        // 4. ถ้าทุกอย่างผ่านหมด คืนค่า object Users กลับไป
+        return user;
     }
+
 }

@@ -23,6 +23,8 @@ public class UserResponseDto {
 
     private String phoneNumber;
 
+    private String bankName;
+
     private String bankAccount;
 
     private String idCardNumber;
@@ -44,6 +46,7 @@ public class UserResponseDto {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
+                .bankName(user.getBankName())
                 .bankAccount(user.getBankAccount())
                 .idCardNumber(user.getIdCardNumber())
                 .userType(String.valueOf(user.getUserType()))
