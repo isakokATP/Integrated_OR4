@@ -122,41 +122,42 @@ VALUES
     (83, 'Find X5 Lite', 10, 'Previous gen lite', 14850, 8, 6.43, 128, 'Starry Black', 8, NOW(), NOW()),
     (84, 'A77', 10, 'Budget friendly', 8250, 6, 6.56, 128, 'Ocean Blue', 20, NOW(), NOW()),
     (85, 'Reno6 Pro', 10, 'Classic premium', 16500, 12, 6.55, 256, 'Arctic Blue', 7, NOW(), NOW());
-
-
+    
+    
 CREATE TABLE attachments (
-                             id INT AUTO_INCREMENT PRIMARY KEY,
-                             saleItem_id INT NOT NULL,
-                             filename VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-                             file_path VARCHAR(255) NOT NULL,
-                             file_size INT NOT NULL, -- ขนาดไฟล์เป็นไบต์
-                             file_type ENUM('jpg', 'jpeg', 'png') NOT NULL,
-                             image_view_order INT NOT NUll,
-                             created_on DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                             updated_on DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-                             CONSTRAINT fk_attachments_task
-                                 FOREIGN KEY (saleItem_id)
-                                     REFERENCES sale_items (id)
-                                     ON DELETE CASCADE
-                                     ON UPDATE CASCADE,
-                             UNIQUE (saleItem_id, filename) -- ต้องการความ unique ของชื่อไฟล์ในแต่ละ task
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  saleItem_id INT NOT NULL,
+  filename VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  file_size INT NOT NULL, -- ขนาดไฟล์เป็นไบต์
+  file_type ENUM('jpg', 'jpeg', 'png') NOT NULL,
+  image_view_order INT NOT NUll,
+  created_on DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_on DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT fk_attachments_task
+    FOREIGN KEY (saleItem_id)
+    REFERENCES sale_items (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  UNIQUE (saleItem_id, filename) -- ต้องการความ unique ของชื่อไฟล์ในแต่ละ task
 ) ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE users (
-                       id                 INT AUTO_INCREMENT PRIMARY KEY,
-                       nick_name          VARCHAR(50) NOT NULL,
-                       email              VARCHAR(150) NOT NULL UNIQUE,
-                       full_name          VARCHAR(150) NOT NULL,
-                       password           VARCHAR(255) NOT NULL,
-                       phone_number       VARCHAR(15) DEFAULT NULL,
-                       bank_account       VARCHAR(30) DEFAULT NULL,
-                       id_card_number     VARCHAR(20) DEFAULT NULL,
-                       user_type          ENUM('SELLER', 'BUYER') NOT NULL,
-                       id_card_image_front VARCHAR(255) DEFAULT NULL,
-                       id_card_image_back  VARCHAR(255) DEFAULT NULL,
-                       status ENUM('INACTIVE','ACTIVE') NOT NULL DEFAULT 'INACTIVE',
-                       created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                       updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id                 INT AUTO_INCREMENT PRIMARY KEY,
+    nick_name          VARCHAR(50) NOT NULL,
+    email              VARCHAR(150) NOT NULL UNIQUE,
+    full_name          VARCHAR(150) NOT NULL,
+    password           VARCHAR(255) NOT NULL,
+    phone_number       VARCHAR(15) DEFAULT NULL,
+    bank_name          varchar(150) default null,
+    bank_account       VARCHAR(30) DEFAULT NULL,
+    id_card_number     VARCHAR(20) DEFAULT NULL,
+    user_type          ENUM('SELLER', 'BUYER') NOT NULL,
+    id_card_image_front VARCHAR(255) DEFAULT NULL,
+    id_card_image_back  VARCHAR(255) DEFAULT NULL,
+    status ENUM('INACTIVE','ACTIVE') NOT NULL DEFAULT 'INACTIVE',
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
