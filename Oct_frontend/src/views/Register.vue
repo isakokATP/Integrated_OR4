@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6 text-center">Register</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center">egister</h1>
     
     <form @submit.prevent="onSubmit" class="space-y-6">
       <!-- Account Type Selection -->
