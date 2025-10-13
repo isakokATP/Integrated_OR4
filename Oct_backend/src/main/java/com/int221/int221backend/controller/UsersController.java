@@ -1,14 +1,20 @@
 package com.int221.int221backend.controller;
 
+import com.int221.int221backend.dto.request.UpdateProfileRequestDto;
 import com.int221.int221backend.dto.request.UserRequestDto;
+import com.int221.int221backend.dto.response.ErrorResponse;
+import com.int221.int221backend.dto.response.UserProfileResponseDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
+import com.int221.int221backend.security.JwtTokenProvider;
 import com.int221.int221backend.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +27,9 @@ public class UsersController {
 
     @Autowired
     private VerificationTokenRepository tokenRepo;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/v2/users/register")
     public ResponseEntity<UserResponseDto> registerUser(
@@ -43,9 +52,49 @@ public class UsersController {
     }
 
     // Get User by ID (GET /itb-mshop/v2/users/{id})
+//    @GetMapping("/v2/users/{id}")
+//    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Integer id) {
+//        UserResponseDto responseDto = userService.getUserById(id);
+//        return ResponseEntity.ok(responseDto);
+//    }
+
     @GetMapping("/v2/users/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Integer id) {
-        UserResponseDto responseDto = userService.getUserById(id);
-        return ResponseEntity.ok(responseDto);
+    public ResponseEntity<?> getUserProfile(@PathVariable Integer id, HttpServletRequest request) {
+        try {
+            authorizeRequest(Long.valueOf(id), request);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        }
+
+        UserProfileResponseDto userProfile = userService.getUserProfileById(id);
+        return ResponseEntity.ok(userProfile);
+    }
+
+    @PutMapping("/v2/users/{id}")
+    public ResponseEntity<?> updateUserProfile(@PathVariable Integer id,
+                                               @Valid @RequestBody UpdateProfileRequestDto updateDto,
+                                               HttpServletRequest request) {
+        try {
+            authorizeRequest(Long.valueOf(id), request);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        }
+
+        UserProfileResponseDto updatedProfile = userService.updateUserProfile(id, updateDto);
+        return ResponseEntity.ok(updatedProfile);
+    }
+
+    private void authorizeRequest(Long resourceId, HttpServletRequest request) throws SecurityException {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new SecurityException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        Long loggedInUserId = jwtTokenProvider.extractId(token);
+
+        if (!loggedInUserId.equals(resourceId)) {
+            throw new SecurityException("Access Denied: You do not have permission to access this resource.");
+        }
     }
 }

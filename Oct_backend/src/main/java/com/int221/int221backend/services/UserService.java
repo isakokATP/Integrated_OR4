@@ -1,6 +1,8 @@
 package com.int221.int221backend.services;
 
+import com.int221.int221backend.dto.request.UpdateProfileRequestDto;
 import com.int221.int221backend.dto.request.UserRequestDto;
+import com.int221.int221backend.dto.response.UserProfileResponseDto;
 import com.int221.int221backend.dto.response.UserResponseDto;
 import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.entities.VerificationToken;
@@ -13,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -144,6 +147,25 @@ public class UserService {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return UserResponseDto.fromEntity(user);
+    }
+
+    public UserProfileResponseDto getUserProfileById(Integer userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        return UserProfileResponseDto.fromEntity(user);
+    }
+
+    @Transactional
+    public UserProfileResponseDto updateUserProfile(Integer userId, UpdateProfileRequestDto updateDto) {
+        Users userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // อัปเดตเฉพาะ field ที่อนุญาตให้แก้ไข
+        userToUpdate.setNickName(updateDto.getNickname());
+        userToUpdate.setFullName(updateDto.getFullname());
+
+        Users updatedUser = userRepository.save(userToUpdate);
+        return UserProfileResponseDto.fromEntity(updatedUser);
     }
 
     private UserResponseDto mapToDto(Users user) {
