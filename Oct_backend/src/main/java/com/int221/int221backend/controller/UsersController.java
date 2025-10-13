@@ -29,7 +29,6 @@ public class UsersController {
             @RequestPart(value = "idCardImageFront", required = false) MultipartFile idCardImageFront,
             @RequestPart(value = "idCardImageBack", required = false) MultipartFile idCardImageBack
     ) {
-        // บันทึกไฟล์ตัวอย่าง
         if (idCardImageFront != null) {
             System.out.println("Front Image: " + idCardImageFront.getOriginalFilename());
         }
@@ -38,7 +37,6 @@ public class UsersController {
             System.out.println("Back Image: " + idCardImageBack.getOriginalFilename());
         }
 
-        // บันทึกข้อมูลผู้ใช้
         UserResponseDto savedUser = userService.registerUser(userRequest, idCardImageFront, idCardImageBack);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);

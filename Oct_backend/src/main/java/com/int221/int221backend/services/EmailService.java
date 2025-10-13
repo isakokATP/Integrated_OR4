@@ -34,7 +34,7 @@ public class EmailService {
 
         // สร้าง verification URL สำหรับ frontend โดยใส่ JWT Token เป็น Query Parameter
         // สมมติว่า Frontend URL ชี้ไปที่หน้าที่จะจัดการ Token: e.g., http://frontend.com/verify?token={JWT}
-        String verificationUrl = appFrontendUrl + "/verify-email/?token=" + jwtToken;
+        String verificationUrl = appFrontendUrl + "/v2/auth/verify-email?token=" + jwtToken;
 
         String subject = "Please verify your email";
         String content = "Hello " + user.getFullName() + ",\n\n"

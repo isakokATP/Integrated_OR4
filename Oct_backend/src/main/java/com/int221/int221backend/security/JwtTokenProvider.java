@@ -1,8 +1,11 @@
 package com.int221.int221backend.security;
 
+import com.int221.int221backend.entities.Users;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,17 +17,27 @@ import java.util.function.Function;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${jwt.secret}")
-    private String secret;
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     @Value("${jwt.expiration.ms}")
     private long jwtExpirationInMs;
 
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${jwt.issuer}")
+    private String jwtIssuer;
+
+    @Value("${jwt.access-token.expiration-ms}")
+    private long jwtAccessExpirationMs;
+
+    @Value("${jwt.refresh-token.expiration-ms}")
+    private long jwtRefreshExpirationMs;
+
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
     public String generateToken(Long userId, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId); // Claim 1: userId
@@ -41,20 +54,53 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateAccessToken(Users user) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtAccessExpirationMs);
+
+        // สร้าง Claims ตาม Requirement
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("nickname", user.getNickName());
+        claims.put("id", user.getId()); // ใช้ "id" เป็นชื่อ claim
+        claims.put("email", user.getEmail());
+        claims.put("role", user.getUserType().name());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuer(jwtIssuer)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(Users user) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtRefreshExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(user.getId().toString()) // Refresh Token เก็บแค่ ID ก็เพียงพอ
+                .setIssuer(jwtIssuer)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public boolean validateToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(authToken);
             return true;
-        } catch (SignatureException ex) {
-            // Invalid JWT signature
+        } catch (SecurityException ex) {
+            logger.error("Invalid JWT signature");
         } catch (MalformedJwtException ex) {
-            // Invalid JWT token
+            logger.error("Invalid JWT token");
         } catch (ExpiredJwtException ex) {
-            // Expired JWT token
+            logger.error("Expired JWT token");
         } catch (UnsupportedJwtException ex) {
-            // Unsupported JWT token
+            logger.error("Unsupported JWT token");
         } catch (IllegalArgumentException ex) {
-            // JWT claims string is empty
+            logger.error("JWT claims string is empty.");
         }
         return false;
     }
@@ -63,16 +109,32 @@ public class JwtTokenProvider {
         return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
 
-    /**
-     * ดึง userId จาก Claim
-     */
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+//    public Integer extractId(String token) {
+//        // ใช้ "id" ให้ตรงกับตอนสร้าง และ get เป็น Integer
+//        return extractClaim(token, claims -> claims.get("id", Integer.class));
+//    }
+//
+//    public String extractEmail(String token) {
+//        return extractClaim(token, claims -> claims.get("email", String.class));
+//    }
+//    public Long getUserIdFromToken(String token) {
+//        // เรียกใช้ method ใหม่แล้วแปลง Integer เป็น Long
+//        return extractId(token).longValue();
+//    }
+//    public String getEmailFromToken(String token) {
+//        // เรียกใช้ method ใหม่โดยตรง
+//        return extractEmail(token);
+//    }
+
     public Long getUserIdFromToken(String token) {
         return extractAllClaims(token).get("userId", Long.class);
     }
 
-    /**
-     * ดึง email จาก Claim
-     */
     public String getEmailFromToken(String token) {
         return extractAllClaims(token).get("email", String.class);
     }

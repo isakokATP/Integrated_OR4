@@ -9,11 +9,12 @@
           type="email" 
           placeholder="itbkk.somchai@ad.sit.kmutt.ac.th"
           class="w-full border p-2 rounded" 
+          :maxlength="MAX_EMAIL_LENGTH"
         />
       </div>
       <div>
         <label class="block text-sm font-medium">Password</label>
-        <input v-model="password" type="password" class="w-full border p-2 rounded" />
+        <input v-model="password" type="password" class="w-full border p-2 rounded" :maxlength="MAX_PASSWORD_LENGTH" />
       </div>
       <button 
         :disabled="!isFormValid || loading" 
@@ -39,9 +40,17 @@ const loading = ref(false);
 const message = ref("");
 const messageType = ref("");
 
-// Check if form is valid (both email and password are filled)
+// Spec constants
+const MAX_EMAIL_LENGTH = 50;
+const MAX_PASSWORD_LENGTH = 14;
+// Simple email format check (HTML5-like)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Enable 'Sign In' only if email follows standard format and password is NOT empty
 const isFormValid = computed(() => {
-  return email.value.trim() && password.value.trim();
+  const isEmailValid = EMAIL_REGEX.test(email.value) && email.value.length <= MAX_EMAIL_LENGTH;
+  const isPasswordPresent = password.value.length > 0 && password.value.length <= MAX_PASSWORD_LENGTH;
+  return Boolean(isEmailValid && isPasswordPresent);
 });
 
 // ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE (ต้องมี /or4 เพราะ FE อยู่ใต้ base path)
@@ -54,36 +63,35 @@ async function onSubmit(e){
   messageType.value = "";
   
   try {
-    if (!email.value || !password.value) throw new Error("Email and password are required");
-
     const response = await fetch(`${LOGIN_URL}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
+      // Do not trim per spec; send raw values
       body: JSON.stringify({ email: email.value, password: password.value })
     });
 
     if (response.ok) {
-      // ต้องเรียก API เพื่อดึงข้อมูล user และแสดงชื่อเล่น
-      const userResponse = await fetch(`/or4/itb-mshop/v2/users?email=${encodeURIComponent(email.value)}`, {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
-      
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        message.value = `Welcome ${userData.nickName || 'User'}!`;
-        messageType.value = "success";
-        setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
-      } else {
-        message.value = "Logged in successfully!";
-        messageType.value = "success";
-        setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
-      }
+      const data = await response.json();
+      const accessToken = data.accessToken;
+      const refreshToken = data.refreshToken;
+
+      // Decode JWT (no verify) to get nickname claim
+      const payloadPart = accessToken.split('.')[1];
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const payloadJson = JSON.parse(atob(padded));
+      const nickname = payloadJson.nickname || 'User';
+
+      // Store tokens and nickname for later pages to use
+      sessionStorage.setItem('accessToken', accessToken);
+      sessionStorage.setItem('refreshToken', refreshToken);
+      sessionStorage.setItem('nickname', nickname);
+
+      // Redirect to sale items page; page can read nickname from storage
+      router.push({ name: "sale-items-page" });
     } else if (response.status === 401) {
       message.value = "Email or Password is incorrect.";
       messageType.value = "error";

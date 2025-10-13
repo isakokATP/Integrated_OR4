@@ -34,9 +34,9 @@
           <label class="block text-sm font-medium mb-1">Nickname *</label>
           <input 
             v-model="form.nickName" 
+            v-trim
             type="text" 
             class="w-full border p-2 rounded"
-            @blur="trimField('nickName')"
             required
           />
         </div>
@@ -45,9 +45,9 @@
           <label class="block text-sm font-medium mb-1">Email *</label>
           <input 
             v-model="form.email" 
+            v-trim
             type="email" 
             class="w-full border p-2 rounded"
-            @blur="trimField('email')"
             required
           />
         </div>
@@ -63,7 +63,6 @@
               'w-full border p-2 rounded',
               form.password && !isPasswordValid ? 'border-red-500' : 'border-gray-300'
             ]"
-            @blur="trimField('password')"
             required
           />
           <p class="text-xs mt-1" :class="form.password && !isPasswordValid ? 'text-red-600' : 'text-gray-600'">
@@ -81,12 +80,12 @@
           <label class="block text-sm font-medium mb-1">Full Name *</label>
           <input 
             v-model="form.fullName" 
+            v-trim
             type="text" 
             :class="[
               'w-full border p-2 rounded',
               form.fullName && !isFullNameValid ? 'border-red-500' : 'border-gray-300'
             ]"
-            @blur="trimField('fullName')"
             required
           />
           <p class="text-xs mt-1" :class="form.fullName && !isFullNameValid ? 'text-red-600' : 'text-gray-600'">
@@ -110,9 +109,9 @@
             <label class="block text-sm font-medium mb-1">Mobile Number *</label>
             <input 
               v-model="form.phoneNumber" 
+              v-trim
               type="tel" 
               class="w-full border p-2 rounded"
-              @blur="trimField('phoneNumber')"
               :required="form.userType === 'SELLER'"
             />
           </div>
@@ -121,9 +120,9 @@
             <label class="block text-sm font-medium mb-1">Bank Account Number *</label>
             <input 
               v-model="form.bankAccount" 
+              v-trim
               type="text" 
               class="w-full border p-2 rounded"
-              @blur="trimField('bankAccount')"
               :required="form.userType === 'SELLER'"
             />
           </div>
@@ -133,9 +132,9 @@
           <label class="block text-sm font-medium mb-1">Bank Name *</label>
           <input 
             v-model="form.bankName" 
+            v-trim
             type="text" 
             class="w-full border p-2 rounded"
-            @blur="trimField('bankName')"
             :required="form.userType === 'SELLER'"
           />
         </div>
@@ -144,9 +143,9 @@
           <label class="block text-sm font-medium mb-1">National ID Number *</label>
           <input 
             v-model="form.idCardNumber" 
+            v-trim
             type="text" 
             class="w-full border p-2 rounded"
-            @blur="trimField('idCardNumber')"
             :required="form.userType === 'SELLER'"
           />
         </div>
@@ -280,12 +279,7 @@ function handleFileChange(event, type) {
   }
 }
 
-// Trim function for lost focus
-function trimField(fieldName) {
-  if (form.value[fieldName]) {
-    form.value[fieldName] = form.value[fieldName].trim()
-  }
-}
+// (Removed) Manual trim on blur is now replaced by global v-trim directive
 
 // Form submission
 async function onSubmit() {
