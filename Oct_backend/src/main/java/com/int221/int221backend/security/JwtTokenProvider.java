@@ -54,14 +54,31 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+//    public String generateAccessToken(Users user) {
+//        Date now = new Date();
+//        Date expiryDate = new Date(now.getTime() + jwtAccessExpirationMs);
+//
+//        Map<String, Object> claims = new HashMap<>();
+//        claims.put("nickname", user.getNickName());
+//        claims.put("id", user.getId()); // ใช้ "id" เป็นชื่อ claim
+//        claims.put("email", user.getEmail());
+//        claims.put("role", user.getUserType().name());
+//
+//        return Jwts.builder()
+//                .setClaims(claims)
+//                .setIssuer(jwtIssuer)
+//                .setIssuedAt(now)
+//                .setExpiration(expiryDate)
+//                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+//                .compact();
+//    }
     public String generateAccessToken(Users user) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtAccessExpirationMs);
 
-        // สร้าง Claims ตาม Requirement
         Map<String, Object> claims = new HashMap<>();
         claims.put("nickname", user.getNickName());
-        claims.put("id", user.getId()); // ใช้ "id" เป็นชื่อ claim
+        claims.put("id", user.getId()); // <-- ใช้ "id" เป็นมาตรฐาน
         claims.put("email", user.getEmail());
         claims.put("role", user.getUserType().name());
 
@@ -79,8 +96,27 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtRefreshExpirationMs);
 
         return Jwts.builder()
-                .setSubject(user.getId().toString()) // Refresh Token เก็บแค่ ID ก็เพียงพอ
+                .setSubject(user.getId().toString())
                 .setIssuer(jwtIssuer)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateVerificationToken(Users user) {
+        long verificationExpirationMs = 3600000; // 1 hour
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + verificationExpirationMs);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("email", user.getEmail());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuer(jwtIssuer)
+                .setSubject("Email Verification")
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -114,22 +150,13 @@ public class JwtTokenProvider {
         return claimsResolver.apply(claims);
     }
 
-//    public Integer extractId(String token) {
-//        // ใช้ "id" ให้ตรงกับตอนสร้าง และ get เป็น Integer
-//        return extractClaim(token, claims -> claims.get("id", Integer.class));
-//    }
-//
-//    public String extractEmail(String token) {
-//        return extractClaim(token, claims -> claims.get("email", String.class));
-//    }
-//    public Long getUserIdFromToken(String token) {
-//        // เรียกใช้ method ใหม่แล้วแปลง Integer เป็น Long
-//        return extractId(token).longValue();
-//    }
-//    public String getEmailFromToken(String token) {
-//        // เรียกใช้ method ใหม่โดยตรง
-//        return extractEmail(token);
-//    }
+    public Long extractId(String token) {
+        return extractClaim(token, claims -> claims.get("id", Long.class));
+    }
+
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
 
     public Long getUserIdFromToken(String token) {
         return extractAllClaims(token).get("userId", Long.class);
