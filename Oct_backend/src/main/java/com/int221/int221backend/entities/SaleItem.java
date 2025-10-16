@@ -58,4 +58,8 @@ public class SaleItem {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;
+
+    @ManyToOne(fetch = FetchType.LAZY) // (LAZY fetch เพื่อประสิทธิภาพที่ดีกว่า)
+    @JoinColumn(name = "seller_id") // ❗️สำคัญ: เปลี่ยน "seller_id" ให้เป็นชื่อ Foreign Key ในตาราง sale_items ของคุณ
+    private Users seller;
 }

@@ -1,10 +1,7 @@
 package com.int221.int221backend.controller;
 
-import com.int221.int221backend.dto.request.TokenRequest;
-import com.int221.int221backend.dto.response.UserResponseDto;
-import com.int221.int221backend.dto.response.UserResponseVerDto;
+import com.int221.int221backend.dto.response.userresponse.UserResponseVerDto;
 import com.int221.int221backend.entities.Users;
-import com.int221.int221backend.entities.VerificationToken;
 import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
 import com.int221.int221backend.security.JwtTokenProvider;
@@ -12,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/itb-mshop")

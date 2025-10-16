@@ -1,20 +1,18 @@
 package com.int221.int221backend.controller;
 
-import com.int221.int221backend.dto.request.UpdateProfileRequestDto;
-import com.int221.int221backend.dto.request.UserRequestDto;
+import com.int221.int221backend.dto.request.userrequest.UpdateProfileRequestDto;
+import com.int221.int221backend.dto.request.userrequest.UserRequestDto;
 import com.int221.int221backend.dto.response.ErrorResponse;
-import com.int221.int221backend.dto.response.UserProfileResponseDto;
-import com.int221.int221backend.dto.response.UserResponseDto;
+import com.int221.int221backend.dto.response.userresponse.UserProfileResponseDto;
+import com.int221.int221backend.dto.response.userresponse.UserResponseDto;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
 import com.int221.int221backend.security.JwtTokenProvider;
 import com.int221.int221backend.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,15 +56,28 @@ public class UsersController {
 //        return ResponseEntity.ok(responseDto);
 //    }
 
+//    @GetMapping("/v2/users/{id}")
+//    public ResponseEntity<?> getUserProfile(@PathVariable Integer id, HttpServletRequest request) {
+//        try {
+//            authorizeRequest(Long.valueOf(id), request);
+//        } catch (SecurityException e) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+//        }
+//
+//        UserProfileResponseDto userProfile = userService.getUserProfileById(id);
+//        return ResponseEntity.ok(userProfile);
+//    }
+
     @GetMapping("/v2/users/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable Integer id, HttpServletRequest request) {
         try {
-            authorizeRequest(Long.valueOf(id), request);
+            authorizeRequest(id.longValue(), request);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
         }
 
-        UserProfileResponseDto userProfile = userService.getUserProfileById(id);
+        // ✅ รับค่าเป็น Object เพราะเราไม่รู้ว่า Service จะส่ง DTO ตัวไหนกลับมา
+        Object userProfile = userService.getUserProfileById(id);
         return ResponseEntity.ok(userProfile);
     }
 

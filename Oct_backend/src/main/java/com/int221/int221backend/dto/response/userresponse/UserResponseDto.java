@@ -1,4 +1,4 @@
-package com.int221.int221backend.dto.response;
+package com.int221.int221backend.dto.response.userresponse;
 
 import com.int221.int221backend.entities.Users;
 import lombok.Builder;
