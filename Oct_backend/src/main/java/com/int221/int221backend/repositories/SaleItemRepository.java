@@ -15,6 +15,8 @@ import java.util.List;
 public interface SaleItemRepository extends JpaRepository <SaleItem, Integer> {
     Integer countSaleItemByBrand_Id(Integer brandId);
 
+    Page<SaleItem> findAllBySeller_Id(Integer sellerId, Pageable pageable);
+
     @Query("select st from SaleItem st " +
             "where (:brandList is null or st.brand.name IN :brandList) " +
             "and (:storageList is null or st.storageGb IN :storageList or (-1 in (:storageList) and st.storageGb is null)) " +

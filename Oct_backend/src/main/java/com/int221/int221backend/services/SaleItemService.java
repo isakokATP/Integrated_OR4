@@ -1,18 +1,17 @@
 package com.int221.int221backend.services;
 
-import com.int221.int221backend.dto.request.NewSaleItemDto;
-import com.int221.int221backend.dto.request.SaleItemImageInfo;
-import com.int221.int221backend.dto.request.SaleItemImageRequest;
-import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
+import com.int221.int221backend.dto.request.*;
 import com.int221.int221backend.dto.response.*;
 import com.int221.int221backend.entities.Attachment;
 import com.int221.int221backend.entities.Brand;
 import com.int221.int221backend.entities.SaleItem;
+import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.enums.FileType;
 import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.AttachmentRepository;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
+import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.utils.ListMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -24,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,16 +41,24 @@ import java.util.stream.Collectors;
 public class SaleItemService {
     @Autowired
     private SaleItemRepository saleItemRepository;
+
     @Autowired
     private ModelMapper modelMapper;
+
     @Autowired
     private BrandRepository brandRepository;
+
     @Autowired
     private EntityManager entityManager;
+
     @Autowired
     private ListMapper listMapper;
+
     @Autowired
     private AttachmentRepository attachmentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${file.upload-dir.saleitems}")
     private String uploadDir;
@@ -71,34 +79,26 @@ public class SaleItemService {
         if (images != null && images.size() > 4) {
             throw new IllegalArgumentException("You can upload maximum 4 images.");
         }
-        // Map DTO -> Entity
         SaleItem saleItem = modelMapper.map(newSaleItemDto, SaleItem.class);
-
         if (saleItem.getColor() == null || saleItem.getColor().trim().isEmpty()) {
             saleItem.setColor(null);
         }
-
         if (saleItem.getQuantity() != null && saleItem.getQuantity() < 0L) {
             throw new IllegalArgumentException("Quantity cannot be negative.");
         }
 
-
-        // บันทึก SaleItem
         SaleItem savedItem = saleItemRepository.save(saleItem);
 
-        // ตรวจสอบและบันทึกไฟล์รูป
         if (images != null && !images.isEmpty()) {
             int order = 1;
             for (MultipartFile file : images) {
 
-                // 1. ตรวจสอบขนาดไฟล์ ≤ 2MB
                 long maxSize = 2 * 1024 * 1024; // 2MB
                 if (file.getSize() > maxSize) {
                     throw new IllegalArgumentException(
                             "File " + file.getOriginalFilename() + " exceeds maximum allowed size of 2MB");
                 }
 
-                // 2. ตรวจสอบ FileType JPEG / PNG (ignore case)
                 String extension = getFileExtension(file.getOriginalFilename());
                 if (!extension.equalsIgnoreCase("jpg") &&
                         !extension.equalsIgnoreCase("jpeg") &&
@@ -107,7 +107,6 @@ public class SaleItemService {
                             "File " + file.getOriginalFilename() + " must be JPEG or PNG");
                 }
 
-                // สร้าง Path จาก uploadDir
                 String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
                 Path path = Path.of(uploadDir, fileName);
                 try {
@@ -131,7 +130,6 @@ public class SaleItemService {
             }
         }
 
-        // โหลด SaleItem พร้อม Attachment
         SaleItem reload = saleItemRepository.saveAndFlush(saleItem);
         entityManager.refresh(reload);
         modelMapper.map(reload, NewSaleItemResponseDto.class);
@@ -141,14 +139,12 @@ public class SaleItemService {
                 .map(a -> new AttachmentDto(a.getFilename(), a.getImageViewOrder()))
                 .toList();
 
-        // Map SaleItem → DTO
         NewSaleItemResponseDto responseDto = modelMapper.map(reload, NewSaleItemResponseDto.class);
         responseDto.setSaleItemImages(imageDtos);
 
         return responseDto;
     }
 
-    // Helper ดึงนามสกุลไฟล์
     private String getFileExtension(String fileName) {
         if (fileName == null || !fileName.contains(".")) {
             throw new IllegalArgumentException("Invalid file name: " + fileName);
@@ -399,5 +395,58 @@ public class SaleItemService {
         response.setSort(String.format("%s : %s", sortBy, sortDirection));
         response.setPage(page);
         return response;
+    }
+
+//    public List<SaleItemResponseDto> getSaleItemsBySellerId(Long sellerId) {
+//        // ค้นหาสินค้าทั้งหมดใน repository โดยอ้างอิงจาก ID ของผู้ขาย
+//        return saleItemRepository.findAllBySeller_Id(sellerId) // สมมติว่าใน SaleItem entity มี field ชื่อ 'seller' ที่เชื่อมกับ Users
+//                .stream()
+//                .map(SaleItemResponseDto::fromEntity) // แปลงแต่ละ SaleItem entity เป็น DTO
+//                .collect(Collectors.toList());
+//    }
+
+    public SellerSaleItemPaginateDto getSaleItemsBySellerId(Integer sellerId, Pageable pageable) {
+        Page<SaleItem> saleItemPage = saleItemRepository.findAllBySeller_Id(sellerId, pageable);
+        List<SaleItemPageResponseDto> dtoContent = saleItemPage.getContent()
+                .stream()
+                .map(SaleItemPageResponseDto::fromEntity)
+                .collect(Collectors.toList());
+
+        SellerSaleItemPaginateDto response = new SellerSaleItemPaginateDto();
+        response.setContent(dtoContent);
+        response.setLast(saleItemPage.isLast());
+        response.setFirst(saleItemPage.isFirst());
+        response.setTotalPages(saleItemPage.getTotalPages());
+        response.setTotalElements((int) saleItemPage.getTotalElements());
+        response.setSize(saleItemPage.getSize());
+        response.setSort(saleItemPage.getSort().toString());
+        response.setPage(saleItemPage.getNumber());
+
+        return response;
+    }
+
+    @Transactional
+    public SaleItemDetailResponseDto createSaleItemForSeller(Long sellerId, CreateSaleItemRequestDto createDto) {
+        Users seller = userRepository.findById(sellerId.intValue())
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + sellerId));
+
+        Brand brand = brandRepository.findById(createDto.getBrandId())
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + createDto.getBrandId()));
+
+        SaleItem newSaleItem = new SaleItem();
+        newSaleItem.setModel(createDto.getModel());
+        newSaleItem.setDescription(createDto.getDescription());
+        newSaleItem.setPrice(createDto.getPrice());
+        newSaleItem.setRamGb(createDto.getRamGb());
+        newSaleItem.setStorageGb(createDto.getStorageGb());
+        newSaleItem.setColor(createDto.getColor());
+        newSaleItem.setQuantity(createDto.getQuantity());
+
+        newSaleItem.setSeller(seller);
+        newSaleItem.setBrand(brand);
+
+        SaleItem savedItem = saleItemRepository.save(newSaleItem);
+
+        return SaleItemDetailResponseDto.fromEntity(savedItem);
     }
 }

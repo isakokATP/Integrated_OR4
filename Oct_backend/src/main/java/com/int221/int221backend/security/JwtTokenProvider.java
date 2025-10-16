@@ -54,24 +54,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-//    public String generateAccessToken(Users user) {
-//        Date now = new Date();
-//        Date expiryDate = new Date(now.getTime() + jwtAccessExpirationMs);
-//
-//        Map<String, Object> claims = new HashMap<>();
-//        claims.put("nickname", user.getNickName());
-//        claims.put("id", user.getId()); // ใช้ "id" เป็นชื่อ claim
-//        claims.put("email", user.getEmail());
-//        claims.put("role", user.getUserType().name());
-//
-//        return Jwts.builder()
-//                .setClaims(claims)
-//                .setIssuer(jwtIssuer)
-//                .setIssuedAt(now)
-//                .setExpiration(expiryDate)
-//                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-//                .compact();
-//    }
     public String generateAccessToken(Users user) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtAccessExpirationMs);
@@ -141,6 +123,11 @@ public class JwtTokenProvider {
         return false;
     }
 
+    public Integer extractIdFromRefreshToken(String token) { // <--- แก้ให้ return Integer
+        String subject = extractClaim(token, Claims::getSubject);
+        return Integer.parseInt(subject);
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
@@ -164,5 +151,9 @@ public class JwtTokenProvider {
 
     public String getEmailFromToken(String token) {
         return extractAllClaims(token).get("email", String.class);
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 }

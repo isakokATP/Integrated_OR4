@@ -1,5 +1,6 @@
 package com.int221.int221backend.controller;
 
+import com.int221.int221backend.dto.request.CreateSaleItemRequestDto;
 import com.int221.int221backend.dto.request.NewSaleItemDto;
 import com.int221.int221backend.dto.request.SaleItemImageInfo;
 import com.int221.int221backend.dto.request.SaleItemsUpdateDto;
@@ -10,10 +11,12 @@ import com.int221.int221backend.entities.SaleItem;
 import com.int221.int221backend.exception.NotFoundException;
 import com.int221.int221backend.repositories.BrandRepository;
 import com.int221.int221backend.repositories.SaleItemRepository;
+import com.int221.int221backend.security.JwtTokenProvider;
 import com.int221.int221backend.services.SaleItemService;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +43,9 @@ public class SaleItemController {
 
     @Autowired
     private SaleItemRepository saleItemRepository;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/v1/sale-items")
     public List<SaleItemDto> getAllSaleItem() {
@@ -144,15 +150,6 @@ public class SaleItemController {
         }
     }
 
-//    @DeleteMapping("/v2/sale-items/{saleItemId}/attachments/by-order")
-//    public ResponseEntity<Void> deleteAttachmentByFileName(
-//            @PathVariable Integer saleItemId,
-//            @RequestParam Integer imageViewOrder) {
-//
-//        saleItemService.deleteAttachmentByFileName(saleItemId, imageViewOrder);
-//        return ResponseEntity.noContent().build();
-//    }
-
     @DeleteMapping("/v2/sale-items/{id}")
     public ResponseEntity<Void> deleteSaleItem(@PathVariable Integer id) {
         try {
@@ -162,6 +159,109 @@ public class SaleItemController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete SaleItem", e);
+        }
+    }
+
+    @GetMapping("/v2/sellers/{id}/sale-items")
+    public ResponseEntity<?> getSellerSaleItems(
+            @PathVariable Long id,
+            Pageable pageable,
+            HttpServletRequest request) {
+        try {
+            String token = extractTokenFromRequest(request);
+            if (token == null || !jwtTokenProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Invalid or missing token"));
+            }
+
+            Long loggedInUserId = jwtTokenProvider.extractId(token);
+            String userRole = jwtTokenProvider.extractRole(token);
+
+            if (loggedInUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("Access Denied: Token is missing user ID information."));
+            }
+
+            if (!"SELLER".equalsIgnoreCase(userRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("Access Denied: User is not a seller."));
+            }
+
+            if (!loggedInUserId.equals(id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("Access Denied: You can only view your own sale items."));
+            }
+
+            SellerSaleItemPaginateDto saleItems = saleItemService.getSaleItemsBySellerId(id.intValue(), pageable);
+
+            return ResponseEntity.ok(saleItems);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/v2/sellers/{id}/sale-items")
+    public ResponseEntity<?> createSaleItemForSeller(
+            @PathVariable Long id,
+            @RequestParam String model,
+            @RequestParam Integer brandId,
+            @RequestParam String description,
+            @RequestParam Integer price,
+            @RequestParam(required = false) Integer ramGb,
+            @RequestParam(required = false) Integer storageGb,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) Long quantity,
+            HttpServletRequest request) {
+
+        try {
+            authorizeRequest(id, request);
+
+            CreateSaleItemRequestDto createDto = new CreateSaleItemRequestDto();
+            createDto.setModel(model);
+            createDto.setBrandId(brandId);
+            createDto.setDescription(description);
+            createDto.setPrice(price);
+            createDto.setRamGb(ramGb);
+            createDto.setStorageGb(storageGb);
+            createDto.setColor(color);
+            createDto.setQuantity(quantity);
+
+            SaleItemDetailResponseDto newSaleItem = saleItemService.createSaleItemForSeller(id, createDto);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(newSaleItem);
+
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // ตัดคำว่า "Bearer " ออก
+        }
+        return null;
+    }
+
+    private void authorizeRequest(Long resourceId, HttpServletRequest request) throws SecurityException {
+        String token = extractTokenFromRequest(request);
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            throw new SecurityException("401: Invalid or missing token.");
+        }
+
+        Long loggedInUserId = jwtTokenProvider.extractId(token);
+        String userRole = jwtTokenProvider.extractRole(token);
+
+        if (loggedInUserId == null) {
+            throw new SecurityException("403: Token is missing user ID information.");
+        }
+        if (!"SELLER".equalsIgnoreCase(userRole)) {
+            throw new SecurityException("403: Access Denied. User is not a seller.");
+        }
+        if (!loggedInUserId.equals(resourceId)) {
+            throw new SecurityException("403: Access Denied. You can only add items to your own account.");
         }
     }
 }

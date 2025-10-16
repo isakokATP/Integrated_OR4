@@ -1,4 +1,4 @@
-package com.int221.int221backend.dto.request;
+package com.int221.int221backend.dto.request.userrequest;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

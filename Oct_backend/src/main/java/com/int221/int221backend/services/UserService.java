@@ -1,11 +1,12 @@
 package com.int221.int221backend.services;
 
-import com.int221.int221backend.dto.request.UpdateProfileRequestDto;
-import com.int221.int221backend.dto.request.UserRequestDto;
-import com.int221.int221backend.dto.response.UserProfileResponseDto;
-import com.int221.int221backend.dto.response.UserResponseDto;
+import com.int221.int221backend.dto.request.userrequest.UpdateProfileRequestDto;
+import com.int221.int221backend.dto.request.userrequest.UserRequestDto;
+import com.int221.int221backend.dto.response.userresponse.BuyerProfileResponseDto;
+import com.int221.int221backend.dto.response.userresponse.SellerProfileResponseDto;
+import com.int221.int221backend.dto.response.userresponse.UserProfileResponseDto;
+import com.int221.int221backend.dto.response.userresponse.UserResponseDto;
 import com.int221.int221backend.entities.Users;
-import com.int221.int221backend.entities.VerificationToken;
 import com.int221.int221backend.exception.DuplicateResourceException;
 import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.repositories.VerificationTokenRepository;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -149,11 +149,11 @@ public class UserService {
         return UserResponseDto.fromEntity(user);
     }
 
-    public UserProfileResponseDto getUserProfileById(Integer userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return UserProfileResponseDto.fromEntity(user);
-    }
+//    public UserProfileResponseDto getUserProfileById(Integer userId) {
+//        Users user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+//        return UserProfileResponseDto.fromEntity(user);
+//    }
 
     @Transactional
     public UserProfileResponseDto updateUserProfile(Integer userId, UpdateProfileRequestDto updateDto) {
@@ -182,5 +182,20 @@ public class UserService {
                 .idCardImageFront(user.getIdCardImageFront())
                 .idCardImageBack(user.getIdCardImageBack())
                 .build();
+    }
+
+    public Object getUserProfileById(Integer userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        switch (user.getUserType()) {
+            case BUYER:
+                return BuyerProfileResponseDto.fromEntity(user);
+            case SELLER:
+                return SellerProfileResponseDto.fromEntity(user);
+            default:
+                // กรณีมี Role อื่นๆ ที่ไม่ได้คาดไว้ อาจจะคืนค่าพื้นฐานหรือโยน Exception
+                throw new IllegalStateException("Unexpected user type: " + user.getUserType());
+        }
     }
 }
