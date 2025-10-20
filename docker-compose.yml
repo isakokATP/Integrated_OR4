@@ -1,3 +1,58 @@
+# version: "3.8"
+
+# services:
+#   mysql:
+#     image: mysql:8
+#     container_name: int221-mysql
+#     restart: always
+#     ports:
+#       - "${MYSQL_PORT}:3306"
+#     environment:
+#       MYSQL_ROOT_PASSWORD: 'mysql'
+#     volumes:
+#       - mysql-data:/var/lib/mysql
+#       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+#     networks:
+#       - int221-net
+
+#   backend:
+#     build:
+#       context: ./Oct_backend
+#       dockerfile: Dockerfile
+#       network: host
+#     container_name: int221-backend
+#     restart: always
+#     ports:
+#       - "8080:8080"
+#     depends_on:
+#       - mysql
+#     volumes:
+#       - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
+#       - /home/shisanucha/Integrated_OR4/users:/app/users
+#     networks:
+#       - int221-net
+
+#   frontend:
+#     build:
+#       context: ./Oct_frontend
+#       dockerfile: Dockerfile
+#     container_name: int221-frontend
+#     restart: always
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+#     volumes:
+#       - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
+#       - /home/shisanucha/Integrated_OR4/users:/app/users
+#     networks:
+#       - int221-net
+
+# volumes:
+#   mysql-data:
+
+# networks:
+#   int221-net:
 version: "3.8"
 
 services:
@@ -40,11 +95,13 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     volumes:
       - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
       - /home/shisanucha/Integrated_OR4/users:/app/users
+      - /home/shisanucha/Integrated_OR4/nginx/ssl:/ssl
     networks:
       - int221-net
 
