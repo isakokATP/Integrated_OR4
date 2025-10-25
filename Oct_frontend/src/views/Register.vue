@@ -58,6 +58,7 @@
           <label class="block text-sm font-medium mb-1">Password *</label>
           <input 
             v-model="form.password" 
+            v-trim
             type="password" 
             :class="[
               'w-full border p-2 rounded',
