@@ -6,7 +6,7 @@
         <label class="block text-sm font-medium">Email</label>
         <input
           v-model="email"
-          v-trim-on-blur
+          v-trim
           type="email"
           placeholder="itbkk.somchai@ad.sit.kmutt.ac.th"
           class="w-full border p-2 rounded"
@@ -18,7 +18,7 @@
         <label class="block text-sm font-medium">Password</label>
         <input
           v-model="password"
-          v-trim-on-blur
+          v-trim
           type="password"
           class="w-full border p-2 rounded"
           :maxlength="MAX_PASSWORD_LENGTH"
@@ -59,21 +59,6 @@ const MAX_PASSWORD_LENGTH = 14;
 // Simple email format check (HTML5-like)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Local directive: trim only on blur (focus out)
-const vTrimOnBlur = {
-  mounted(el) {
-    el.addEventListener("blur", () => {
-      if (el.value && typeof el.value === "string") {
-        el.value = el.value.trim();
-        el.dispatchEvent(new Event("input")); // sync back to v-model
-      }
-    });
-  },
-};
-
-// Register directive locally
-defineDirective("trim-on-blur", vTrimOnBlur);
-
 // Enable 'Sign In' only if email follows standard format and password is NOT empty
 const isFormValid = computed(() => {
   const trimmedEmail = email.value.trim();
@@ -107,7 +92,10 @@ async function onSubmit(e) {
         "Content-Type": "application/json",
         "X-Requested-With": "XMLHttpRequest",
       },
-      body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
+      body: JSON.stringify({
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
     });
 
     if (response.ok) {
