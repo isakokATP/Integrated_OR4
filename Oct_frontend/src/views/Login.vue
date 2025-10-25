@@ -4,26 +4,39 @@
     <form @submit.prevent="onSubmit" class="space-y-4">
       <div>
         <label class="block text-sm font-medium">Email</label>
-        <input 
-          v-model="email" 
-          type="email" 
+        <input
+          v-model="email"
+          v-trim-on-blur
+          type="email"
           placeholder="itbkk.somchai@ad.sit.kmutt.ac.th"
-          class="w-full border p-2 rounded" 
+          class="w-full border p-2 rounded"
           :maxlength="MAX_EMAIL_LENGTH"
+          required
         />
       </div>
       <div>
         <label class="block text-sm font-medium">Password</label>
-        <input v-model="password" type="password" class="w-full border p-2 rounded" :maxlength="MAX_PASSWORD_LENGTH" />
+        <input
+          v-model="password"
+          v-trim-on-blur
+          type="password"
+          class="w-full border p-2 rounded"
+          :maxlength="MAX_PASSWORD_LENGTH"
+          required
+        />
       </div>
-      <button 
-        :disabled="!isFormValid || loading" 
+      <button
+        :disabled="!isFormValid || loading"
         class="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {{ loading ? 'Signing In...' : 'Sign In' }}
+        {{ loading ? "Signing In..." : "Sign In" }}
       </button>
     </form>
-    <p v-if="message" class="mt-3 text-sm" :class="messageType === 'error' ? 'text-red-600' : 'text-green-600'">
+    <p
+      v-if="message"
+      class="mt-3 text-sm"
+      :class="messageType === 'error' ? 'text-red-600' : 'text-green-600'"
+    >
       {{ message }}
     </p>
   </div>
@@ -46,31 +59,55 @@ const MAX_PASSWORD_LENGTH = 14;
 // Simple email format check (HTML5-like)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Local directive: trim only on blur (focus out)
+const vTrimOnBlur = {
+  mounted(el) {
+    el.addEventListener("blur", () => {
+      if (el.value && typeof el.value === "string") {
+        el.value = el.value.trim();
+        el.dispatchEvent(new Event("input")); // sync back to v-model
+      }
+    });
+  },
+};
+
+// Register directive locally
+defineDirective("trim-on-blur", vTrimOnBlur);
+
 // Enable 'Sign In' only if email follows standard format and password is NOT empty
 const isFormValid = computed(() => {
-  const isEmailValid = EMAIL_REGEX.test(email.value) && email.value.length <= MAX_EMAIL_LENGTH;
-  const isPasswordPresent = password.value.length > 0 && password.value.length <= MAX_PASSWORD_LENGTH;
+  const trimmedEmail = email.value.trim();
+  const trimmedPassword = password.value.trim();
+
+  const isEmailValid =
+    EMAIL_REGEX.test(trimmedEmail) && trimmedEmail.length <= MAX_EMAIL_LENGTH;
+
+  const isPasswordPresent =
+    trimmedPassword.length > 0 && trimmedPassword.length <= MAX_PASSWORD_LENGTH;
+
   return Boolean(isEmailValid && isPasswordPresent);
 });
 
 // ใช้ endpoint ตรวจสอบอีเมล/รหัสผ่านของ BE (ต้องมี /or4 เพราะ FE อยู่ใต้ base path)
-const LOGIN_URL = '/or4/itb-mshop/v2/auth/login'
+const LOGIN_URL = "/or4/itb-mshop/v2/auth/login";
 
-async function onSubmit(e){
+async function onSubmit(e) {
   e.preventDefault();
   loading.value = true;
   message.value = "";
   messageType.value = "";
-  
+
   try {
+    const trimmedEmail = email.value.trim();
+    const trimmedPassword = password.value.trim();
+
     const response = await fetch(`${LOGIN_URL}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
       },
-      // Do not trim per spec; send raw values
-      body: JSON.stringify({ email: email.value, password: password.value })
+      body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
     });
 
     if (response.ok) {
@@ -79,16 +116,16 @@ async function onSubmit(e){
       const refreshToken = data.refreshToken;
 
       // Decode JWT (no verify) to get nickname claim
-      const payloadPart = accessToken.split('.')[1];
-      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const payloadPart = accessToken.split(".")[1];
+      const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
       const payloadJson = JSON.parse(atob(padded));
-      const nickname = payloadJson.nickname || 'User';
+      const nickname = payloadJson.nickname || "User";
 
       // Store tokens and nickname for later pages to use
-      sessionStorage.setItem('accessToken', accessToken);
-      sessionStorage.setItem('refreshToken', refreshToken);
-      sessionStorage.setItem('nickname', nickname);
+      sessionStorage.setItem("accessToken", accessToken);
+      sessionStorage.setItem("refreshToken", refreshToken);
+      sessionStorage.setItem("nickname", nickname);
 
       // Redirect to sale items page; page can read nickname from storage
       router.push({ name: "sale-items-page" });
@@ -102,7 +139,6 @@ async function onSubmit(e){
       message.value = `There is a problem. Please try again later.`;
       messageType.value = "error";
     }
-
   } catch (err) {
     message.value = err.message || "Login failed";
     messageType.value = "error";
