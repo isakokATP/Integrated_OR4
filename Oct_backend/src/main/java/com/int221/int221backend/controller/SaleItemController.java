@@ -108,18 +108,14 @@ public class SaleItemController {
             @RequestParam(value = "SaleItemImages", required = false) List<MultipartFile> images
     ) {
         try {
-            // 1. เรียก Service เพื่อสร้าง SaleItem และบันทึกรูป
             NewSaleItemResponseDto response = saleItemService.createSaleItem(newSaleItem, images);
 
-            // 2. Return response
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (IllegalArgumentException e) {
-            // กรณีไฟล์ไม่ผ่าน validation (ขนาดไฟล์ / file type)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
         } catch (Exception e) {
-            // กรณีอื่น ๆ
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create SaleItem", e);
         }
     }

@@ -81,7 +81,6 @@ public class AuthController {
             String accessToken = jwtTokenProvider.generateAccessToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            //สร้าง HttpOnly Cookie สำหรับ Refresh Token
             Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(false);   // ตั้งเป็น true เมื่อ deploy บน HTTPS, false สำหรับทดสอบบน HTTP localhost
@@ -105,8 +104,6 @@ public class AuthController {
             );
         }
     }
-
-//    @PostMapping("/v2/auth/logout")
 
     @PostMapping("/v2/auth/refresh")
     public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
