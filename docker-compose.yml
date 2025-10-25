@@ -40,11 +40,13 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     volumes:
       - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
       - /home/shisanucha/Integrated_OR4/users:/app/users
+      - /home/shisanucha/Integrated_OR4/nginx/ssl:/ssl
     networks:
       - int221-net
 

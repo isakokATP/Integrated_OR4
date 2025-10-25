@@ -131,4 +131,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid or expired Refresh Token"));
         }
     }
+
+    @PostMapping("/v2/auth/logout")
+    public ResponseEntity<?> logoutUser(HttpServletResponse httpResponse) {
+        Cookie cookie = new Cookie("refresh_token", null);
+
+        cookie.setMaxAge(0);
+
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // ❗️ ตั้งเป็น true เมื่อ deploy บน HTTPS
+        cookie.setPath("/");
+
+        httpResponse.addCookie(cookie);
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
 }
