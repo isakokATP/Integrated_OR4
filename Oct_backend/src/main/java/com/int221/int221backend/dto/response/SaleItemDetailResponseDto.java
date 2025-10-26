@@ -5,12 +5,15 @@ import com.int221.int221backend.entities.SaleItem;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 public class SaleItemDetailResponseDto {
     private Integer id;
     private String model;
     private String brandName;
+    private BigDecimal screenSize;
     private Integer price;
     private Integer storageGb;
     private Integer ramGb;
@@ -22,13 +25,14 @@ public class SaleItemDetailResponseDto {
         return SaleItemDetailResponseDto.builder()
                 .id(saleItem.getId())
                 .model(saleItem.getModel())
-                .brandName(saleItem.getBrand().getName()) // ดึงชื่อแบรนด์จาก Entity ที่เชื่อมกัน
+                .brandName(saleItem.getBrand().getName())
+                .screenSize(saleItem.getScreenSizeInch())
                 .price(saleItem.getPrice())
                 .storageGb(saleItem.getStorageGb())
                 .ramGb(saleItem.getRamGb())
                 .quantity(saleItem.getQuantity())
                 .color(saleItem.getColor())
-                .seller(SellerSummaryDto.builder() // สร้าง DTO ย่อยสำหรับ Seller
+                .seller(SellerSummaryDto.builder()
                         .id(saleItem.getSeller().getId())
                         .userName(saleItem.getSeller().getNickName())
                         .build())
