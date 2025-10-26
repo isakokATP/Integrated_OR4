@@ -3,6 +3,7 @@ package com.int221.int221backend.services;
 import com.int221.int221backend.dto.request.order.OrderItemDto;
 import com.int221.int221backend.dto.request.order.PlaceOrderRequestDto;
 import com.int221.int221backend.dto.request.order.PlaceOrderSellerGroupDto;
+import com.int221.int221backend.dto.response.history.OrderSummaryDto;
 import com.int221.int221backend.dto.response.order.OrderResponseDto;
 import com.int221.int221backend.entities.Order;
 import com.int221.int221backend.entities.OrderItem;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -110,5 +112,15 @@ public class OrderService {
                 .shippingAddress(savedOrder.getShippingAddress())
                 .note(savedOrder.getNote())
                 .build();
+    }
+
+    public List<OrderSummaryDto> getOrderHistory(Long buyerUserId) {
+        // Use the custom repository method to fetch orders and related data efficiently
+        List<Order> orders = orderRepository.findByBuyerIdWithDetailsOrderByOrderTimestampDesc(buyerUserId.intValue());
+
+        // Map the list of Order entities to a list of OrderSummaryDto
+        return orders.stream()
+                .map(OrderSummaryDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }
