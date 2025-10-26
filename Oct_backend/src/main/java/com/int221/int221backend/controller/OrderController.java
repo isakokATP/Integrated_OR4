@@ -2,6 +2,7 @@ package com.int221.int221backend.controller;
 
 import com.int221.int221backend.dto.request.order.PlaceOrderRequestDto;
 import com.int221.int221backend.dto.response.ErrorResponse;
+import com.int221.int221backend.dto.response.history.OrderSummaryDto;
 import com.int221.int221backend.dto.response.order.OrderResponseDto;
 import com.int221.int221backend.exception.InsufficientStockException;
 import com.int221.int221backend.security.JwtTokenProvider;
@@ -12,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/itb-mshop")
@@ -41,6 +45,30 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Failed to place order: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/v2/users/{id}/orders")
+    public ResponseEntity<?> getOrderHistory(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        try {
+            Long loggedInUserId = getUserIdFromRequest(request);
+
+            if (!loggedInUserId.equals(id)) {
+                throw new AccessDeniedException("Access Denied: You can only view your own orders.");
+            }
+
+            List<OrderSummaryDto> orderHistory = orderService.getOrderHistory(id);
+
+            return ResponseEntity.ok(orderHistory);
+
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An error occurred fetching order history: " + e.getMessage()));
         }
     }
 
