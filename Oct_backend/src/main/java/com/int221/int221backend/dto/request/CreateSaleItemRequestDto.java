@@ -1,10 +1,11 @@
 package com.int221.int221backend.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
-
-import java.math.BigDecimal;
 
 @Data
 public class CreateSaleItemRequestDto {
@@ -17,9 +18,6 @@ public class CreateSaleItemRequestDto {
 
     @NotBlank(message = "Description cannot be empty")
     private String description;
-
-    @DecimalMin(value = "0.00", message = "Screen size must not be negative")
-    private BigDecimal screenSizeInch;
 
     @NotNull(message = "Price cannot be null")
     @Min(value = 0, message = "Price must be zero or greater")

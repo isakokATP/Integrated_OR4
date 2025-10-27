@@ -1,16 +1,15 @@
 SET NAMES utf8mb4;
 
-CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';
-GRANT ALL ON *.* TO 'user'@'%';
+-- CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';
+-- GRANT ALL ON *.* TO 'user'@'%';
 CREATE SCHEMA IF NOT EXISTS pbi1;
 USE pbi1;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS cart_items;
-DROP TABLE IF EXISTS attachments;
+
 DROP TABLE IF EXISTS sale_items;
-DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS brands;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
@@ -90,46 +89,6 @@ CREATE TABLE sale_items (
                             updated_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             FOREIGN KEY (brand_id) REFERENCES brands(id),
                             FOREIGN KEY (seller_id) REFERENCES users(id)
-);
-
-CREATE TABLE cart_items (
-                            id INT AUTO_INCREMENT PRIMARY KEY,
-                            user_id INT NOT NULL,
-                            sale_item_id INT NOT NULL,
-                            seller_id INT NOT NULL,
-                            quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                            FOREIGN KEY (sale_item_id) REFERENCES sale_items(id) ON DELETE CASCADE,
-                            FOREIGN KEY (seller_id) REFERENCES users(id),
-
-                            UNIQUE KEY uk_user_sale_item (user_id, sale_item_id)
-);
-
-CREATE TABLE orders (
-                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        buyer_user_id INT NOT NULL,
-                        order_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        total_items INT DEFAULT NULL,
-                        total_price DECIMAL(10, 2) DEFAULT NULL,
-                        status ENUM('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED') DEFAULT 'PENDING',
-                        shipping_address VARCHAR(500) DEFAULT NULL,
-                        note VARCHAR(500) DEFAULT NULL,
-
-                        FOREIGN KEY (buyer_user_id) REFERENCES users(id)
-);
-
-CREATE TABLE order_items (
-                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                             order_id BIGINT NOT NULL,
-                             sale_item_id INT NOT NULL,
-                             quantity INT NOT NULL CHECK (quantity > 0),
-                             price_at_order DECIMAL(10, 2) NOT NULL,
-
-                             FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-                             FOREIGN KEY (sale_item_id) REFERENCES sale_items(id)
 );
 
 INSERT INTO brands (name, country_of_origin, website_url, is_active) VALUES

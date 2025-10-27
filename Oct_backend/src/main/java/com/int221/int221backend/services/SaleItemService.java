@@ -436,7 +436,6 @@ public class SaleItemService {
         SaleItem newSaleItem = new SaleItem();
         newSaleItem.setModel(createDto.getModel());
         newSaleItem.setDescription(createDto.getDescription());
-        newSaleItem.setScreenSizeInch(createDto.getScreenSizeInch());
         newSaleItem.setPrice(createDto.getPrice());
         newSaleItem.setRamGb(createDto.getRamGb());
         newSaleItem.setStorageGb(createDto.getStorageGb());

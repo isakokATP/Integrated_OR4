@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -205,7 +204,6 @@ public class SaleItemController {
             @RequestParam String model,
             @RequestParam Integer brandId,
             @RequestParam String description,
-            @RequestParam BigDecimal screenSize,
             @RequestParam Integer price,
             @RequestParam(required = false) Integer ramGb,
             @RequestParam(required = false) Integer storageGb,
@@ -220,7 +218,6 @@ public class SaleItemController {
             createDto.setModel(model);
             createDto.setBrandId(brandId);
             createDto.setDescription(description);
-            createDto.setScreenSizeInch(screenSize);
             createDto.setPrice(price);
             createDto.setRamGb(ramGb);
             createDto.setStorageGb(storageGb);
