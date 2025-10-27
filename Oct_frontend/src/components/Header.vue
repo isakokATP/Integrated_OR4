@@ -108,7 +108,11 @@ function clearSearch() {
     <!-- Enhanced User/Cart Icons -->
     <div class="flex items-center space-x-4 ml-6">
       <!-- user icon -->
-      <button class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group">
+      <router-link
+        :to="{ name: 'profile-page' }"
+        class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
+        title="Profile"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -123,7 +127,7 @@ function clearSearch() {
             d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
           />
         </svg>
-      </button>
+      </router-link>
 
       <!-- cart icon -->
       <button class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group relative">

@@ -1,7 +1,9 @@
 SET NAMES utf8mb4;
 
--- CREATE USER  'user'@'%' IDENTIFIED BY 'mysql';
--- GRANT ALL ON *.* TO 'user'@'%';
+CREATE USER IF NOT EXISTS 'user'@'%' IDENTIFIED BY 'mysql';
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'%';
+FLUSH PRIVILEGES;
+
 CREATE SCHEMA IF NOT EXISTS pbi1;
 USE pbi1;
 

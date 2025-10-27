@@ -160,9 +160,23 @@ public class UserService {
         Users userToUpdate = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // อัปเดตเฉพาะ field ที่อนุญาตให้แก้ไข
-        userToUpdate.setNickName(updateDto.getNickname());
-        userToUpdate.setFullName(updateDto.getFullname());
+        // อัปเดต nickname และ fullname (สำหรับทั้ง BUYER และ SELLER)
+        userToUpdate.setNickName(updateDto.getNickName());
+        userToUpdate.setFullName(updateDto.getFullName());
+
+        // อัปเดต email สำหรับ SELLER (ถ้ามีการระบุ)
+        if (userToUpdate.getUserType() == Users.UserType.SELLER && updateDto.getEmail() != null && !updateDto.getEmail().isEmpty()) {
+            // Check if email already exists for another user
+            if (userRepository.existsByEmail(updateDto.getEmail()) && !updateDto.getEmail().equalsIgnoreCase(userToUpdate.getEmail())) {
+                throw new DuplicateResourceException("Email already exists: " + updateDto.getEmail());
+            }
+            userToUpdate.setEmail(updateDto.getEmail());
+        }
+
+        // อัปเดต password ถ้ามีการระบุ (สำหรับ SELLER)
+        if (updateDto.getPassword() != null && !updateDto.getPassword().isEmpty()) {
+            userToUpdate.setPassword(passwordEncoder.encode(updateDto.getPassword()));
+        }
 
         Users updatedUser = userRepository.save(userToUpdate);
         return UserProfileResponseDto.fromEntity(updatedUser);

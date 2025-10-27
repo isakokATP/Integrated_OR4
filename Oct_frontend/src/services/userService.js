@@ -1,7 +1,7 @@
 import { handleApiError } from "../api/client";
 
-// ใช้ path proxy ของ nginx แทน port 8080
-const URL = "ip24or4.sit.kmutt.ac.th/itb-mshop";
+// ใช้ relative URL to avoid mixed content issues
+const URL = "";
 
 export async function registerUser(form) {
   try {
@@ -19,7 +19,7 @@ export async function registerUser(form) {
     if (form.idCardImageFront) fd.append("idCardImageFront", form.idCardImageFront);
     if (form.idCardImageBack) fd.append("idCardImageBack", form.idCardImageBack);
 
-    const res = await fetch(`${URL}/v2/users/register`, {
+    const res = await fetch(`${URL}/itb-mshop/v2/users/register`, {
       method: "POST",
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
@@ -39,7 +39,7 @@ export async function registerUser(form) {
 
 export async function verifyEmail(token) {
   try {
-    const res = await fetch(`${URL}/v2/auth/verify-email`, {
+    const res = await fetch(`${URL}/itb-mshop/v2/auth/verify-email`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

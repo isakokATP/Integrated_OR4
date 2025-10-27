@@ -1,6 +1,7 @@
 import { handleApiError } from "../api/client";
 
-const URL = "http://ip24or4.sit.kmutt.ac.th";
+// Use relative URL to avoid mixed content issues with HTTPS
+const URL = "";
 
 // API URL loaded from environment variables
 

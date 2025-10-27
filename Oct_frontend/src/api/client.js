@@ -3,9 +3,10 @@ const isLocalhost =
   window.location.hostname === "127.0.0.1" ||
   window.location.hostname === "::1";
 
+// Use relative URL in production to avoid mixed content issues
 export const apiUrl = isLocalhost
   ? import.meta.env.VITE_API_URL_LOCAL
-  : import.meta.env.VITE_API_URL_PROD;
+  : ""; // Use relative URL for production
 
 // if (!isLocalhost && !window.location.origin.startsWith("https")) {
 //   throw new Error("Invalid production API URL");

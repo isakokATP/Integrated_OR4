@@ -26,40 +26,37 @@ const password = ref("");
 const loading = ref(false);
 const message = ref("");
 
-// ใช้ nginx proxy (ไม่เรียก port 8080 ตรง ๆ)
-const LOGIN_URL = '/itb-mshop/v2/users'
-
 async function onSubmit(e){
   e.preventDefault();
   loading.value = true;
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
 
-    const credentials = btoa(`${email.value}:${password.value}`);
-
-    const response = await fetch(`${LOGIN_URL}?email=${email.value}`, {
-      method: 'GET',
+    const response = await fetch('/itb-mshop/v2/auth/login', {
+      method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      }),
+      credentials: 'include' // Important for cookies
     });
 
     if (response.ok) {
-      const userData = await response.json();
-
-      if (userData.status === 'ACTIVE') {
-        sessionStorage.setItem('userEmail', email.value);
-        sessionStorage.setItem('userPassword', password.value);
-        message.value = "Logged in successfully!";
-        setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
-      } else {
-        message.value = "Account is not active. Please verify your email first.";
-        setTimeout(() => router.push({ name: "verify-email-page" }), 2000);
+      const data = await response.json();
+      
+      // Store access token
+      if (data.accessToken) {
+        sessionStorage.setItem('accessToken', data.accessToken);
       }
-
+      
+      message.value = "Logged in successfully!";
+      setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
     } else {
-      message.value = "Invalid email or password";
+      const errorData = await response.json();
+      message.value = errorData.message || "Invalid email or password";
     }
 
   } catch (err) {

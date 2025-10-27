@@ -11,6 +11,8 @@ import EditBrand from "../views/EditBrand.vue";
 import Register from "../views/Register.vue";
 import Login from "../views/Login.vue";
 import VerifyEmail from "../views/VerifyEmail.vue";
+import Profile from "../views/Profile.vue";
+import EditProfile from "../views/EditProfile.vue";
 const routes = [
   {
     path: "/",
@@ -71,6 +73,16 @@ const routes = [
     path: "/verify-email",
     name: "verify-email-page",
     component: VerifyEmail,
+  },
+  {
+    path: "/profile",
+    name: "profile-page",
+    component: Profile,
+  },
+  {
+    path: "/profile/edit",
+    name: "edit-profile-page",
+    component: EditProfile,
   },
 ];
 
