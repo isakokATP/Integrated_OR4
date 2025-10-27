@@ -38,7 +38,7 @@
                 <span class="label-text font-semibold">Nickname</span>
               </label>
               <input
-                v-model="userProfile.nickName"
+                :value="userProfile.nickName || userProfile.nickname || ''"
                 type="text"
                 class="input input-bordered"
                 disabled
@@ -226,7 +226,9 @@ const fetchUserProfile = async () => {
       throw new Error(`Failed to fetch profile: ${response.status}`);
     }
 
-    userProfile.value = await response.json();
+    const data = await response.json();
+    console.log('Profile data received:', data);
+    userProfile.value = data;
   } catch (err) {
     error.value = handleApiError(err);
     console.error('Error fetching profile:', err);

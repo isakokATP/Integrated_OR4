@@ -28,11 +28,16 @@ export async function registerUser(form) {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || `Register failed (${res.status})`);
+      const errorData = await res.json().catch(() => ({ message: 'Registration failed' }));
+      const error = new Error(errorData.message || `Register failed (${res.status})`);
+      error.status = res.status; // Attach status code
+      throw error;
     }
     return await res.json();
   } catch (err) {
+    if (err.status) {
+      throw err; // Re-throw if it already has status
+    }
     throw handleApiError(err);
   }
 }
