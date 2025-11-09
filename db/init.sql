@@ -46,21 +46,21 @@ INSERT INTO users (
     id_card_image_back,
     status
 ) VALUES
-      (1, 'BUYER', 'Somchai', 'itbkk.somchai@ad.sit.kmutt.ac.th', 'itProj24*SOM', 'Somchai Jaidee',
+      (1, 'BUYER', 'Somchai', 'itbkk.somchai@ad.sit.kmutt.ac.th', '$argon2d$v=19$m=16,t=2,p=1$c0dyOGNYQWV4eXNhRTNRbg$9FFZoEIVUMDFGH9or9orAw', 'Somchai Jaidee',
        NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE'),
 
-      (2, 'BUYER', 'Somkiat', 'itbkk.somkiat@ad.sit.kmutt.ac.th', 'itProj24*SOM', 'Somkiat Luckchart',
+      (2, 'BUYER', 'Somkiat', 'itbkk.somkiat@ad.sit.kmutt.ac.th', '$argon2d$v=19$m=16,t=2,p=1$c0dyOGNYQWV4eXNhRTNRbg$9FFZoEIVUMDFGH9or9orAw', 'Somkiat Luckchart',
        NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE'),
 
-      (3, 'SELLER', 'Somsuan', 'itbkk.somsuan@ad.sit.kmutt.ac.th', 'itProj24*SOM', 'Somsuan Hundee',
+      (3, 'SELLER', 'Somsuan', 'itbkk.somsuan@ad.sit.kmutt.ac.th', '$argon2d$v=19$m=16,t=2,p=1$c0dyOGNYQWV4eXNhRTNRbg$9FFZoEIVUMDFGH9or9orAw', 'Somsuan Hundee',
        '0834567890', '0371234567', 'Bangkok Bank', '1000111100222',
        '1000111100222_front.png', '1000111100222_back.png', 'ACTIVE'),
 
-      (4, 'SELLER', 'Somsuk', 'itbkk.somsuk@ad.sit.kmutt.ac.th', 'itProj24*SOM', 'Somsuk Fundee',
+      (4, 'SELLER', 'Somsuk', 'itbkk.somsuk@ad.sit.kmutt.ac.th', '$argon2d$v=19$m=16,t=2,p=1$c0dyOGNYQWV4eXNhRTNRbg$9FFZoEIVUMDFGH9or9orAw', 'Somsuk Fundee',
        '0845678901', '2371234567', 'Siam Commercial Bank', '1000111100333',
        '1000111100333_front.png', '1000111100333_back.png', 'ACTIVE'),
 
-      (5, 'SELLER', 'Somsak', 'itbkk.somsak@ad.sit.kmutt.ac.th', 'itProj24*SOM', 'Somsak Saksit',
+      (5, 'SELLER', 'Somsak', 'itbkk.somsak@ad.sit.kmutt.ac.th', '$argon2d$v=19$m=16,t=2,p=1$c0dyOGNYQWV4eXNhRTNRbg$9FFZoEIVUMDFGH9or9orAw', 'Somsak Saksit',
        '0856789012', '0373456789', 'Bangkok Bank', '1000111100444',
        '1000111100444_front.png', '1000111100444_back.png', 'ACTIVE');
 

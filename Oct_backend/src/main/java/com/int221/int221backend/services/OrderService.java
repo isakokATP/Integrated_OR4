@@ -49,7 +49,7 @@ public class OrderService {
         Order newOrder = new Order();
         newOrder.setBuyer(buyer);
         newOrder.setOrderTimestamp(Instant.now());
-        newOrder.setStatus(OrderStatus.PENDING); // Set initial status
+        newOrder.setStatus(OrderStatus.PENDING);
 
         newOrder.setShippingAddress(requestDto.getShippingAddress());
         newOrder.setNote(requestDto.getNote());
@@ -74,8 +74,6 @@ public class OrderService {
                 }
 
                 saleItem.setQuantity(currentStock - requestedQuantity);
-
-                // 6. Create OrderItem entity
                 OrderItem orderItem = new OrderItem();
                 // orderItem.setOrder(newOrder); // Link will be set via cascade or helper method
                 orderItem.setSaleItem(saleItem);
@@ -84,7 +82,6 @@ public class OrderService {
                 // Use helper method to manage bidirectional relationship
                 newOrder.addItem(orderItem);
 
-                // 7. Remove item from the buyer's cart
                 cartItemRepository.findByUserAndSaleItem(buyer, saleItem)
                         .ifPresent(cartItemRepository::delete); // Delete if found
 
@@ -96,14 +93,11 @@ public class OrderService {
             }
         }
 
-        // 8. Set final calculated totals on the Order
         newOrder.setTotalPrice(calculatedTotalPrice);
         newOrder.setTotalItems(calculatedTotalItems);
 
-        // 9. Save the Order (which should cascade save OrderItems if configured)
         Order savedOrder = orderRepository.save(newOrder);
 
-        // 10. Build and return the response DTO
         return OrderResponseDto.builder()
                 .orderId(savedOrder.getId())
                 .orderTimestamp(savedOrder.getOrderTimestamp())
@@ -115,10 +109,8 @@ public class OrderService {
     }
 
     public List<OrderSummaryDto> getOrderHistory(Long buyerUserId) {
-        // Use the custom repository method to fetch orders and related data efficiently
         List<Order> orders = orderRepository.findByBuyerIdWithDetailsOrderByOrderTimestampDesc(buyerUserId.intValue());
 
-        // Map the list of Order entities to a list of OrderSummaryDto
         return orders.stream()
                 .map(OrderSummaryDto::fromEntity)
                 .collect(Collectors.toList());

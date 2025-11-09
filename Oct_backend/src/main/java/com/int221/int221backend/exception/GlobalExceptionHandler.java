@@ -44,25 +44,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(400).body(response);
     }
 
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<Object> handleValidationErrors(MethodArgumentNotValidException ex) {
-//        Map<String, String> errors = new HashMap<>();
-//        ex.getBindingResult().getFieldErrors().forEach(error ->
-//                errors.put(error.getField(), error.getDefaultMessage())
-//        );
-//
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("status", "validation_failed");
-//        response.put("errors", errors);
-//
-//        return ResponseEntity.badRequest().body(response);
-//    }
-
     @ExceptionHandler(DuplicateBrandNameException.class)
     public ResponseEntity<String> handleDuplicateBrandName(DuplicateBrandNameException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
-
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
@@ -96,39 +81,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, WebRequest request) {
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            String fieldName = error.getField();
-            Object rejectedValue = error.getRejectedValue();
-
-            // field 'email'
-            if ("email".equals(fieldName)) {
-                //white space check
-                if (rejectedValue instanceof String rejectedEmail && !rejectedEmail.equals(rejectedEmail.trim())) {
-                    return buildUnauthorizedResponse(
-                            "Email format is invalid (contains leading/trailing whitespace)", request
-                    );
-                }
-            }
-
-            if ("password".equals(fieldName)) {
-                if (" ".equals(rejectedValue)) {
-                    return buildUnauthorizedResponse(
-                            "Password format is invalid", request
-                    );
-                }
-                //password exceed 14 cha
-                if ("Size".equals(error.getCode())) {
-                    return buildUnauthorizedResponse(
-                            // คุณสามารถใช้ default message จาก DTO ได้ด้วย
-                            error.getDefaultMessage(), request
-                    );
-                }
-            }
-        }
-        //400 Bad Request
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(err ->
-                errors.put(err.getField(), err.getDefaultMessage())
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
         );
 
         Map<String, Object> responseBody = new HashMap<>();
@@ -137,6 +92,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(responseBody);
     }
+
     private ResponseEntity<Object> buildUnauthorizedResponse(String message, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.UNAUTHORIZED.value());

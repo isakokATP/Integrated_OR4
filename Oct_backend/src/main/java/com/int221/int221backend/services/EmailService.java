@@ -30,10 +30,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendVerificationEmail(Users user, String jwtToken) { // เปลี่ยนชื่อตัวแปรเป็น jwtToken เพื่อความชัดเจน
-
-        // สร้าง verification URL สำหรับ frontend โดยใส่ JWT Token เป็น Query Parameter
-        // สมมติว่า Frontend URL ชี้ไปที่หน้าที่จะจัดการ Token: e.g., http://frontend.com/verify?token={JWT}
+    public void sendVerificationEmail(Users user, String jwtToken) {
         String verificationUrl = appFrontendUrl + "/v2/auth/verify-email?token=" + jwtToken;
 
         String subject = "Please verify your email";
