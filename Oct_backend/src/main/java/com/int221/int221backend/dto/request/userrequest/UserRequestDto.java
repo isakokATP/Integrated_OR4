@@ -72,9 +72,9 @@ public class UserRequestDto {
         this.phoneNumber = phoneNumber == null ? null : phoneNumber.trim();
     }
 
-    public void setPassword(String password) {
-        this.password = password == null ? null : password.trim();
-    }
+//    public void setPassword(String password) {
+//        this.password = password == null ? null : password.trim();
+//    }
 
     public void setBackName(String backName) {
         this.bankName = backName == null ? null : backName.trim();

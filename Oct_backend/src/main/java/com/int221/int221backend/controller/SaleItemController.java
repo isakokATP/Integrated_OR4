@@ -239,7 +239,7 @@ public class SaleItemController {
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // ตัดคำว่า "Bearer " ออก
+            return authHeader.substring(7);
         }
         return null;
     }

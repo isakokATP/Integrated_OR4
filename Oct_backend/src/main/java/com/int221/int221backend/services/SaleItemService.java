@@ -351,7 +351,6 @@ public class SaleItemService {
                 }
             }
         }
-
         saleItemRepository.delete(saleItem);
     }
 

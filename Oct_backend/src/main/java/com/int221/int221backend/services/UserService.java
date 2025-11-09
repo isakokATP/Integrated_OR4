@@ -161,8 +161,8 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         // อัปเดตเฉพาะ field ที่อนุญาตให้แก้ไข
-        userToUpdate.setNickName(updateDto.getNickname());
-        userToUpdate.setFullName(updateDto.getFullname());
+        userToUpdate.setNickName(updateDto.getNickName());
+        userToUpdate.setFullName(updateDto.getFullName());
 
         Users updatedUser = userRepository.save(userToUpdate);
         return UserProfileResponseDto.fromEntity(updatedUser);

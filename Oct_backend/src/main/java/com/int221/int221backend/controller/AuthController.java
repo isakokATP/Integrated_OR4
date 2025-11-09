@@ -8,6 +8,8 @@ import com.int221.int221backend.enums.AuthStatus;
 import com.int221.int221backend.repositories.UserRepository;
 import com.int221.int221backend.security.JwtTokenProvider;
 import com.int221.int221backend.services.AuthService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,41 +36,11 @@ public class AuthController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private UserRepository UserRepository;
-
     @Value("${jwt.refresh-token.expiration-ms}")
     private long refreshTokenExpirationMs;
+
     @Autowired
     private UserRepository userRepository;
-
-//    @PostMapping("/v2/auth/login")
-//    public ResponseEntity<?> authenticateUser(@Valid @RequestBody AuthRequestDto authRequest) {
-//        try {
-//            Users user = authService.authenticate(
-//                    authRequest.getEmail(),
-//                    authRequest.getPassword()
-//            );
-//
-//            String accessToken = jwtTokenProvider.generateAccessToken(user);
-//            String refreshToken = jwtTokenProvider.generateRefreshToken(user);
-//
-//            Map<String, String> tokens = new HashMap<>();
-//            tokens.put("accessToken", accessToken);
-//            tokens.put("refreshToken", refreshToken);
-//
-//            return ResponseEntity.ok(tokens);
-//
-//        } catch (BadCredentialsException e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-//                    new ErrorResponse("Invalid email/password")
-//            );
-//        } catch (DisabledException e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-//                    new ErrorResponse("You need to activate your account before signing in.")
-//            );
-//        }
-//    }
 
     @PostMapping("/v2/auth/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody AuthRequestDto authRequest, HttpServletResponse httpResponse) {
@@ -124,10 +96,15 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid or expired Refresh Token"));
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Refresh token is expired"));
+        } catch (JwtException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid Refresh Token"));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
         }
     }
+
 
     @PostMapping("/v2/auth/logout")
     public ResponseEntity<?> logoutUser(HttpServletResponse httpResponse) {
