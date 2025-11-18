@@ -43,6 +43,14 @@ public class Order {
     @Column(name = "note", length = 500)
     private String note;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Users seller;
+
+    // 🔻 เพิ่มสถานะการเปิดดู
+    @Column(name = "is_viewed", nullable = false)
+    private Boolean isViewed = false;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();
 

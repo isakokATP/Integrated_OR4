@@ -1,5 +1,6 @@
 package com.int221.int221backend.dto.response.order;
 
+import com.int221.int221backend.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,6 @@ public class OrderResponseDto {
     private Integer totalItems;
     private BigDecimal totalPrice;
     private String shippingAddress;
+    private OrderStatus orderStatus;
     private String note;
 }
