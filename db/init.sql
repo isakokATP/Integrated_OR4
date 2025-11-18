@@ -111,14 +111,17 @@ CREATE TABLE cart_items (
 CREATE TABLE orders (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         buyer_user_id INT NOT NULL,
+                        seller_id INT NOT NULL,
                         order_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         total_items INT DEFAULT NULL,
                         total_price DECIMAL(10, 2) DEFAULT NULL,
-                        status ENUM('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED') DEFAULT 'PENDING',
+                        status ENUM('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'COMPLETED') NOT NULL DEFAULT 'PENDING',
                         shipping_address VARCHAR(500) DEFAULT NULL,
                         note VARCHAR(500) DEFAULT NULL,
+                        is_viewed BOOLEAN NOT NULL DEFAULT FALSE,
 
-                        FOREIGN KEY (buyer_user_id) REFERENCES users(id)
+                        FOREIGN KEY (buyer_user_id) REFERENCES users(id),
+                        FOREIGN KEY (seller_id) REFERENCES users(id)
 );
 
 CREATE TABLE order_items (

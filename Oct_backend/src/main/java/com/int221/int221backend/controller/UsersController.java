@@ -49,25 +49,6 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-    // Get User by ID (GET /itb-mshop/v2/users/{id})
-//    @GetMapping("/v2/users/{id}")
-//    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Integer id) {
-//        UserResponseDto responseDto = userService.getUserById(id);
-//        return ResponseEntity.ok(responseDto);
-//    }
-
-//    @GetMapping("/v2/users/{id}")
-//    public ResponseEntity<?> getUserProfile(@PathVariable Integer id, HttpServletRequest request) {
-//        try {
-//            authorizeRequest(Long.valueOf(id), request);
-//        } catch (SecurityException e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
-//        }
-//
-//        UserProfileResponseDto userProfile = userService.getUserProfileById(id);
-//        return ResponseEntity.ok(userProfile);
-//    }
-
     @GetMapping("/v2/users/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable Integer id, HttpServletRequest request) {
         try {

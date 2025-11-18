@@ -35,15 +35,15 @@ public class OrderController {
         try {
             Long buyerUserId = getUserIdFromRequest(request);
 
-            OrderResponseDto orderResponse = orderService.placeOrder(buyerUserId, requestDto);
+            List<OrderResponseDto> orderResponses = orderService.placeOrder(buyerUserId, requestDto);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(orderResponse);
+            return ResponseEntity.status(HttpStatus.CREATED).body(orderResponses);
 
-        } catch (SecurityException e) {
+        }catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
-        } catch (InsufficientStockException | ResourceNotFoundException e) {
+        } catch (InsufficientStockException | ResourceNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
-        } catch (Exception e) {
+        } catch (Exception e ) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Failed to place order: " + e.getMessage()));
         }
     }
@@ -69,6 +69,53 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An error occurred fetching order history: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/v2/sellers/{id}/orders")
+    public ResponseEntity<?> getSellerOrders(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "new") String type,
+            HttpServletRequest request) {
+
+        try {
+            Long loggedInUserId = getUserIdFromRequest(request);
+            String userRole = jwtTokenProvider.extractRole(extractTokenFromRequest(request));
+
+            if (!"SELLER".equalsIgnoreCase(userRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access Denied: User is not a seller."));
+            }
+
+            if (!loggedInUserId.equals(id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access Denied: You can only view your own orders."));
+            }
+
+            List<OrderResponseDto> orders = orderService.getSellerOrders(id, type);
+            return ResponseEntity.ok(orders);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error fetching orders: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/v2/orders/{orderId}/view")
+    public ResponseEntity<?> markOrderAsViewed(
+            @PathVariable Long orderId,
+            HttpServletRequest request) {
+
+        try {
+            Long loggedInUserId = getUserIdFromRequest(request);
+
+            orderService.markOrderAsViewed(orderId, loggedInUserId);
+
+            return ResponseEntity.ok().build();
+
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error updating order: " + e.getMessage()));
         }
     }
 
