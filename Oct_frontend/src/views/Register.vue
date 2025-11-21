@@ -174,20 +174,21 @@
       <!-- Submit and Cancel Buttons -->
       <div class="flex space-x-4 pt-4">
         <button 
+        
           type="submit" 
           :disabled="!isFormValid || loading"
           class="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ loading ? 'Registering...' : 'Submit' }}
+          
         </button>
         
         <button 
+        @click="router.push({ name: 'sale-items-page' })"
           type="button" 
-          @click="onCancel"
           class="px-6 py-2 bg-gray-500 text-white rounded"
         >
-          Cancel
-        </button>
+          Cancel</button>
       </div>
     </form>
 
@@ -298,14 +299,22 @@ async function onSubmit() {
   } catch (error) {
     let errorMessage = 'Registration failed'
     
-    if (error.message) {
-      if (error.message.includes('email')) {
+    // Check status code
+    if (error.status === 409) {
+      // Conflict - data already exists
+      if (error.message && error.message.includes('Email')) {
         errorMessage = 'Email already exists. Please use a different email.'
-      } else if (error.message.includes('idCardNumber')) {
+      } else if (error.message && error.message.includes('ID card')) {
         errorMessage = 'National ID number already exists. Please use a different ID number.'
       } else {
-        errorMessage = error.message
+        errorMessage = 'This information already exists. Please use different information.'
       }
+    } else if (error.status === 400) {
+      errorMessage = error.message || 'Invalid input. Please check your information.'
+    } else if (error.status === 500) {
+      errorMessage = 'Server error. Please try again later.'
+    } else if (error.message) {
+      errorMessage = error.message
     }
     
     message.value = errorMessage

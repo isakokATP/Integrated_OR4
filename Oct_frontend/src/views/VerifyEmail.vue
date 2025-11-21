@@ -44,27 +44,47 @@ const message = ref('')
 const messageType = ref('')
 
 // API ผ่าน nginx proxy (ลดปัญหา CORS)
-const VERIFY_URL = '/itb-mshop/v2/auth/verify-email'
+const VERIFY_URL = `${import.meta.env.BASE_URL}itb-mshop/v2/auth/verify-email`
 
 async function verifyToken(token) {
   try {
-    // ใช้ GET แทน POST เพื่อแค่ตรวจสอบ token
-    const res = await fetch(`${VERIFY_URL}?token=${token}`, {
-      method: 'GET',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    // ใช้ POST method ตาม backend endpoint
+    const res = await fetch(`${VERIFY_URL}?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest' 
+      }
     })
 
+    // อ่าน response เป็น text ก่อน เพื่อตรวจสอบว่าเป็น JSON หรือ string
+    const responseText = await res.text()
+    
     if (!res.ok) {
-      const text = await res.text()
-      throw new Error(text || 'Verification failed')
+      // ถ้า error พยายาม parse เป็น JSON เพื่อดึง message
+      try {
+        const errorData = JSON.parse(responseText)
+        throw new Error(errorData.message || errorData.error || responseText || `Verification failed (${res.status})`)
+      } catch (parseError) {
+        // ถ้า parse ไม่ได้ แสดง error message โดยตรง
+        throw new Error(responseText || `Verification failed (${res.status})`)
+      }
     }
 
-    const data = await res.json()
-    message.value = `Hello ${data.fullName}, your email has been successfully verified!`
-    messageType.value = 'success'
+    // ถ้า success พยายาม parse เป็น JSON
+    try {
+      const data = JSON.parse(responseText)
+      message.value = `Hello ${data.fullName}, your email has been successfully verified!`
+      messageType.value = 'success'
+    } catch (parseError) {
+      // ถ้า parse ไม่ได้ แต่ status ok ก็ถือว่าสำเร็จ
+      message.value = responseText || 'Email verification successful!'
+      messageType.value = 'success'
+    }
 
   } catch (err) {
-    message.value = err.message || 'Email verification failed'
+    console.error('Verification error:', err)
+    message.value = err.message || 'Email verification failed. Please try again or contact support.'
     messageType.value = 'error'
   } finally {
     loading.value = false

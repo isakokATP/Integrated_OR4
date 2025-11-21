@@ -14,6 +14,12 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - int221-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   backend:
     build:
@@ -25,12 +31,15 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
-      - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
-      - /home/shisanucha/Integrated_OR4/users:/app/users
+      - ./uploads:/app/uploads
+      - ./users:/app/users
     networks:
       - int221-net
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pbi1?useSSL=false&serverTimezone=Asia/Bangkok&allowPublicKeyRetrieval=true
 
   frontend:
     build:
@@ -42,11 +51,13 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     volumes:
-      - /home/shisanucha/Integrated_OR4/uploads:/app/uploads
-      - /home/shisanucha/Integrated_OR4/users:/app/users
-      - /home/shisanucha/Integrated_OR4/nginx/ssl:/ssl
+      - ./uploads:/app/uploads
+      - ./users:/app/users
+      # Uncomment below when SSL certificates are available
+      # - ./nginx/ssl:/ssl
     networks:
       - int221-net
 

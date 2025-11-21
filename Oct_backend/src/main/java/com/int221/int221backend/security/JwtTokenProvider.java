@@ -48,6 +48,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setClaims(claims) // ใส่ Claims ที่เราสร้างขึ้น
+                .setIssuer(jwtIssuer)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

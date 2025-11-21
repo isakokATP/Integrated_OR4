@@ -11,6 +11,11 @@ import EditBrand from "../views/EditBrand.vue";
 import Register from "../views/Register.vue";
 import Login from "../views/Login.vue";
 import VerifyEmail from "../views/VerifyEmail.vue";
+import Profile from "../views/Profile.vue";
+import EditProfile from "../views/EditProfile.vue";
+import SignOut from "../views/SignOut.vue";
+import Cart from "../views/Cart.vue";
+import YourOrders from "../views/YourOrders.vue";
 const routes = [
   {
     path: "/",
@@ -72,11 +77,97 @@ const routes = [
     name: "verify-email-page",
     component: VerifyEmail,
   },
+  {
+    path: "/profile",
+    name: "profile-page",
+    component: Profile,
+  },
+  {
+    path: "/profile/edit",
+    name: "edit-profile-page",
+    component: EditProfile,
+  },
+  {
+    path: "/signout",
+    name: "signout-page",
+    component: SignOut,
+  },
+  {
+    path: "/cart",
+    name: "cart-page",
+    component: Cart,
+  },
+  {
+    path: "/your-orders",
+    name: "your-orders-page",
+    component: YourOrders,
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+});
+
+// Navigation guard to protect routes based on user role
+router.beforeEach((to, from, next) => {
+  // Routes that don't require authentication
+  const publicRoutes = ['login-page', 'register-page', 'verify-email-page', 'home-page', 'sale-items-page', 'sale-items-page-byId'];
+  
+  if (publicRoutes.includes(to.name)) {
+    next();
+    return;
+  }
+
+  // Get token and user role
+  const token = sessionStorage.getItem('accessToken');
+  
+  if (!token) {
+    // Not logged in, redirect to login
+    next({ name: 'login-page' });
+    return;
+  }
+
+  try {
+    // Decode token to get user role
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userRole = payload.role || payload.userType;
+
+    // Seller-only routes
+    const sellerOnlyRoutes = [
+      'sale-items-list-page',
+      'new-sale-item-page',
+      'edit-sale-item-page',
+      'new-brand-page',
+      'edit-brand-page'
+    ];
+
+    // Routes accessible to both buyers and sellers (buying features)
+    const buyingRoutes = [
+      'cart-page',
+      'your-orders-page'
+    ];
+
+    // Check if route requires seller access
+    if (sellerOnlyRoutes.includes(to.name)) {
+      if (userRole !== 'SELLER') {
+        // Buyer trying to access seller page, redirect to sale items gallery
+        next({ name: 'sale-items-page' });
+        return;
+      }
+    }
+
+    // Buying routes (cart, orders) are accessible to both BUYER and SELLER
+    // No restriction needed - both can buy and view their orders
+
+    // Allow access
+    next();
+  } catch (e) {
+    console.error('Error decoding token:', e);
+    // Invalid token, redirect to login
+    next({ name: 'login-page' });
+    return;
+  }
 });
 
 export default router;

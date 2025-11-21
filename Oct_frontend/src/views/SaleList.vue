@@ -48,10 +48,6 @@ function setSort(type) {
   goToPage(1);
 }
 
-function goToAddSaleItem() {
-  router.push({ name: "new-sale-item-page" });
-}
-
 // ดึง message จาก query string
 watch(
   () => route.query.message,
@@ -259,6 +255,14 @@ function goToPrevPage() {
     loadSaleItems();
   }
 }
+
+// Handle cart update from ItemsGallary
+function handleCartUpdate(msg) {
+  message.value = msg;
+  setTimeout(() => {
+    message.value = "";
+  }, 3000);
+}
 </script>
 
 <template>
@@ -268,19 +272,6 @@ function goToPrevPage() {
   />
   <div class="max-w-6xl mx-auto mt-2">
     <Notification :message="message" />
-
-    <!-- ปุ่ม Add -->
-    <div class="mb-6">
-      <button
-        class="itbms-sale-item-add bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-3"
-        @click="goToAddSaleItem"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-        </svg>
-        Add Sale Item
-      </button>
-    </div>
 
     <!-- Filter + Sort Bar -->
     <div class="flex items-center gap-6 mb-8">
@@ -394,7 +385,7 @@ function goToPrevPage() {
   </div>
 
     <!-- แสดงรายการสินค้า -->
-    <ItemsGallary :items="filteredItems" />
+    <ItemsGallary :items="filteredItems" @cart-updated="handleCartUpdate" />
 
     <!-- Pagination -->
     <div v-show="totalPages > 1" class="flex justify-center mt-8">

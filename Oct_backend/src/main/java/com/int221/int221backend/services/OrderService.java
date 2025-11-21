@@ -38,6 +38,9 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AttachmentRepository attachmentRepository;
+
 //    @Transactional
 //    public OrderResponseDto placeOrder(Long buyerUserId, PlaceOrderRequestDto requestDto) {
 //
@@ -221,8 +224,37 @@ public class OrderService {
                 .build();
     }
 
+    @Transactional
     public List<OrderSummaryDto> getOrderHistory(Long buyerUserId) {
         List<Order> orders = orderRepository.findByBuyerIdWithDetailsOrderByOrderTimestampDesc(buyerUserId.intValue());
+
+        // Fetch attachments separately to avoid MultipleBagFetchException
+        // Collect all sale item IDs
+        List<Integer> saleItemIds = orders.stream()
+                .flatMap(order -> order.getItems().stream())
+                .map(orderItem -> orderItem.getSaleItem().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Batch fetch attachments for all sale items in one query
+        if (!saleItemIds.isEmpty()) {
+            List<Attachment> allAttachments = attachmentRepository.findBySaleItemIdIn(saleItemIds);
+
+            // Group attachments by sale item ID
+            java.util.Map<Integer, List<Attachment>> attachmentsBySaleItem = allAttachments.stream()
+                    .collect(Collectors.groupingBy(attachment -> attachment.getSaleItem().getId()));
+
+            // Initialize attachments for each sale item
+            orders.forEach(order -> {
+                order.getItems().forEach(orderItem -> {
+                    SaleItem saleItem = orderItem.getSaleItem();
+                    List<Attachment> itemAttachments = attachmentsBySaleItem.getOrDefault(saleItem.getId(), new ArrayList<>());
+                    // Clear and set attachments to avoid lazy loading
+                    saleItem.getAttachments().clear();
+                    saleItem.getAttachments().addAll(itemAttachments);
+                });
+            });
+        }
 
         return orders.stream()
                 .map(OrderSummaryDto::fromEntity)

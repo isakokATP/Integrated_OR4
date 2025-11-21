@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import { fetchSaleItemById, deleteSaleItem } from "../services/saleItemService";
+import { addToCart } from "../services/cartService";
 import { useRoute, useRouter } from "vue-router";
 import Header from "../components/Header.vue";
 import Notification from "../components/Notification.vue";
+import { updateCartCount } from "../composables/useCartCount";
 
 const item = ref({});
 const errorMsg = ref("");
@@ -12,6 +14,21 @@ const id = route.params.id;
 const router = useRouter();
 const isLoading = ref(true);
 const message = ref("");
+const quantity = ref(1);
+const isAddingToCart = ref(false);
+
+// Check if user is seller
+const isSeller = computed(() => {
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) return false;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role === 'SELLER';
+  } catch (e) {
+    return false;
+  }
+});
 
 // images from DB
 const images = computed(() => (item.value?.saleItemImages ?? []));
@@ -61,6 +78,8 @@ onMounted(async () => {
     alert("The requested sale item does not exist.");
     router.push({ name: "sale-items-page" });
   }
+  // Reset quantity when item loads
+  quantity.value = 1;
 });
 
 const handleEdit = () => {
@@ -118,6 +137,51 @@ const confirmDelete = async () => {
 const cancelDelete = () => {
   showConfirm.value = false; // ปิด dialog
   itemToDelete.value = null; // เคลียร์ข้อมูล itemToDelete
+};
+
+// Quantity management
+const increaseQuantity = () => {
+  if (item.value.quantity && quantity.value < item.value.quantity) {
+    quantity.value++;
+  }
+};
+
+const decreaseQuantity = () => {
+  if (quantity.value > 1) {
+    quantity.value--;
+  }
+};
+
+// Add to cart
+const handleAddToCart = async () => {
+  // Check if user is logged in
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) {
+    router.push({ name: 'login-page' });
+    return;
+  }
+
+  isAddingToCart.value = true;
+  try {
+    await addToCart(item.value.id, quantity.value);
+    // Update cart count in header
+    await updateCartCount();
+    message.value = 'Item added to cart successfully!';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
+  } catch (error) {
+    if (error.status === 401) {
+      router.push({ name: 'login-page' });
+    } else {
+      message.value = error.message || 'Failed to add item to cart';
+      setTimeout(() => {
+        message.value = '';
+      }, 3000);
+    }
+  } finally {
+    isAddingToCart.value = false;
+  }
 };
 </script>
 
@@ -220,7 +284,46 @@ const cancelDelete = () => {
           Available quantity : {{ item.quantity }} units
         </div>
 
-        <div class="flex gap-4 mt-6">
+        <!-- Quantity Selector and Add to Cart (for buyers) -->
+        <div v-if="!isSeller" class="mt-6 space-y-4">
+          <div class="flex items-center gap-4">
+            <label class="text-base font-medium">Quantity:</label>
+            <div class="flex items-center gap-2">
+              <button
+                @click="decreaseQuantity"
+                :disabled="quantity <= 1"
+                class="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                -
+              </button>
+              <input
+                v-model.number="quantity"
+                type="number"
+                :min="1"
+                :max="item.quantity"
+                class="w-16 text-center border-2 border-gray-300 rounded-lg px-2 py-1"
+                @input="quantity = Math.max(1, Math.min(quantity, item.quantity || 1))"
+              />
+              <button
+                @click="increaseQuantity"
+                :disabled="!item.quantity || quantity >= item.quantity"
+                class="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <button
+            @click="handleAddToCart"
+            :disabled="isAddingToCart || !item.quantity"
+            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ isAddingToCart ? 'Adding...' : 'Add to Cart' }}
+          </button>
+        </div>
+
+        <!-- Edit/Delete buttons (for sellers) -->
+        <div v-if="isSeller" class="flex gap-4 mt-6">
           <button
             @click="handleEdit"
             class="itbms-edit-button w-24 bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-500"

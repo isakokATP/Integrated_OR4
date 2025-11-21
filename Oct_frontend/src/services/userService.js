@@ -1,7 +1,8 @@
 import { handleApiError } from "../api/client";
 
-// ใช้ path proxy ของ nginx แทน port 8080
-const URL = "ip24or4.sit.kmutt.ac.th/itb-mshop";
+// Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
+// This ensures API calls use the correct base path
+const URL = import.meta.env.BASE_URL || "";
 
 export async function registerUser(form) {
   try {
@@ -19,7 +20,7 @@ export async function registerUser(form) {
     if (form.idCardImageFront) fd.append("idCardImageFront", form.idCardImageFront);
     if (form.idCardImageBack) fd.append("idCardImageBack", form.idCardImageBack);
 
-    const res = await fetch(`${URL}/v2/users/register`, {
+    const res = await fetch(`${URL}/itb-mshop/v2/users/register`, {
       method: "POST",
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
@@ -28,18 +29,23 @@ export async function registerUser(form) {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || `Register failed (${res.status})`);
+      const errorData = await res.json().catch(() => ({ message: 'Registration failed' }));
+      const error = new Error(errorData.message || `Register failed (${res.status})`);
+      error.status = res.status; // Attach status code
+      throw error;
     }
     return await res.json();
   } catch (err) {
+    if (err.status) {
+      throw err; // Re-throw if it already has status
+    }
     throw handleApiError(err);
   }
 }
 
 export async function verifyEmail(token) {
   try {
-    const res = await fetch(`${URL}/v2/auth/verify-email`, {
+    const res = await fetch(`${URL}/itb-mshop/v2/auth/verify-email`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

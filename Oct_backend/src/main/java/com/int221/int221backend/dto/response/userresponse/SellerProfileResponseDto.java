@@ -15,6 +15,7 @@ public class SellerProfileResponseDto {
     private String bankName;
     private String bankAccount;
     private String nickName;
+    private String idCardNumber;
 
     public static SellerProfileResponseDto fromEntity(Users user) {
         return SellerProfileResponseDto.builder()
@@ -26,6 +27,7 @@ public class SellerProfileResponseDto {
                 .bankName(user.getBankName())
                 .bankAccount(user.getBankAccount())
                 .nickName(user.getNickName())
+                .idCardNumber(user.getIdCardNumber())
                 .build();
     }
 }

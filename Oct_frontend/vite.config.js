@@ -7,9 +7,11 @@ import tailwindcss from "@tailwindcss/vite"; // 👉 เพิ่มบรรท
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
-  const isProduction = env.IS_PRODUCTION === "true";
+  // Check both environment variable and mode for production
+  const isProduction = env.IS_PRODUCTION === "true" || mode === "production";
 
   console.log("IS_PRODUCTION:", isProduction);
+  console.log("Mode:", mode);
 
   return {
     plugins: [
@@ -21,7 +23,7 @@ export default defineConfig(({ mode }) => {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
-    base: "/or4/",
+    base: isProduction ? "/or4/" : "/",
     build: {
       assetsDir: "assets",
       outDir: "dist",
