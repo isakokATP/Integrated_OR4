@@ -31,7 +31,7 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(Users user, String jwtToken) {
-        String verificationUrl = appFrontendUrl + "/v2/auth/verify-email?token=" + jwtToken;
+        String verificationUrl = appFrontendUrl + "/verify-email/?token=" + jwtToken;
 
         String subject = "Please verify your email";
         String content = "Hello " + user.getFullName() + ",\n\n"

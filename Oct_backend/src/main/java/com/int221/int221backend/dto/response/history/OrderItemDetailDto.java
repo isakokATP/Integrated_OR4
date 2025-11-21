@@ -18,19 +18,37 @@ public class OrderItemDetailDto {
 
     public static OrderItemDetailDto fromEntity(OrderItem item) {
         SaleItem saleItem = item.getSaleItem();
-        String desc = String.format("%s %s %s %sGB",
-                saleItem.getBrand().getName(),
-                saleItem.getModel(),
-                saleItem.getColor() != null ? saleItem.getColor() : "",
-                saleItem.getStorageGb() != null ? saleItem.getStorageGb() : ""
-        ).trim().replaceAll("\\s+", " ");
+        // Format: Brand Model Color StorageGB
+        // Example: "Apple iPhone 15 Black 256GB"
+        StringBuilder descBuilder = new StringBuilder();
+        descBuilder.append(saleItem.getBrand().getName());
+        descBuilder.append(" ").append(saleItem.getModel());
+        if (saleItem.getColor() != null && !saleItem.getColor().trim().isEmpty()) {
+            descBuilder.append(" ").append(saleItem.getColor());
+        }
+        if (saleItem.getStorageGb() != null) {
+            descBuilder.append(" ").append(saleItem.getStorageGb()).append("GB");
+        }
+        String desc = descBuilder.toString().trim().replaceAll("\\s+", " ");
 
-        // TODO: Logic for getting the primary image URL for the saleItem
-        String primaryImageUrl = null; // Replace with actual logic if available
+        // Get primary image (first image with imageViewOrder = 1)
+        String primaryImageUrl = null;
+        if (saleItem.getAttachments() != null && !saleItem.getAttachments().isEmpty()) {
+            primaryImageUrl = saleItem.getAttachments().stream()
+                    .filter(a -> a.getImageViewOrder() != null && a.getImageViewOrder() == 1)
+                    .findFirst()
+                    .map(a -> a.getFilename())
+                    .orElse(saleItem.getAttachments().stream()
+                            .min((a1, a2) -> Integer.compare(
+                                    a1.getImageViewOrder() != null ? a1.getImageViewOrder() : Integer.MAX_VALUE,
+                                    a2.getImageViewOrder() != null ? a2.getImageViewOrder() : Integer.MAX_VALUE))
+                            .map(a -> a.getFilename())
+                            .orElse(null));
+        }
 
         return OrderItemDetailDto.builder()
                 .saleItemId(saleItem.getId())
-                .imageUrl(primaryImageUrl) // ⬅️ เพิ่ม
+                .imageUrl(primaryImageUrl)
                 .description(desc)
                 .quantity(item.getQuantity())
                 .unitPrice(item.getPriceAtOrder())

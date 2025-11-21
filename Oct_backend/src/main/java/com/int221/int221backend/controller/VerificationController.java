@@ -1,5 +1,6 @@
 package com.int221.int221backend.controller;
 
+import com.int221.int221backend.dto.response.ErrorResponse;
 import com.int221.int221backend.dto.response.userresponse.UserResponseVerDto;
 import com.int221.int221backend.entities.Users;
 import com.int221.int221backend.repositories.UserRepository;
@@ -30,7 +31,7 @@ public class VerificationController {
 
         if (!jwtTokenProvider.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    "An error occured, or the verification link has expired. Please request a new verification email"
+                    new ErrorResponse("An error occured, or the verification link has expired. Please request a new verification email")
             );
         }
 
@@ -39,13 +40,13 @@ public class VerificationController {
             email = jwtTokenProvider.getEmailFromToken(token);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    "Token is valid but claims (userId/email) are missing or invalid."
+                    new ErrorResponse("Token is valid but claims (userId/email) are missing or invalid.")
             );
         }
 
         if (jwtUserId == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    "Verification token is missing the required 'userId' claim."
+                    new ErrorResponse("Verification token is missing the required 'userId' claim.")
             );
         }
 
@@ -55,12 +56,12 @@ public class VerificationController {
 
         if (user == null || !user.getEmail().equalsIgnoreCase(email)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    "User not found or email mismatch."
+                    new ErrorResponse("User not found or email mismatch.")
             );
         }
         if (user.getStatus() == Users.Status.ACTIVE) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                    "User is already active."
+                    new ErrorResponse("User is already active.")
             );
         }
 

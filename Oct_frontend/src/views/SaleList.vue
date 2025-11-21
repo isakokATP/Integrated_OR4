@@ -259,6 +259,14 @@ function goToPrevPage() {
     loadSaleItems();
   }
 }
+
+// Handle cart update from ItemsGallary
+function handleCartUpdate(msg) {
+  message.value = msg;
+  setTimeout(() => {
+    message.value = "";
+  }, 3000);
+}
 </script>
 
 <template>
@@ -394,7 +402,7 @@ function goToPrevPage() {
   </div>
 
     <!-- แสดงรายการสินค้า -->
-    <ItemsGallary :items="filteredItems" />
+    <ItemsGallary :items="filteredItems" @cart-updated="handleCartUpdate" />
 
     <!-- Pagination -->
     <div v-show="totalPages > 1" class="flex justify-center mt-8">

@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Set IS_PRODUCTION for build to use /or4/ base path
+ENV IS_PRODUCTION=true
 RUN npm run build
 
 # Production stage

@@ -40,7 +40,7 @@ async function onSubmit(e){
   try {
     if (!email.value || !password.value) throw new Error("Email and password are required");
 
-    const response = await fetch('/itb-mshop/v2/auth/login', {
+    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,7 +83,21 @@ async function onSubmit(e){
       }
     } else {
       const errorData = await response.json();
-      message.value = errorData.message || "Invalid email or password";
+      
+      // Handle validation errors (errors object)
+      if (errorData.errors && typeof errorData.errors === 'object') {
+        // Extract error messages from errors object
+        const errorMessages = Object.values(errorData.errors);
+        message.value = errorMessages.join(', ') || "Validation failed";
+      } 
+      // Handle simple error message
+      else if (errorData.message) {
+        message.value = errorData.message;
+      } 
+      // Fallback
+      else {
+        message.value = "Invalid email or password";
+      }
     }
 
   } catch (err) {

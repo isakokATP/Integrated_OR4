@@ -632,7 +632,8 @@ async function handleSave() {
   };
 
   try {
-    // Send data and images together to Backend
+    // Send data to Backend (images are not supported by /v2/sellers/{id}/sale-items endpoint)
+    // If images are needed, they should be uploaded separately or use /v2/sale-items endpoint
     const createdItem = await createSaleItem(dataToSend, selectedFiles.value);
     
     // Clear selected files after successful save
@@ -640,11 +641,24 @@ async function handleSave() {
     fileErrors.value = [];
     
     router.push({
-      name: "sale-items-page",
+      name: "sale-items-list-page",
       query: { message: "The sale item has been successfully added." },
     });
   } catch (err) {
-    alert("เกิดข้อผิดพลาด: " + err);
+    // Handle specific error cases
+    let errorMessage = "เกิดข้อผิดพลาด: ";
+    if (err.status === 400) {
+      errorMessage += "Missing/Invalid request parameters";
+    } else if (err.status === 401) {
+      errorMessage += "Seller not found or invalid token";
+    } else if (err.status === 403) {
+      errorMessage += "User is not active, request seller id not matched with id in access token";
+    } else if (err.status === 404) {
+      errorMessage += "Brand not found";
+    } else {
+      errorMessage += err.message || "Unknown error";
+    }
+    alert(errorMessage);
   }
 }
 

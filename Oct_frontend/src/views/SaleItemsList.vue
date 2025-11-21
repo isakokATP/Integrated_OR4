@@ -5,6 +5,22 @@
   />
   <div class="px-6 pt-2">
     <Notification :message="message" />
+    
+    <!-- Loading State -->
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <span class="loading loading-spinner loading-lg text-blue-600"></span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="alert alert-error mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Content -->
+    <div v-else>
     <div class="flex justify-between mb-4">
       <button
         class="itbms-sale-item-add text-white bg-blue-900 hover:bg-blue-500 text-lg px-6 py-3 rounded"
@@ -110,13 +126,14 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { fetchSaleItemsV2, deleteSaleItem } from "../services/saleItemService";
+import { fetchSellerSaleItems, deleteSaleItem } from "../services/saleItemService";
 import Header from "../components/Header.vue";
 import Notification from "../components/Notification.vue";
 
@@ -126,30 +143,74 @@ const route = useRoute();
 const message = ref("");
 const showConfirm = ref(false);
 const itemToDelete = ref({ id: null, model: "" });
+const loading = ref(false);
+const error = ref("");
+
+// Get current user ID from token
+const getCurrentUserId = () => {
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.id;
+  } catch (e) {
+    console.error('Error decoding token:', e);
+    return null;
+  }
+};
+
+// Get user role from token
+const getUserRole = () => {
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role || payload.userType;
+  } catch (e) {
+    console.error('Error decoding token:', e);
+    return null;
+  }
+};
 
 const loadSaleItems = async () => {
-  const response = await fetchSaleItemsV2(1, 1000, "default", {
-    brands: [],
-    priceMin: null,
-    priceMax: null,
-    storageSizes: [],
-    searchKeyWord: null
-  });
-  saleItems.value = response.content;
-  console.log(saleItems.value);
+  loading.value = true;
+  error.value = "";
+  
+  try {
+    const userId = getCurrentUserId();
+    if (!userId) {
+      error.value = 'Not authenticated';
+      router.push({ name: 'login-page' });
+      return;
+    }
+
+    const response = await fetchSellerSaleItems(userId, 0, 1000);
+    saleItems.value = response.content || [];
+    console.log(saleItems.value);
+  } catch (err) {
+    error.value = err.message || 'Failed to load sale items';
+    console.error('Error loading sale items:', err);
+    
+    // Handle specific error cases
+    if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+      router.push({ name: 'login-page' });
+    }
+  } finally {
+    loading.value = false;
+  }
 };
 
 // Handle search updates from Header
 const handleSearchUpdate = async (searchQuery) => {
-  const response = await fetchSaleItemsV2(1, 1000, "default", {
-    brands: [],
-    priceMin: null,
-    priceMax: null,
-    storageSizes: [],
-    searchKeyWord: searchQuery
-  });
-  saleItems.value = response.content;
-  console.log("Search results:", saleItems.value);
+  // For seller's sale items list, we can filter client-side or ignore search
+  // Since the requirement is to show only seller's items, we'll reload all items
+  await loadSaleItems();
 };
 
 const goToAddSaleItem = () => {

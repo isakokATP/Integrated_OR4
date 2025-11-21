@@ -1,7 +1,8 @@
 import { handleApiError } from "../api/client";
 
-// ใช้ relative URL to avoid mixed content issues
-const URL = "";
+// Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
+// This ensures API calls use the correct base path
+const URL = import.meta.env.BASE_URL || "";
 
 export async function registerUser(form) {
   try {

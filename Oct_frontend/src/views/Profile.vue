@@ -130,6 +130,33 @@
                 disabled
               />
             </div>
+
+            <!-- National ID Photos -->
+            <div class="form-control col-span-2">
+              <label class="label">
+                <span class="label-text font-semibold">National ID Photos</span>
+              </label>
+              <div class="flex gap-4">
+                <div class="flex-1">
+                  <label class="label-text text-sm">Front</label>
+                  <div class="w-full p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto text-gray-400 mb-2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12.75a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <p class="text-gray-600">Provided</p>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <label class="label-text text-sm">Back</label>
+                  <div class="w-full p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto text-gray-400 mb-2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12.75a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <p class="text-gray-600">Provided</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -209,7 +236,7 @@ const fetchUserProfile = async () => {
       return;
     }
 
-    const response = await fetch(`/itb-mshop/v2/users/${userId}`, {
+    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -246,24 +273,8 @@ const editProfile = () => {
 };
 
 const logout = async () => {
-  try {
-    // Call logout API
-    await fetch('/itb-mshop/v2/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
-
-    // Clear session
-    sessionStorage.clear();
-    
-    // Redirect to login
-    router.push({ name: 'login-page' });
-  } catch (err) {
-    console.error('Logout error:', err);
-    // Still clear session and redirect
-    sessionStorage.clear();
-    router.push({ name: 'login-page' });
-  }
+  // Redirect to signout route which will handle cleanup and redirect
+  router.push({ name: 'signout-page' });
 };
 
 onMounted(() => {

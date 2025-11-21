@@ -51,27 +51,14 @@
             <!-- Email -->
             <div class="form-control">
               <label class="label">
-                <span class="label-text font-semibold">Email 
-                  <span v-if="originalProfile.userType === 'BUYER'">*</span>
-                </span>
+                <span class="label-text font-semibold">Email</span>
               </label>
               <input
-                v-if="originalProfile.userType === 'BUYER'"
                 v-model="formData.email"
                 type="email"
                 disabled
                 class="input input-bordered input-disabled"
               />
-              <input
-                v-else
-                v-model="formData.email"
-                type="email"
-                :class="['input', hasError('email') ? 'input-error' : 'input-bordered']"
-                placeholder="Enter email"
-              />
-              <label v-if="hasError('email')" class="label">
-                <span class="label-text-alt text-red-500">{{ getError('email') }}</span>
-              </label>
             </div>
 
             <!-- Full Name -->
@@ -93,27 +80,14 @@
             <!-- Password -->
             <div class="form-control">
               <label class="label">
-                <span class="label-text font-semibold">Password 
-                  <span v-if="originalProfile.userType === 'BUYER'">*</span>
-                </span>
+                <span class="label-text font-semibold">Password</span>
               </label>
               <input
-                v-if="originalProfile.userType === 'BUYER'"
                 type="password"
                 value="••••••••"
                 disabled
                 class="input input-bordered input-disabled"
               />
-              <input
-                v-else
-                v-model="formData.password"
-                type="password"
-                :class="['input', hasError('password') ? 'input-error' : 'input-bordered']"
-                placeholder="Leave blank to keep current password"
-              />
-              <label v-if="hasError('password')" class="label">
-                <span class="label-text-alt text-red-500">{{ getError('password') }}</span>
-              </label>
             </div>
           </div>
         </div>
@@ -293,52 +267,55 @@ const getError = (field) => errors.value[field];
 const hasChanges = computed(() => {
   if (!originalProfile.value) return false;
   
-  if (originalProfile.value.userType === 'BUYER') {
-    return formData.value.nickName !== originalProfile.value.nickName ||
-           formData.value.fullName !== originalProfile.value.fullName;
-  } else {
-    return formData.value.nickName !== originalProfile.value.nickName ||
-           formData.value.fullName !== originalProfile.value.fullName ||
-           formData.value.email !== originalProfile.value.email ||
-           (formData.value.password && formData.value.password.trim() !== '');
-  }
+  // For both BUYER and SELLER, only nickname and fullname are editable
+  const originalNickName = originalProfile.value.nickName || originalProfile.value.nickname || '';
+  const originalFullName = originalProfile.value.fullName || originalProfile.value.fullname || '';
+  
+  return formData.value.nickName !== originalNickName ||
+         formData.value.fullName !== originalFullName;
 });
 
 // Check if form is valid
 const isFormValid = computed(() => {
-  // Validate all editable fields
-  const fieldsToCheck = originalProfile.value?.userType === 'BUYER' 
-    ? ['nickName', 'fullName'] 
-    : ['nickName', 'fullName', 'email', 'password'];
-  
-  return fieldsToCheck.every(field => {
-    if (field === 'password' && !formData.value.password) return true; // Optional
-    return validateField(field, formData.value[field]);
-  });
+  // For both BUYER and SELLER, only nickname and fullname are editable
+  return validateField('nickName', formData.value.nickName) &&
+         validateField('fullName', formData.value.fullName);
 });
 
 // Can save only if has changes and form is valid
 const canSave = computed(() => hasChanges.value && isFormValid.value);
 
-// Mask phone number
+// Mask phone number - show 2nd, 3rd, 4th digits from end
+// Example: 0123456789 -> xxxxx678x
 const maskPhoneNumber = (phone) => {
   if (!phone) return '';
-  if (phone.length <= 7) return phone;
-  return 'x'.repeat(phone.length - 6) + phone.slice(-6, -3) + 'x';
+  if (phone.length <= 4) return phone;
+  // Show digits at positions -4, -3, -2 (2nd, 3rd, 4th from end)
+  const visiblePart = phone.slice(-4, -1); // positions -4 to -2 (3 digits)
+  const maskedLength = phone.length - 4; // mask everything except last 4
+  return 'x'.repeat(maskedLength) + visiblePart + 'x'; // last digit is also masked
 };
 
-// Mask bank account
+// Mask bank account - show 2nd, 3rd, 4th digits from end
+// Example: 0123456789 -> xxxxx678x
 const maskBankAccount = (account) => {
   if (!account) return '';
   if (account.length <= 4) return account;
-  return 'x'.repeat(account.length - 3) + account.slice(-3);
+  // Show digits at positions -4, -3, -2 (2nd, 3rd, 4th from end)
+  const visiblePart = account.slice(-4, -1); // positions -4 to -2 (3 digits)
+  const maskedLength = account.length - 4; // mask everything except last 4
+  return 'x'.repeat(maskedLength) + visiblePart + 'x'; // last digit is also masked
 };
 
-// Mask ID card (last 3 digits)
+// Mask ID card - show 2nd, 3rd, 4th digits from end
+// Example: 0123456789 -> xxxxx678x
 const maskIdCard = (idCard) => {
   if (!idCard) return '';
-  if (idCard.length <= 3) return idCard;
-  return 'x'.repeat(idCard.length - 3) + idCard.slice(-3);
+  if (idCard.length <= 4) return idCard;
+  // Show digits at positions -4, -3, -2 (2nd, 3rd, 4th from end)
+  const visiblePart = idCard.slice(-4, -1); // positions -4 to -2 (3 digits)
+  const maskedLength = idCard.length - 4; // mask everything except last 4
+  return 'x'.repeat(maskedLength) + visiblePart + 'x'; // last digit is also masked
 };
 
 // Fetch current profile
@@ -357,7 +334,7 @@ const fetchProfile = async () => {
       return;
     }
 
-    const response = await fetch(`/itb-mshop/v2/users/${userId}`, {
+    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -378,8 +355,8 @@ const fetchProfile = async () => {
     
     // Initialize form data with current values
     formData.value = {
-      nickName: originalProfile.value.nickName || '',
-      fullName: originalProfile.value.fullName || '',
+      nickName: originalProfile.value.nickName || originalProfile.value.nickname || '',
+      fullName: originalProfile.value.fullName || originalProfile.value.fullname || '',
       email: originalProfile.value.email || '',
       password: ''
     };
@@ -419,12 +396,9 @@ const saveProfile = async () => {
   errors.value = {};
   
   try {
-    // Validate all fields
-    const fieldsToCheck = originalProfile.value.userType === 'BUYER' 
-      ? ['nickName', 'fullName'] 
-      : ['nickName', 'fullName', 'email'];
-    
-    fieldsToCheck.forEach(field => validateField(field, formData.value[field]));
+    // Validate all fields (only nickname and fullname are editable)
+    validateField('nickName', formData.value.nickName);
+    validateField('fullName', formData.value.fullName);
     
     if (!isFormValid.value) {
       message.value = 'Please fix validation errors';
@@ -435,20 +409,13 @@ const saveProfile = async () => {
     const userId = getCurrentUserId();
     const token = sessionStorage.getItem('accessToken');
 
+    // Only nickname and fullname can be updated
     const updateData = {
       nickName: formData.value.nickName.trim(),
       fullName: formData.value.fullName.trim()
     };
 
-    // Only add email for seller and password if provided
-    if (originalProfile.value.userType === 'SELLER') {
-      updateData.email = formData.value.email.trim();
-      if (formData.value.password && formData.value.password.trim() !== '') {
-        updateData.password = formData.value.password.trim();
-      }
-    }
-
-    const response = await fetch(`/itb-mshop/v2/users/${userId}`, {
+    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -1,14 +1,44 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { addToCart } from "../services/cartService";
+import { updateCartCount } from "../composables/useCartCount";
 
 const props = defineProps({
   items: Array,
 });
 
+const emit = defineEmits(['cart-updated']);
+
 const router = useRouter();
 
 function goToSaleItem(id) {
   router.push({ name: "sale-items-page-byId", params: { id } });
+}
+
+async function handleAddToCart(event, item) {
+  event.stopPropagation(); // Prevent card click
+  
+  // Check if user is logged in
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) {
+    router.push({ name: 'login-page' });
+    return;
+  }
+
+  try {
+    await addToCart(item.id, 1);
+    // Update cart count in header
+    await updateCartCount();
+    // Emit event to parent to show notification
+    emit('cart-updated', 'Item added to cart successfully!');
+  } catch (error) {
+    if (error.status === 401) {
+      router.push({ name: 'login-page' });
+    } else {
+      // Emit error message to parent
+      emit('cart-updated', error.message || 'Failed to add item to cart');
+    }
+  }
 }
 </script>
 
@@ -69,11 +99,20 @@ function goToSaleItem(id) {
               ฿{{ item.price.toLocaleString() }}
             </div>
             
-            <!-- View Details Button -->
-            <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span class="inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md">
-                View Details →
-              </span>
+            <!-- Action Buttons -->
+            <div class="mt-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                @click.stop="handleAddToCart($event, item)"
+                class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all duration-200"
+              >
+                Add to Cart
+              </button>
+              <button
+                @click.stop="goToSaleItem(item.id)"
+                class="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all duration-200"
+              >
+                Details →
+              </button>
             </div>
           </div>
         </div>

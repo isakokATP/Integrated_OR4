@@ -1,8 +1,38 @@
 <script setup>
-import { ref, watch, defineProps, defineEmits } from "vue";
+import { ref, watch, defineProps, defineEmits, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useCartCount, updateCartCount } from "../composables/useCartCount";
 
 const router = useRouter();
+const { cartCount } = useCartCount();
+
+// Force reactivity for login status
+const loginTrigger = ref(0);
+
+// Check if user is logged in
+const isLoggedIn = computed(() => {
+  loginTrigger.value; // Force dependency
+  return !!sessionStorage.getItem('accessToken');
+});
+
+// Get user nickname from token
+const userNickname = computed(() => {
+  loginTrigger.value; // Force dependency
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) return null;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.nickname || null;
+  } catch (e) {
+    return null;
+  }
+});
+
+// Logout function
+const handleLogout = () => {
+  router.push({ name: 'signout-page' });
+};
 
 // Props for search value from parent
 const props = defineProps({
@@ -44,19 +74,46 @@ function clearSearch() {
   searchQuery.value = "";
   emit("search", "");
 }
+
+// Update cart count on mount and when route changes
+onMounted(() => {
+  updateCartCount();
+});
+
+// Watch for route changes to update cart count and force reactivity
+watch(() => router.currentRoute.value.path, () => {
+  updateCartCount();
+  loginTrigger.value++; // Force login status update
+});
 </script>
 
 <template>
   <!-- แถบบน -->
   <div class="w-full bg-blue-900 h-12 flex items-center justify-end px-8">
-    <router-link
-      :to="{ name: 'login-page' }"
-      class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
-      >Signin</router-link>
-    <router-link
-      :to="{ name: 'register-page' }"
-      class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
-      >Register</router-link>
+    <!-- Show login/register when not logged in -->
+    <template v-if="!isLoggedIn">
+      <router-link
+        :to="{ name: 'login-page' }"
+        class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
+        >Signin</router-link>
+      <router-link
+        :to="{ name: 'register-page' }"
+        class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
+        >Register</router-link>
+    </template>
+    
+    <!-- Show nickname and logout when logged in -->
+    <template v-else>
+      <span class="text-white text-sm font-semibold ml-6">
+        Welcome, {{ userNickname || 'User' }}
+      </span>
+      <button
+        @click="handleLogout"
+        class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition cursor-pointer"
+      >
+        Logout
+      </button>
+    </template>
   </div>
   <!-- ส่วน header หลัก -->
   <div class="container mx-auto px-5 py-6 flex items-center justify-between">
@@ -130,7 +187,11 @@ function clearSearch() {
       </router-link>
 
       <!-- cart icon -->
-      <button class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group relative">
+      <router-link
+        :to="{ name: 'cart-page' }"
+        class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group relative"
+        title="Cart"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -146,10 +207,10 @@ function clearSearch() {
           />
         </svg>
         <!-- Cart Badge -->
-        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-          0
+        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+          {{ cartCount }}
         </span>
-      </button>
+      </router-link>
     </div>
   </div>
 </template>

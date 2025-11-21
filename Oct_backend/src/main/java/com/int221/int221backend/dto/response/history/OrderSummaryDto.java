@@ -20,6 +20,7 @@ public class OrderSummaryDto {
     private OrderStatus status;
     private String shippingAddress;
     private String note;
+    private String sellerNickname;
     private List<OrderItemDetailDto> items;
 
     public static OrderSummaryDto fromEntity(Order order) {
@@ -35,6 +36,7 @@ public class OrderSummaryDto {
                 .status(order.getStatus())
                 .shippingAddress(order.getShippingAddress())
                 .note(order.getNote())
+                .sellerNickname(order.getSeller().getNickName())
                 .items(itemDtos)
                 .build();
     }
