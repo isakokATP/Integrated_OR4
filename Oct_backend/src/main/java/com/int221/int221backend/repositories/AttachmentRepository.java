@@ -15,4 +15,7 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
     Integer findMaxImageViewOrderBySaleItem(@Param("saleItem") SaleItem saleItem);
 
     List<Attachment> findBySaleItemId(Integer saleItemId);
+
+    @Query("SELECT a FROM Attachment a WHERE a.saleItem.id IN :saleItemIds")
+    List<Attachment> findBySaleItemIdIn(@Param("saleItemIds") List<Integer> saleItemIds);
 }

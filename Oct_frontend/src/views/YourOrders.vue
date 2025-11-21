@@ -1,6 +1,16 @@
 <template>
   <Header />
   <div class="max-w-6xl mx-auto p-6">
+    <!-- Navigation Bar -->
+    <nav class="text-sm mb-4 flex items-center space-x-2">
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
+      >Home</router-link>
+      <span class="mx-1">›</span>
+      <span class="font-semibold">Your Orders</span>
+    </nav>
+    
     <h1 class="text-3xl font-bold mb-6">Your Orders</h1>
 
     <!-- Loading State -->
@@ -42,11 +52,22 @@
           <div v-for="order in sellerGroup" :key="order.orderNumber" class="border-b last:border-b-0 pb-4 last:pb-0 space-y-4">
             <!-- Order Summary -->
             <div class="flex justify-between items-start mb-4">
-              <div>
-                <p class="text-sm text-gray-600">Order Number: <span class="font-semibold text-gray-800">{{ order.orderNumber }}</span></p>
-                <p class="text-sm text-gray-600 mt-1">Total Amount: <span class="font-semibold text-blue-600 text-lg">฿{{ order.totalAmount.toLocaleString() }}</span></p>
+              <div class="flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <p class="text-sm text-gray-600">Order Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span></p>
+                    <p class="text-sm text-gray-600">Payment Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span></p>
+                    <p class="text-sm text-gray-600">Seller: <span class="font-semibold text-gray-800">{{ sellerNickname }}</span></p>
+                    <p class="text-sm text-gray-600">Order Number: <span class="font-semibold text-gray-800">{{ order.orderNumber }}</span></p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-600">Shipping To:</p>
+                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ order.shippingAddress || 'N/A' }}</p>
+                    <p class="text-sm text-gray-600 mt-2">Total Amount: <span class="font-semibold text-blue-600 text-lg">฿{{ order.totalAmount.toLocaleString() }}</span></p>
+                  </div>
+                </div>
               </div>
-              <div class="text-right">
+              <div class="text-right ml-4">
                 <span class="badge" :class="getStatusBadgeClass(order.status)">
                   {{ order.status }}
                 </span>
@@ -120,6 +141,7 @@ const groupedOrders = computed(() => {
 
   const grouped = {};
 
+  // Orders are already sorted DESC by backend, so we maintain that order
   orders.value.forEach(order => {
     // Format date as YYYY-MM-DD for grouping
     const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
@@ -133,10 +155,18 @@ const groupedOrders = computed(() => {
       grouped[orderDate][sellerNickname] = [];
     }
 
+    // Push maintains order (newest first within same date/seller group)
     grouped[orderDate][sellerNickname].push(order);
   });
 
-  return grouped;
+  // Sort date keys in descending order (newest first) to ensure reverse chronological display
+  const sortedGrouped = {};
+  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+  sortedDates.forEach(date => {
+    sortedGrouped[date] = grouped[date];
+  });
+
+  return sortedGrouped;
 });
 
 // Format date for display
@@ -146,6 +176,19 @@ const formatDate = (dateString) => {
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
+  });
+};
+
+// Format order date for order summary
+const formatOrderDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 };
 

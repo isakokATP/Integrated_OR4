@@ -1,4 +1,5 @@
 <template>
+  <Header />
   <div class="max-w-4xl mx-auto p-6">
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center h-64">
@@ -15,6 +16,16 @@
 
     <!-- Profile Content -->
     <div v-else class="space-y-6">
+      <!-- Navigation Bar -->
+      <nav class="text-sm mb-4 flex items-center space-x-2">
+        <router-link
+          to="/sale-items"
+          class="text-blue-600 hover:underline font-medium"
+        >Home</router-link>
+        <span class="mx-1">›</span>
+        <span class="font-semibold">My Profile</span>
+      </nav>
+
       <!-- Header -->
       <div class="flex justify-between items-start">
         <div>
@@ -62,19 +73,20 @@
                 <span class="label-text font-semibold">Full Name</span>
               </label>
               <input
-                v-model="userProfile.fullName"
+                :value="userProfile.fullName || userProfile.fullname || ''"
                 type="text"
                 class="input input-bordered"
                 disabled
               />
             </div>
 
-            <div class="form-control">
+            <!-- Mobile - Only show for SELLER -->
+            <div v-if="userProfile.userType === 'SELLER'" class="form-control">
               <label class="label">
-                <span class="label-text font-semibold">Phone Number</span>
+                <span class="label-text font-semibold">Mobile</span>
               </label>
               <input
-                v-model="userProfile.phoneNumber"
+                :value="maskMobile(userProfile.phoneNumber)"
                 type="text"
                 class="input input-bordered"
                 disabled
@@ -109,81 +121,23 @@
 
             <div class="form-control">
               <label class="label">
-                <span class="label-text font-semibold">Bank Account</span>
+                <span class="label-text font-semibold">Bank Account No</span>
               </label>
               <input
-                v-model="userProfile.bankAccount"
+                :value="maskBankAccount(userProfile.bankAccount)"
                 type="text"
                 class="input input-bordered bg-white"
                 disabled
               />
-            </div>
-
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-semibold">ID Card Number</span>
-              </label>
-              <input
-                v-model="userProfile.idCardNumber"
-                type="text"
-                class="input input-bordered bg-white"
-                disabled
-              />
-            </div>
-
-            <!-- National ID Photos -->
-            <div class="form-control col-span-2">
-              <label class="label">
-                <span class="label-text font-semibold">National ID Photos</span>
-              </label>
-              <div class="flex gap-4">
-                <div class="flex-1">
-                  <label class="label-text text-sm">Front</label>
-                  <div class="w-full p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto text-gray-400 mb-2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12.75a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
-                    <p class="text-gray-600">Provided</p>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <label class="label-text text-sm">Back</label>
-                  <div class="w-full p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto text-gray-400 mb-2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12.75a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
-                    <p class="text-gray-600">Provided</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Buyer Information -->
-      <div v-else class="card bg-gradient-to-br from-green-50 to-teal-50 shadow-lg">
-        <div class="card-body">
-          <h2 class="card-title text-xl mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12A1.125 1.125 0 0120.25 21.75H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            Buyer Account
-          </h2>
-          <p class="text-gray-600">You are registered as a buyer. Browse and purchase items from sellers.</p>
-        </div>
-      </div>
-
       <!-- Actions -->
       <div class="flex justify-end gap-4">
-        <button @click="goHome" class="btn btn-outline">
-          Back to Home
-        </button>
         <button @click="editProfile" class="btn btn-primary">
           Edit Profile
-        </button>
-        <button @click="logout" class="btn btn-error">
-          Logout
         </button>
       </div>
     </div>
@@ -193,6 +147,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import Header from '../components/Header.vue';
 import { handleApiError } from '../api/client';
 
 const router = useRouter();
@@ -264,17 +219,30 @@ const fetchUserProfile = async () => {
   }
 };
 
-const goHome = () => {
-  router.push({ name: 'home-page' });
+// Mask mobile - show 3 digits from end (2nd, 3rd, 4th from end) and last digit as x
+// Example: 0123456789 -> xxxxxx789x
+const maskMobile = (mobile) => {
+  if (!mobile) return '';
+  if (mobile.length <= 4) return mobile;
+  // Show digits at positions -4, -3, -2 (2nd, 3rd, 4th from end)
+  const visiblePart = mobile.slice(-4, -1); // positions -4 to -2 (3 digits)
+  const maskedLength = mobile.length - 4; // mask everything except last 4
+  return 'x'.repeat(maskedLength) + visiblePart + 'x'; // last digit is also masked
+};
+
+// Mask bank account - show 3 digits from end (2nd, 3rd, 4th from end) and last digit as x
+// Example: 0123456789 -> xxxxxx789x
+const maskBankAccount = (account) => {
+  if (!account) return '';
+  if (account.length <= 4) return account;
+  // Show digits at positions -4, -3, -2 (2nd, 3rd, 4th from end)
+  const visiblePart = account.slice(-4, -1); // positions -4 to -2 (3 digits)
+  const maskedLength = account.length - 4; // mask everything except last 4
+  return 'x'.repeat(maskedLength) + visiblePart + 'x'; // last digit is also masked
 };
 
 const editProfile = () => {
   router.push({ name: 'edit-profile-page' });
-};
-
-const logout = async () => {
-  // Redirect to signout route which will handle cleanup and redirect
-  router.push({ name: 'signout-page' });
 };
 
 onMounted(() => {

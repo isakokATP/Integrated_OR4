@@ -1,5 +1,6 @@
 <template>
   <Header />
+  <Notification :message="message" :type="messageType" />
   <div class="max-w-6xl mx-auto p-6">
     <nav class="text-sm mb-4 flex items-center space-x-2">
       <router-link
@@ -221,6 +222,7 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '../components/Header.vue';
+import Notification from '../components/Notification.vue';
 import { getCart, updateCartItemQuantity, removeCartItem } from '../services/cartService';
 import { placeOrder } from '../services/orderService';
 import { updateCartCount } from '../composables/useCartCount';
@@ -234,6 +236,8 @@ const getImageUrl = (filename) => {
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
+const message = ref('');
+const messageType = ref('success');
 const cartData = ref(null);
 const showRemoveConfirm = ref(false);
 const itemToRemove = ref(null);
@@ -396,7 +400,11 @@ const selectedSummary = computed(() => {
 // Place order
 const handlePlaceOrder = async () => {
   if (selectedItems.value.size === 0) {
-    alert('Please select at least one item to place an order');
+    message.value = 'Please select at least one item to place an order';
+    messageType.value = 'error';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
     return;
   }
   
@@ -420,13 +428,21 @@ const handlePlaceOrder = async () => {
   });
   
   if (sellerGroups.length === 0) {
-    alert('Please select at least one item to place an order');
+    message.value = 'Please select at least one item to place an order';
+    messageType.value = 'error';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
     return;
   }
   
   // Validate address
   if (!shippingAddress.value.trim()) {
-    alert('Please enter shipping address');
+    message.value = 'Please enter shipping address';
+    messageType.value = 'error';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
     return;
   }
   
@@ -439,9 +455,17 @@ const handlePlaceOrder = async () => {
     // Clear form
     shippingAddress.value = '';
     note.value = '';
-    alert('Order placed successfully!');
+    message.value = 'Order placed successfully!';
+    messageType.value = 'success';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
   } catch (err) {
-    alert(err.message || 'Failed to place order');
+    message.value = err.message || 'Failed to place order';
+    messageType.value = 'error';
+    setTimeout(() => {
+      message.value = '';
+    }, 3000);
   } finally {
     isPlacingOrder.value = false;
   }

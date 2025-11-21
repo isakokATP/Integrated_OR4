@@ -15,6 +15,21 @@
 
     <!-- Edit Profile Form -->
     <div v-else-if="originalProfile" class="space-y-6">
+      <!-- Navigation Bar -->
+      <nav class="text-sm mb-4 flex items-center space-x-2">
+        <router-link
+          to="/sale-items"
+          class="text-blue-600 hover:underline font-medium"
+        >Home</router-link>
+        <span class="mx-1">›</span>
+        <router-link
+          to="/profile"
+          class="text-blue-600 hover:underline font-medium"
+        >My Profile</router-link>
+        <span class="mx-1">›</span>
+        <span class="font-semibold">Edit Profile</span>
+      </nav>
+
       <!-- Header -->
       <div class="flex justify-between items-start">
         <div>

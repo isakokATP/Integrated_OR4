@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    @Query("SELECT DISTINCT o FROM Order o JOIN FETCH o.items oi JOIN FETCH oi.saleItem si JOIN FETCH si.brand JOIN FETCH si.seller LEFT JOIN FETCH si.attachments WHERE o.buyer.id = :buyerId ORDER BY o.orderTimestamp DESC")
+    @Query("SELECT DISTINCT o FROM Order o JOIN FETCH o.items oi JOIN FETCH oi.saleItem si JOIN FETCH si.brand JOIN FETCH si.seller WHERE o.buyer.id = :buyerId AND o.status = 'COMPLETED' ORDER BY o.orderTimestamp DESC")
     List<Order> findByBuyerIdWithDetailsOrderByOrderTimestampDesc(Integer buyerId);
 
     // 1. สำหรับ Tab "New Orders" (Completed + Not Viewed)

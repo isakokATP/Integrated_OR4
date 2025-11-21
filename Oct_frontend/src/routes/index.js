@@ -142,8 +142,8 @@ router.beforeEach((to, from, next) => {
       'edit-brand-page'
     ];
 
-    // Buyer-only routes
-    const buyerOnlyRoutes = [
+    // Routes accessible to both buyers and sellers (buying features)
+    const buyingRoutes = [
       'cart-page',
       'your-orders-page'
     ];
@@ -157,14 +157,8 @@ router.beforeEach((to, from, next) => {
       }
     }
 
-    // Check if route requires buyer access
-    if (buyerOnlyRoutes.includes(to.name)) {
-      if (userRole !== 'BUYER') {
-        // Seller trying to access buyer page, redirect to seller's sale items list
-        next({ name: 'sale-items-list-page' });
-        return;
-      }
-    }
+    // Buying routes (cart, orders) are accessible to both BUYER and SELLER
+    // No restriction needed - both can buy and view their orders
 
     // Allow access
     next();

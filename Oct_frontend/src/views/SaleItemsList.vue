@@ -1,10 +1,20 @@
 <template>
   <Header 
-    :searchValue="null" 
+    :searchValue="searchQuery" 
     @search="handleSearchUpdate" 
   />
   <div class="px-6 pt-2">
     <Notification :message="message" />
+    
+    <!-- Navigation Bar -->
+    <nav class="text-sm mb-4 flex items-center space-x-2">
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline font-medium"
+      >Home</router-link>
+      <span class="mx-1">›</span>
+      <span class="font-semibold">Sale Items List</span>
+    </nav>
     
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center h-64">
@@ -138,6 +148,7 @@ import Header from "../components/Header.vue";
 import Notification from "../components/Notification.vue";
 
 const saleItems = ref([]);
+const allSaleItems = ref([]); // Store all items for filtering
 const router = useRouter();
 const route = useRoute();
 const message = ref("");
@@ -145,6 +156,7 @@ const showConfirm = ref(false);
 const itemToDelete = ref({ id: null, model: "" });
 const loading = ref(false);
 const error = ref("");
+const searchQuery = ref("");
 
 // Get current user ID from token
 const getCurrentUserId = () => {
@@ -191,7 +203,8 @@ const loadSaleItems = async () => {
     }
 
     const response = await fetchSellerSaleItems(userId, 0, 1000);
-    saleItems.value = response.content || [];
+    allSaleItems.value = response.content || [];
+    applySearchFilter();
     console.log(saleItems.value);
   } catch (err) {
     error.value = err.message || 'Failed to load sale items';
@@ -206,11 +219,32 @@ const loadSaleItems = async () => {
   }
 };
 
+// Filter items based on search query
+const applySearchFilter = () => {
+  if (!searchQuery.value || searchQuery.value.trim() === '') {
+    saleItems.value = allSaleItems.value;
+    return;
+  }
+
+  const query = searchQuery.value.toLowerCase().trim();
+  saleItems.value = allSaleItems.value.filter(item => {
+    // Search in model, brand, color, description
+    const model = (item.model || '').toLowerCase();
+    const brand = (item.brandName || '').toLowerCase();
+    const color = (item.color || '').toLowerCase();
+    const description = (item.description || '').toLowerCase();
+    
+    return model.includes(query) || 
+           brand.includes(query) || 
+           color.includes(query) ||
+           description.includes(query);
+  });
+};
+
 // Handle search updates from Header
-const handleSearchUpdate = async (searchQuery) => {
-  // For seller's sale items list, we can filter client-side or ignore search
-  // Since the requirement is to show only seller's items, we'll reload all items
-  await loadSaleItems();
+const handleSearchUpdate = (query) => {
+  searchQuery.value = query || '';
+  applySearchFilter();
 };
 
 const goToAddSaleItem = () => {

@@ -29,6 +29,20 @@ const userNickname = computed(() => {
   }
 });
 
+// Get user role from token
+const userRole = computed(() => {
+  loginTrigger.value; // Force dependency
+  const token = sessionStorage.getItem('accessToken');
+  if (!token) return null;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role || payload.userType || null;
+  } catch (e) {
+    return null;
+  }
+});
+
 // Logout function
 const handleLogout = () => {
   router.push({ name: 'signout-page' });
@@ -102,11 +116,17 @@ watch(() => router.currentRoute.value.path, () => {
         >Register</router-link>
     </template>
     
-    <!-- Show nickname and logout when logged in -->
+    <!-- Show nickname, your orders, and logout when logged in -->
     <template v-else>
       <span class="text-white text-sm font-semibold ml-6">
         Welcome, {{ userNickname || 'User' }}
       </span>
+      <router-link
+        :to="{ name: 'your-orders-page' }"
+        class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition"
+      >
+        Your Orders
+      </router-link>
       <button
         @click="handleLogout"
         class="text-white text-sm font-semibold ml-6 hover:text-amber-400 transition cursor-pointer"
