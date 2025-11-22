@@ -25,7 +25,7 @@
                 </button>
               </div>
             </template>
-            <div v-else class="text-gray-500 text-sm font-medium">Brands</div>
+            <div v-else class="text-gray-500 text-sm font-medium">Brand</div>
           </div>
           
           <!-- Brand Dropdown -->
