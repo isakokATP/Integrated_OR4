@@ -1,37 +1,28 @@
 <template>
   <Header />
   <div class="max-w-6xl mx-auto p-6">
-    <!-- Navigation Bar -->
     <nav class="text-sm mb-4 flex items-center space-x-2">
-      <router-link
-        to="/sale-items"
-        class="text-blue-600 hover:underline font-medium"
-      >Home</router-link>
+      <router-link to="/sale-items" class="text-blue-600 hover:underline font-medium">Home</router-link>
       <span class="mx-1">›</span>
       <span class="font-semibold">Your Orders</span>
     </nav>
 
     <h1 class="text-3xl font-bold mb-6">Your Orders</h1>
 
-    <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center h-64">
       <span class="loading loading-spinner loading-lg text-blue-600"></span>
     </div>
 
-    <!-- Error State -->
     <div v-else-if="error" class="alert alert-error mb-4">
       <span>{{ error }}</span>
     </div>
 
-    <!-- Empty Orders -->
-    <div v-else-if="!sortedOrders || sortedOrders.length === 0" class="text-center py-12">
+    <div v-else-if="!sortedOrders.length" class="text-center py-12">
       <p class="text-xl text-gray-500">You have no orders yet</p>
-      <router-link to="/sale-items" class="text-blue-600 hover:underline mt-4 inline-block">
-        Start Shopping
-      </router-link>
+      <router-link to="/sale-items" class="text-blue-600 hover:underline mt-4 inline-block">Start Shopping</router-link>
     </div>
 
-    <!-- Orders List (flat, no seller grouping) -->
+    <!-- Flat Orders -->
     <div v-else class="space-y-6">
       <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md p-6 space-y-4">
         <!-- Order Summary -->
@@ -52,9 +43,7 @@
             </div>
           </div>
           <div class="text-right ml-4">
-            <span class="badge" :class="getStatusBadgeClass(order.status)">
-              {{ order.status }}
-            </span>
+            <span class="badge" :class="getStatusBadgeClass(order.status)">{{ order.status }}</span>
           </div>
         </div>
 
@@ -62,20 +51,10 @@
         <div class="space-y-3">
           <h4 class="font-semibold text-gray-700">Order Items:</h4>
           <div v-for="item in order.items" :key="item.saleItemId" class="flex gap-4 p-3 bg-gray-50 rounded-lg">
-            <!-- Item Image -->
             <div class="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
-              <img
-                v-if="item.imageUrl"
-                :src="getImageUrl(item.imageUrl)"
-                :alt="item.description"
-                class="w-full h-full object-cover"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                No Image
-              </div>
+              <img v-if="item.imageUrl" :src="getImageUrl(item.imageUrl)" :alt="item.description" class="w-full h-full object-cover" />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
             </div>
-
-            <!-- Item Details -->
             <div class="flex-1">
               <p class="font-semibold text-gray-800">{{ item.description }}</p>
               <div class="mt-2 flex gap-4 text-sm text-gray-600">
@@ -87,6 +66,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -101,48 +81,33 @@ const loading = ref(false);
 const error = ref('');
 const orders = ref([]);
 
-// Get current user ID from token
+// Get current user ID
 const getCurrentUserId = () => {
   const token = sessionStorage.getItem('accessToken');
   if (!token) return null;
-
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.id;
-  } catch (e) {
-    console.error('Error decoding token:', e);
-    return null;
-  }
+  try { return JSON.parse(atob(token.split('.')[1])).id; }
+  catch(e){ console.error(e); return null; }
 };
 
-// Sorted flat orders (no grouping)
+// Sorted flat orders
 const sortedOrders = computed(() => {
   if (!orders.value) return [];
   return [...orders.value].sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
 });
 
-// Format date for display
-const formatOrderDate = (dateString) => {
+// Format order date
+const formatOrderDate = dateString => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  return date.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 };
 
-// Get image URL
-const getImageUrl = (filename) => {
-  if (!filename) return null;
-  return `/or4/uploads/${encodeURIComponent(filename)}`;
-};
+// Image URL
+const getImageUrl = filename => filename ? `/or4/uploads/${encodeURIComponent(filename)}` : null;
 
-// Status badge class
-const getStatusBadgeClass = (status) => {
-  switch (status) {
+// Status badge
+const getStatusBadgeClass = status => {
+  switch(status){
     case 'COMPLETED': return 'badge-success';
     case 'CANCELLED': return 'badge-error';
     case 'PENDING': return 'badge-warning';
@@ -152,29 +117,16 @@ const getStatusBadgeClass = (status) => {
 
 // Load orders
 const loadOrders = async () => {
-  loading.value = true;
-  error.value = '';
+  loading.value = true; error.value = '';
   try {
     const userId = getCurrentUserId();
-    if (!userId) {
-      error.value = 'Not authenticated';
-      router.push({ name: 'login-page' });
-      return;
-    }
-
+    if(!userId){ error.value='Not authenticated'; router.push({name:'login-page'}); return; }
     orders.value = await getBuyerOrders(userId);
-  } catch (err) {
-    if (err.status === 401) {
-      router.push({ name: 'login-page' });
-    } else {
-      error.value = err.message || 'Failed to load orders';
-    }
-  } finally {
-    loading.value = false;
-  }
+  } catch(err){
+    if(err.status===401){ router.push({name:'login-page'}); }
+    else{ error.value=err.message||'Failed to load orders'; }
+  } finally{ loading.value=false; }
 };
 
-onMounted(() => {
-  loadOrders();
-});
+onMounted(()=>{ loadOrders(); });
 </script>
