@@ -16,6 +16,7 @@
         <input
           v-model="password"
           type="password"
+          maxlength="14"
           class="w-full border p-2 rounded"
         />
       </div>
