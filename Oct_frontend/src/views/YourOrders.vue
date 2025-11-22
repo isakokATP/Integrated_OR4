@@ -24,32 +24,29 @@
     </div>
 
     <!-- Empty Orders -->
-    <div v-else-if="!sortedOrders || sortedOrders.length === 0" class="text-center py-12">
+    <div v-else-if="!sortedOrders.length" class="text-center py-12">
       <p class="text-xl text-gray-500">You have no orders yet</p>
       <router-link to="/sale-items" class="text-blue-600 hover:underline mt-4 inline-block">
         Start Shopping
       </router-link>
     </div>
 
-    <!-- Orders list (flat, no seller grouping) -->
+    <!-- Orders List (Flat, sorted by order date DESC) -->
     <div v-else class="space-y-6">
-      <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md p-6 space-y-4">
-        
+      <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md p-6 space-y-4 border-b last:border-b-0">
         <!-- Order Summary -->
         <div class="flex justify-between items-start mb-4">
-          <div class="flex-1">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div>
-                <p class="text-sm text-gray-600">Order Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span></p>
-                <p class="text-sm text-gray-600">Payment Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span></p>
-                <p class="text-sm text-gray-600">Seller: <span class="font-semibold text-gray-800">{{ order.sellerNickname }}</span></p>
-                <p class="text-sm text-gray-600">Order Number: <span class="font-semibold text-gray-800">{{ order.orderNumber }}</span></p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-600">Shipping To:</p>
-                <p class="text-sm font-semibold text-gray-800 mt-1">{{ order.shippingAddress || 'N/A' }}</p>
-                <p class="text-sm text-gray-600 mt-2">Total Amount: <span class="font-semibold text-blue-600 text-lg">฿{{ order.totalAmount.toLocaleString() }}</span></p>
-              </div>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <p class="text-sm text-gray-600">Order Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span></p>
+              <p class="text-sm text-gray-600">Payment Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.paymentDate) }}</span></p>
+              <p class="text-sm text-gray-600">Seller: <span class="font-semibold text-gray-800">{{ order.sellerNickname }}</span></p>
+              <p class="text-sm text-gray-600">Order Number: <span class="font-semibold text-gray-800">{{ order.orderNumber }}</span></p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Shipping To:</p>
+              <p class="text-sm font-semibold text-gray-800 mt-1">{{ order.shippingAddress || 'N/A' }}</p>
+              <p class="text-sm text-gray-600 mt-2">Total Amount: <span class="font-semibold text-blue-600 text-lg">฿{{ order.totalAmount.toLocaleString() }}</span></p>
             </div>
           </div>
           <div class="text-right ml-4">
@@ -63,20 +60,10 @@
         <div class="space-y-3">
           <h4 class="font-semibold text-gray-700">Order Items:</h4>
           <div v-for="item in order.items" :key="item.saleItemId" class="flex gap-4 p-3 bg-gray-50 rounded-lg">
-            <!-- Item Image -->
             <div class="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
-              <img
-                v-if="item.imageUrl"
-                :src="getImageUrl(item.imageUrl)"
-                :alt="item.description"
-                class="w-full h-full object-cover"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                No Image
-              </div>
+              <img v-if="item.imageUrl" :src="getImageUrl(item.imageUrl)" :alt="item.description" class="w-full h-full object-cover" />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
             </div>
-
-            <!-- Item Details -->
             <div class="flex-1">
               <p class="font-semibold text-gray-800">{{ item.description }}</p>
               <div class="mt-2 flex gap-4 text-sm text-gray-600">
@@ -86,7 +73,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -107,7 +93,6 @@ const orders = ref([]);
 const getCurrentUserId = () => {
   const token = sessionStorage.getItem('accessToken');
   if (!token) return null;
-
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.id;
@@ -117,11 +102,9 @@ const getCurrentUserId = () => {
   }
 };
 
-// Flat list of orders sorted by date DESC
+// Flat list of orders sorted by orderDate DESC
 const sortedOrders = computed(() => {
-  return orders.value
-    ? [...orders.value].sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))
-    : [];
+  return orders.value ? [...orders.value].sort((a,b) => new Date(b.orderDate) - new Date(a.orderDate)) : [];
 });
 
 // Format date for display
@@ -143,9 +126,9 @@ const getImageUrl = (filename) => {
   return `/or4/uploads/${encodeURIComponent(filename)}`;
 };
 
-// Get status badge class
+// Badge class for status
 const getStatusBadgeClass = (status) => {
-  switch (status) {
+  switch(status) {
     case 'COMPLETED': return 'badge-success';
     case 'CANCELLED': return 'badge-error';
     case 'PENDING': return 'badge-warning';
@@ -157,7 +140,6 @@ const getStatusBadgeClass = (status) => {
 const loadOrders = async () => {
   loading.value = true;
   error.value = '';
-  
   try {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -165,14 +147,10 @@ const loadOrders = async () => {
       router.push({ name: 'login-page' });
       return;
     }
-
     orders.value = await getBuyerOrders(userId);
   } catch (err) {
-    if (err.status === 401) {
-      router.push({ name: 'login-page' });
-    } else {
-      error.value = err.message || 'Failed to load orders';
-    }
+    if (err.status === 401) router.push({ name: 'login-page' });
+    else error.value = err.message || 'Failed to load orders';
   } finally {
     loading.value = false;
   }
