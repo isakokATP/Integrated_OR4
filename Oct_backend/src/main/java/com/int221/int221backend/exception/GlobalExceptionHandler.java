@@ -79,8 +79,34 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    private ResponseEntity<Object> buildUnauthorizedResponse(String message, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("error", "Unauthorized");
+        body.put("message", message);
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, WebRequest request) {
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            String fieldName = error.getField();
+            Object rejectedValue = error.getRejectedValue();
+            if ("password".equals(fieldName)) {
+                if (rejectedValue instanceof String && ((String) rejectedValue).trim().isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ErrorResponse("Invalid email/password"));
+                }
+            }
+            if ("email".equals(fieldName)) {
+                if (rejectedValue instanceof String rejectedEmail && !rejectedEmail.equals(rejectedEmail.trim())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ErrorResponse("Email format is invalid (contains leading/trailing whitespace)"));
+                }
+            }
+        }
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
@@ -91,15 +117,5 @@ public class GlobalExceptionHandler {
         responseBody.put("errors", errors);
 
         return ResponseEntity.badRequest().body(responseBody);
-    }
-
-    private ResponseEntity<Object> buildUnauthorizedResponse(String message, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("error", "Unauthorized");
-        body.put("message", message);
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
 }
