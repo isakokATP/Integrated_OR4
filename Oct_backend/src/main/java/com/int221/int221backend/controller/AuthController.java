@@ -78,17 +78,28 @@ public class AuthController {
     }
 
     @PostMapping("/v2/auth/refresh")
-    public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+    public ResponseEntity<?> refreshToken(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken) {
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("No refresh token provided"));
+        }
+
         try {
-            if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid Refresh Token"));
+            if (!jwtTokenProvider.validateToken(refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Invalid Refresh Token"));
             }
 
             Integer userId = jwtTokenProvider.extractIdFromRefreshToken(refreshToken);
 
             Users user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BadCredentialsException("User associated with token not found"));
-
+                    .orElseThrow(() -> new BadCredentialsException("User not found"));
+            if (user.getStatus() != Users.Status.ACTIVE) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("User is not active"));
+            }
             String newAccessToken = jwtTokenProvider.generateAccessToken(user);
 
             Map<String, String> response = new HashMap<>();
@@ -102,6 +113,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid Refresh Token"));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An error occurred"));
         }
     }
 
