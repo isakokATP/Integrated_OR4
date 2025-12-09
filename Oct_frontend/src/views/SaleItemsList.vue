@@ -54,7 +54,7 @@
     </div>
 
     <!-- Content -->
-    <div v-else>
+    <div v-if="!loading && !error">
       <div class="flex justify-between mb-4">
         <button
           class="itbms-sale-item-add text-white bg-blue-900 hover:bg-blue-500 text-lg px-6 py-3 rounded"
