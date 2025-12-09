@@ -1,4 +1,4 @@
-import { api } from "../api/client"; 
+import { api } from "../api/client";
 
 // Get auth token
 const getAuthToken = () => {
@@ -7,13 +7,12 @@ const getAuthToken = () => {
 
 // --- Process Seller Groups ---
 export function preprocessSellerGroups(sellerGroups) {
-  return sellerGroups.map(group => {
+  return sellerGroups.map((group) => {
     const hasInsufficient = group.items.some(
-      item => item.quantity > item.stock
+      (item) => item.quantity > item.stock
     );
 
-    // assign status to every item
-    const updatedItems = group.items.map(item => ({
+    const updatedItems = group.items.map((item) => ({
       ...item,
       status: hasInsufficient ? "Canceled" : "Confirmed",
     }));
@@ -33,11 +32,8 @@ export async function placeOrder(
 ) {
   try {
     const token = getAuthToken();
-    if (!token) {
-      throw new Error("Not authenticated");
-    }
+    if (!token) throw new Error("Not authenticated");
 
-    // This is the correct processed sellerGroups
     const processedGroups = preprocessSellerGroups(sellerGroups);
 
     const payload = {
@@ -53,7 +49,7 @@ export async function placeOrder(
       },
     });
 
-    return response;
+    return response.data;
   } catch (error) {
     console.error("Error placing order:", error);
     throw error;
@@ -64,12 +60,51 @@ export async function placeOrder(
 export async function getBuyerOrders(userId) {
   try {
     const token = getAuthToken();
-    if (!token) {
-      throw new Error("Not authenticated");
-    }
+    if (!token) throw new Error("Not authenticated");
 
-    const response = await api.get(
-      `/itb-mshop/v2/users/${userId}/orders`,
+    const response = await api.get(`/itb-mshop/v2/users/${userId}/orders`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getting buyer orders:", error);
+    throw error;
+  }
+}
+
+// --- Get Seller Orders ---
+export async function getSellerOrders(sellerId) {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await api.get(`/itb-mshop/v2/sellers/${sellerId}/orders`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // safety check
+    const result = response.data?.data ?? response.data;
+    return result;
+  } catch (err) {
+    console.error("Error getting seller orders:", err);
+    throw err;
+  }
+}
+
+// --- Mark Order as Viewed ---
+export async function markOrderViewed(orderId) {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await api.put(
+      `/itb-mshop/v2/orders/${orderId}/viewed`,
+      {},
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -77,9 +112,61 @@ export async function getBuyerOrders(userId) {
       }
     );
 
-    return response;
-  } catch (error) {
-    console.error("Error getting buyer orders:", error);
-    throw error;
+    // return updated order object (สำหรับ FE อัปเดต state)
+    return response.data?.data ?? response.data;
+  } catch (err) {
+    console.error("Error marking order viewed:", err);
+    throw err;
   }
 }
+
+// --- Get Order Detail ---
+export async function getOrderDetail(orderId) {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await api.get(`/itb-mshop/v2/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error getting order detail:", err);
+    throw err;
+  }
+}
+
+// --- Classify Seller Orders ---
+export function classifySellerOrders(orders) {
+  const newOrders = orders.filter(
+    (o) => !o.isViewed && o.status === "Completed"
+  );
+
+  const canceledOrders = orders.filter((o) => o.status === "Canceled");
+
+  const allOrders = orders
+    .filter((o) => o.status === "Completed")
+    .sort((a, b) => b.orderNo - a.orderNo);
+
+  return { newOrders, canceledOrders, allOrders };
+}
+
+// --- Count New Orders ---
+export function countNewOrders(orders) {
+  return orders.filter((o) => !o.isViewed && o.status === "Completed").length;
+}
+
+// --- Fetch and classify seller orders ---
+export async function fetchAndClassifySellerOrders(sellerId) {
+  try {
+    const orders = await getSellerOrders(sellerId);
+    return classifySellerOrders(orders);
+  } catch (err) {
+    console.error("Error fetching and classifying seller orders:", err);
+    throw err;
+  }
+}
+
