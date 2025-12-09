@@ -48,6 +48,7 @@ export async function placeOrder(
 
     const response = await api.post("/itb-mshop/v2/orders", payload, {
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
