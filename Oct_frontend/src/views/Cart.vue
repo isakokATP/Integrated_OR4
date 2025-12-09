@@ -24,9 +24,19 @@
     </div>
 
     <!-- Empty Cart -->
-    <div v-else-if="!cartData || !cartData.sellerGroups || cartData.sellerGroups.length === 0" class="text-center py-12">
+    <div
+      v-else-if="
+        !cartData ||
+        !cartData.sellerGroups ||
+        cartData.sellerGroups.length === 0
+      "
+      class="text-center py-12"
+    >
       <p class="text-xl text-gray-500">Your cart is empty</p>
-      <router-link to="/sale-items" class="text-blue-600 hover:underline mt-4 inline-block">
+      <router-link
+        to="/sale-items"
+        class="text-blue-600 hover:underline mt-4 inline-block"
+      >
         Continue Shopping
       </router-link>
     </div>
@@ -48,19 +58,29 @@
             <label class="font-medium cursor-pointer">Select All</label>
           </div>
         </div>
-        
-        <div v-for="sellerGroup in cartData.sellerGroups" :key="sellerGroup.sellerId" class="bg-white rounded-lg shadow-md p-6">
+
+        <div
+          v-for="sellerGroup in cartData.sellerGroups"
+          :key="sellerGroup.sellerId"
+          class="bg-white rounded-lg shadow-md p-6"
+        >
           <div class="flex items-center gap-2 mb-4">
             <input
-              :ref="el => { if (el) sellerCheckboxes.value[sellerGroup.sellerId] = el }"
+              :ref="
+                (el) => {
+                  if (el) sellerCheckboxes.value[sellerGroup.sellerId] = el;
+                }
+              "
               type="checkbox"
               :checked="isSellerSelected(sellerGroup)"
               @change="toggleSellerSelection(sellerGroup)"
               class="w-5 h-5 cursor-pointer"
             />
-            <h3 class="text-xl font-semibold">{{ sellerGroup.sellerNickname }}</h3>
+            <h3 class="text-xl font-semibold">
+              {{ sellerGroup.sellerNickname }}
+            </h3>
           </div>
-          
+
           <div class="space-y-4">
             <div
               v-for="item in sellerGroup.items"
@@ -76,32 +96,39 @@
                     class="w-5 h-5 cursor-pointer"
                   />
                 </div>
-                
+
                 <!-- Product Image -->
-                <div class="w-24 h-24 flex-shrink-0 border border-gray-300 rounded overflow-hidden bg-white">
+                <div
+                  class="w-24 h-24 flex-shrink-0 border border-gray-300 rounded overflow-hidden bg-white"
+                >
                   <img
                     v-if="item.imageUrl"
                     :src="getImageUrl(item.imageUrl)"
                     :alt="`${item.brandName} ${item.model}`"
                     class="object-contain w-full h-full"
                   />
-                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-gray-400 text-xs"
+                  >
                     No Image
                   </div>
                 </div>
-                
+
                 <div class="flex-1">
-                  <h4 class="font-semibold text-lg">{{ item.brandName }} {{ item.model }}</h4>
+                  <h4 class="font-semibold text-lg">
+                    {{ item.brandName }} {{ item.model }}
+                  </h4>
                   <p class="text-gray-600 text-sm mt-1">
-                    {{ item.ramGb ? `${item.ramGb}GB RAM` : '' }}
-                    {{ item.storageGb ? ` / ${item.storageGb}GB Storage` : '' }}
-                    {{ item.color ? ` / ${item.color}` : '' }}
+                    {{ item.ramGb ? `${item.ramGb}GB RAM` : "" }}
+                    {{ item.storageGb ? ` / ${item.storageGb}GB Storage` : "" }}
+                    {{ item.color ? ` / ${item.color}` : "" }}
                   </p>
                   <p class="text-lg font-semibold text-blue-600 mt-2">
                     ฿{{ item.price.toLocaleString() }}
                   </p>
                 </div>
-                
+
                 <div class="flex items-center gap-3">
                   <div class="flex items-center gap-2">
                     <button
@@ -112,14 +139,20 @@
                     </button>
                     <span class="w-12 text-center">{{ item.quantity }}</span>
                     <button
-                      @click="increaseQuantity(item.cartItemId, item.quantity, item.availableStock)"
+                      @click="
+                        increaseQuantity(
+                          item.cartItemId,
+                          item.quantity,
+                          item.availableStock
+                        )
+                      "
                       :disabled="item.quantity >= item.availableStock"
                       class="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                       +
                     </button>
                   </div>
-                  
+
                   <div class="text-right min-w-[100px]">
                     <p class="font-semibold text-lg">
                       ฿{{ (item.price * item.quantity).toLocaleString() }}
@@ -136,7 +169,7 @@
       <div class="lg:col-span-1">
         <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
           <h2 class="text-2xl font-semibold mb-4">Cart Summary</h2>
-          
+
           <div class="space-y-4">
             <!-- Address Input -->
             <div>
@@ -150,9 +183,11 @@
                 maxlength="500"
                 class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"
               ></textarea>
-              <p class="text-xs text-gray-500 mt-1">{{ shippingAddress.length }}/500</p>
+              <p class="text-xs text-gray-500 mt-1">
+                {{ shippingAddress.length }}/500
+              </p>
             </div>
-            
+
             <!-- Note Input -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -167,25 +202,33 @@
               ></textarea>
               <p class="text-xs text-gray-500 mt-1">{{ note.length }}/500</p>
             </div>
-            
+
             <div class="border-t pt-4 space-y-2">
               <div class="flex justify-between">
                 <span class="text-gray-600">Total Items:</span>
-                <span class="font-semibold">{{ selectedSummary.totalItems }}</span>
+                <span class="font-semibold">{{
+                  selectedSummary.totalItems
+                }}</span>
               </div>
-              
+
               <div class="flex justify-between text-xl font-bold border-t pt-2">
                 <span>Total Price:</span>
-                <span class="text-blue-600">฿{{ selectedSummary.totalPrice.toLocaleString() }}</span>
+                <span class="text-blue-600"
+                  >฿{{ selectedSummary.totalPrice.toLocaleString() }}</span
+                >
               </div>
             </div>
-            
+
             <button
               @click="handlePlaceOrder"
-              :disabled="isPlacingOrder || selectedItems.size === 0 || !shippingAddress.trim()"
+              :disabled="
+                isPlacingOrder ||
+                selectedItems.size === 0 ||
+                !shippingAddress.trim()
+              "
               class="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ isPlacingOrder ? 'Placing Order...' : 'Place Order' }}
+              {{ isPlacingOrder ? "Placing Order..." : "Place Order" }}
             </button>
           </div>
         </div>
@@ -198,7 +241,9 @@
       class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
     >
       <div class="bg-white p-6 rounded shadow-lg text-center max-w-md">
-        <div class="mb-4">Do you want to remove the sale item from the cart?</div>
+        <div class="mb-4">
+          Do you want to remove the sale item from the cart?
+        </div>
         <div class="flex justify-center gap-4">
           <button
             class="bg-red-700 hover:bg-red-500 text-white px-4 py-2 rounded"
@@ -219,13 +264,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
-import Header from '../components/Header.vue';
-import Notification from '../components/Notification.vue';
-import { getCart, updateCartItemQuantity, removeCartItem } from '../services/cartService';
-import { placeOrder } from '../services/orderService';
-import { updateCartCount } from '../composables/useCartCount';
+import { ref, onMounted, computed, watch, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import Header from "../components/Header.vue";
+import Notification from "../components/Notification.vue";
+import {
+  getCart,
+  updateCartItemQuantity,
+  removeCartItem,
+} from "../services/cartService";
+import { placeOrder } from "../services/orderService";
+import { updateCartCount } from "../composables/useCartCount";
 
 // Get image URL
 const getImageUrl = (filename) => {
@@ -235,9 +284,9 @@ const getImageUrl = (filename) => {
 
 const router = useRouter();
 const loading = ref(false);
-const error = ref('');
-const message = ref('');
-const messageType = ref('success');
+const error = ref("");
+const message = ref("");
+const messageType = ref("success");
 const cartData = ref(null);
 const showRemoveConfirm = ref(false);
 const itemToRemove = ref(null);
@@ -245,36 +294,40 @@ const selectedItems = ref(new Set()); // Store selected cartItemIds
 const isPlacingOrder = ref(false);
 const selectAllCheckbox = ref(null);
 const sellerCheckboxes = ref({});
-const shippingAddress = ref('');
-const note = ref('');
+const shippingAddress = ref("");
+const note = ref("");
 
 const loadCart = async () => {
   loading.value = true;
-  error.value = '';
-  
+  error.value = "";
+
   try {
     cartData.value = await getCart();
     // Update cart count in header
     await updateCartCount();
   } catch (err) {
     if (err.status === 401) {
-      router.push({ name: 'login-page' });
+      router.push({ name: "login-page" });
     } else {
-      error.value = err.message || 'Failed to load cart';
+      error.value = err.message || "Failed to load cart";
     }
   } finally {
     loading.value = false;
   }
 };
 
-const increaseQuantity = async (cartItemId, currentQuantity, availableStock) => {
+const increaseQuantity = async (
+  cartItemId,
+  currentQuantity,
+  availableStock
+) => {
   if (currentQuantity >= availableStock) return;
-  
+
   try {
     await updateCartItemQuantity(cartItemId, currentQuantity + 1);
     await loadCart(); // loadCart already calls updateCartCount
   } catch (err) {
-    alert(err.message || 'Failed to update quantity');
+    alert(err.message || "Failed to update quantity");
   }
 };
 
@@ -285,25 +338,25 @@ const decreaseQuantity = async (cartItemId, currentQuantity) => {
     showRemoveConfirm.value = true;
     return;
   }
-  
+
   try {
     await updateCartItemQuantity(cartItemId, currentQuantity - 1);
     await loadCart(); // loadCart already calls updateCartCount
   } catch (err) {
-    alert(err.message || 'Failed to update quantity');
+    alert(err.message || "Failed to update quantity");
   }
 };
 
 const confirmRemove = async () => {
   if (!itemToRemove.value) return;
-  
+
   try {
     await removeCartItem(itemToRemove.value);
     showRemoveConfirm.value = false;
     itemToRemove.value = null;
     await loadCart(); // loadCart already calls updateCartCount
   } catch (err) {
-    alert(err.message || 'Failed to remove item');
+    alert(err.message || "Failed to remove item");
     showRemoveConfirm.value = false;
     itemToRemove.value = null;
   }
@@ -317,26 +370,32 @@ const cancelRemove = () => {
 // Selection management
 const isSelectAllChecked = computed(() => {
   if (!cartData.value || !cartData.value.sellerGroups) return false;
-  const totalItems = cartData.value.sellerGroups.reduce((sum, group) => sum + group.items.length, 0);
+  const totalItems = cartData.value.sellerGroups.reduce(
+    (sum, group) => sum + group.items.length,
+    0
+  );
   return totalItems > 0 && selectedItems.value.size === totalItems;
 });
 
 const isSelectAllIndeterminate = computed(() => {
   if (!cartData.value || !cartData.value.sellerGroups) return false;
-  const totalItems = cartData.value.sellerGroups.reduce((sum, group) => sum + group.items.length, 0);
+  const totalItems = cartData.value.sellerGroups.reduce(
+    (sum, group) => sum + group.items.length,
+    0
+  );
   return selectedItems.value.size > 0 && selectedItems.value.size < totalItems;
 });
 
 const toggleSelectAll = () => {
   if (!cartData.value || !cartData.value.sellerGroups) return;
-  
+
   if (isSelectAllChecked.value) {
     // Deselect all
     selectedItems.value.clear();
   } else {
     // Select all
-    cartData.value.sellerGroups.forEach(group => {
-      group.items.forEach(item => {
+    cartData.value.sellerGroups.forEach((group) => {
+      group.items.forEach((item) => {
         selectedItems.value.add(item.cartItemId);
       });
     });
@@ -344,25 +403,29 @@ const toggleSelectAll = () => {
 };
 
 const isSellerSelected = (sellerGroup) => {
-  return sellerGroup.items.every(item => selectedItems.value.has(item.cartItemId));
+  return sellerGroup.items.every((item) =>
+    selectedItems.value.has(item.cartItemId)
+  );
 };
 
 const isSellerIndeterminate = (sellerGroup) => {
-  const selectedCount = sellerGroup.items.filter(item => selectedItems.value.has(item.cartItemId)).length;
+  const selectedCount = sellerGroup.items.filter((item) =>
+    selectedItems.value.has(item.cartItemId)
+  ).length;
   return selectedCount > 0 && selectedCount < sellerGroup.items.length;
 };
 
 const toggleSellerSelection = (sellerGroup) => {
   const allSelected = isSellerSelected(sellerGroup);
-  
+
   if (allSelected) {
     // Deselect all items in this seller group
-    sellerGroup.items.forEach(item => {
+    sellerGroup.items.forEach((item) => {
       selectedItems.value.delete(item.cartItemId);
     });
   } else {
     // Select all items in this seller group
-    sellerGroup.items.forEach(item => {
+    sellerGroup.items.forEach((item) => {
       selectedItems.value.add(item.cartItemId);
     });
   }
@@ -381,90 +444,103 @@ const selectedSummary = computed(() => {
   if (!cartData.value || !cartData.value.sellerGroups) {
     return { totalItems: 0, totalPrice: 0 };
   }
-  
+
   let totalItems = 0;
   let totalPrice = 0;
-  
-  cartData.value.sellerGroups.forEach(group => {
-    group.items.forEach(item => {
+
+  cartData.value.sellerGroups.forEach((group) => {
+    group.items.forEach((item) => {
       if (selectedItems.value.has(item.cartItemId)) {
         totalItems += item.quantity;
         totalPrice += item.price * item.quantity;
       }
     });
   });
-  
+
   return { totalItems, totalPrice };
 });
 
 // Place order
 const handlePlaceOrder = async () => {
   if (selectedItems.value.size === 0) {
-    message.value = 'Please select at least one item to place an order';
-    messageType.value = 'error';
+    message.value = "Please select at least one item to place an order";
+    messageType.value = "error";
     setTimeout(() => {
-      message.value = '';
+      message.value = "";
     }, 3000);
     return;
   }
-  
+
   // Build seller groups with only selected items
   const sellerGroups = [];
-  
-  cartData.value.sellerGroups.forEach(group => {
+
+  cartData.value.sellerGroups.forEach((group) => {
     const selectedGroupItems = group.items
-      .filter(item => selectedItems.value.has(item.cartItemId))
-      .map(item => ({
+      .filter((item) => selectedItems.value.has(item.cartItemId))
+      .map((item) => ({
+        cartItemId: item.cartItemId,
         saleItemId: item.saleItemId,
-        quantity: item.quantity
+        quantity: item.quantity,
+        stock: item.availableStock,
+        price: item.price,
+        brandName: item.brandName,
+        model: item.model,
+        color: item.color,
+        ramGb: item.ramGb,
+        storageGb: item.storageGb,
+        imageUrl: item.imageUrl,
       }));
-    
+
     if (selectedGroupItems.length > 0) {
       sellerGroups.push({
         sellerId: group.sellerId,
-        items: selectedGroupItems
+        items: selectedGroupItems,
       });
     }
   });
-  
+
   if (sellerGroups.length === 0) {
-    message.value = 'Please select at least one item to place an order';
-    messageType.value = 'error';
+    message.value = "Please select at least one item to place an order";
+    messageType.value = "error";
     setTimeout(() => {
-      message.value = '';
+      message.value = "";
     }, 3000);
     return;
   }
-  
+
   // Validate address
   if (!shippingAddress.value.trim()) {
-    message.value = 'Please enter shipping address';
-    messageType.value = 'error';
+    message.value = "Please enter shipping address";
+    messageType.value = "error";
     setTimeout(() => {
-      message.value = '';
+      message.value = "";
     }, 3000);
     return;
   }
-  
+
   isPlacingOrder.value = true;
   try {
-    await placeOrder(sellerGroups, shippingAddress.value.trim(), note.value.trim());
+    await placeOrder(
+      sellerGroups,
+      shippingAddress.value.trim(),
+      note.value.trim()
+    );
     // Reload cart after successful order (backend will remove ordered items)
     await loadCart(); // loadCart already calls updateCartCount
     selectedItems.value.clear();
     // Clear form
-    shippingAddress.value = '';
-    note.value = '';
-    message.value = 'Order placed successfully!';
-    messageType.value = 'success';
+    shippingAddress.value = "";
+    note.value = "";
+    message.value = "Order placed successfully!";
+    messageType.value = "success";
     setTimeout(() => {
-      message.value = '';
+      message.value = "";
     }, 3000);
   } catch (err) {
-    message.value = err.message || 'Failed to place order';
-    messageType.value = 'error';
+    message.value = err.message || "Failed to place order";
+    messageType.value = "error";
     setTimeout(() => {
-      message.value = '';
+      message.value = "";
     }, 3000);
   } finally {
     isPlacingOrder.value = false;
@@ -472,29 +548,36 @@ const handlePlaceOrder = async () => {
 };
 
 // Set indeterminate state for checkboxes
-watch([isSelectAllIndeterminate, cartData], () => {
-  nextTick(() => {
-    if (selectAllCheckbox.value) {
-      selectAllCheckbox.value.indeterminate = isSelectAllIndeterminate.value;
-    }
-  });
-}, { immediate: true });
+watch(
+  [isSelectAllIndeterminate, cartData],
+  () => {
+    nextTick(() => {
+      if (selectAllCheckbox.value) {
+        selectAllCheckbox.value.indeterminate = isSelectAllIndeterminate.value;
+      }
+    });
+  },
+  { immediate: true }
+);
 
-watch([cartData, selectedItems], () => {
-  nextTick(() => {
-    if (cartData.value && cartData.value.sellerGroups) {
-      cartData.value.sellerGroups.forEach(group => {
-        const checkbox = sellerCheckboxes.value[group.sellerId];
-        if (checkbox) {
-          checkbox.indeterminate = isSellerIndeterminate(group);
-        }
-      });
-    }
-  });
-}, { deep: true });
+watch(
+  [cartData, selectedItems],
+  () => {
+    nextTick(() => {
+      if (cartData.value && cartData.value.sellerGroups) {
+        cartData.value.sellerGroups.forEach((group) => {
+          const checkbox = sellerCheckboxes.value[group.sellerId];
+          if (checkbox) {
+            checkbox.indeterminate = isSellerIndeterminate(group);
+          }
+        });
+      }
+    });
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   loadCart();
 });
 </script>
-
