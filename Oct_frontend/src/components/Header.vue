@@ -141,7 +141,7 @@ watch(() => router.currentRoute.value.path, () => {
     <div class="flex items-center space-x-6 flex-1">
       <router-link to="/" class="group">
         <span class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
-          ITB MShop
+          ITB MShops
         </span>
       </router-link>
       
