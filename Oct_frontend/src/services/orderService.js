@@ -68,7 +68,8 @@ export async function getBuyerOrders(userId) {
       },
     });
 
-    return response.data;
+    // api.get คืน body ที่ parse แล้วเลย (List<OrderSummaryDto>)
+    return response;
   } catch (error) {
     console.error("Error getting buyer orders:", error);
     throw error;
@@ -87,9 +88,8 @@ export async function getSellerOrders(sellerId) {
       },
     });
 
-    // safety check
-    const result = response.data?.data ?? response.data;
-    return result;
+    // api.get คืน body ที่ parse แล้วเลย (List<OrderResponseDto>)
+    return response;
   } catch (err) {
     console.error("Error getting seller orders:", err);
     throw err;

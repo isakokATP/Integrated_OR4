@@ -56,8 +56,8 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./users:/app/users
-      # Uncomment below when SSL certificates are available
-      # - ./nginx/ssl:/ssl
+      # Mount SSL certificates for HTTPS (fullchain.pem, privkey.pem, dhparam-2048.pem)
+      - ./nginx/ssl:/ssl
     networks:
       - int221-net
 
