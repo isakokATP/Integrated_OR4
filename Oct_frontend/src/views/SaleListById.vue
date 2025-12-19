@@ -19,7 +19,7 @@ const isAddingToCart = ref(false);
 
 // Check if user is seller
 const isSeller = computed(() => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return false;
   
   try {
@@ -155,8 +155,10 @@ const decreaseQuantity = () => {
 // Add to cart
 const handleAddToCart = async () => {
   // Check if user is logged in
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
+  console.log("handleAddToCart called. Token exists:", !!token);
   if (!token) {
+    console.warn("No token found in localStorage, redirecting to login.");
     router.push({ name: 'login-page' });
     return;
   }
@@ -172,8 +174,10 @@ const handleAddToCart = async () => {
     }, 3000);
   } catch (error) {
     if (error.status === 401) {
+      console.warn("Caught 401 in handleAddToCart. Redirecting to login.");
       router.push({ name: 'login-page' });
     } else {
+      console.error("Caught non-401 error in handleAddToCart:", error);
       message.value = error.message || 'Failed to add item to cart';
       setTimeout(() => {
         message.value = '';

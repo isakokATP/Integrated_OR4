@@ -19,13 +19,15 @@ export function clearStoredAccessToken() {
 }
 
 function redirectToLogin(message) {
-  clearStoredAccessToken(); // Safety: always clear token before redirecting to login
+  // clearStoredAccessToken(); // Safety: always clear token before redirecting to login
+  console.error("DEBUG: redirectToLogin called. Message:", message);
   if (message) {
     // ใช้ alert แบบง่าย ๆ ให้ตรง requirement ข้อ error message
-    alert(message);
-    window.location.href = `${import.meta.env.BASE_URL}login`;
+    alert("DEBUG: SHOULD REDIRECT: " + message);
+    // window.location.href = `${import.meta.env.BASE_URL}login`;
   } else {
-    window.location.href = `${import.meta.env.BASE_URL}login`;
+    alert("DEBUG: SHOULD REDIRECT (No message)");
+    // window.location.href = `${import.meta.env.BASE_URL}login`;
   }
 }
 
