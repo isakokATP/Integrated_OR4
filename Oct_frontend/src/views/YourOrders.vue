@@ -74,8 +74,8 @@
               <div class="flex items-center gap-2">
                  <span class="text-sm text-gray-600">Seller: <span class="font-bold text-blue-600">{{ getSellerName(order) }}</span></span>
               </div>
-              <span class="badge" :class="getStatusBadgeClass(order.status)">
-                {{ order.status }}
+              <span class="badge" :class="getStatusBadgeClass(order.orderStatus || order.status)">
+                {{ order.orderStatus || order.status }}
               </span>
             </div>
 
@@ -179,7 +179,11 @@ const filteredOrders = computed(() => {
   if (!orders.value) return [];
   if (currentTab.value === 'ALL') return orders.value;
   if (currentTab.value === 'CANCELED') {
-    return orders.value.filter(o => o.status === 'CANCELLED' || o.status === 'CANCELED');
+    // API returns orderStatus, but code might expect status. Check both.
+    return orders.value.filter(o => 
+      (o.status === 'CANCELLED' || o.status === 'CANCELED') || 
+      (o.orderStatus === 'CANCELLED' || o.orderStatus === 'CANCELED')
+    );
   }
   return orders.value;
 });
