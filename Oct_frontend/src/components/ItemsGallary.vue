@@ -20,10 +20,8 @@ async function handleAddToCart(event, item) {
   
   // Check if user is logged in
   const token = localStorage.getItem('accessToken');
-  console.log("ItemsGallary: handleAddToCart called. Token exists:", !!token);
   
   if (!token) {
-    console.warn("ItemsGallary: No token found in localStorage, redirecting to login.");
     router.push({ name: 'login-page' });
     return;
   }
@@ -36,10 +34,8 @@ async function handleAddToCart(event, item) {
     emit('cart-updated', 'Item added to cart successfully!');
   } catch (error) {
     if (error.status === 401) {
-      console.warn("ItemsGallary: Caught 401. Redirecting to login.");
       router.push({ name: 'login-page' });
     } else {
-      console.error("ItemsGallary: Caught non-401 error:", error);
       // Emit error message to parent
       emit('cart-updated', error.message || 'Failed to add item to cart');
     }
