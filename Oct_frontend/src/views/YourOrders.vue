@@ -53,9 +53,7 @@
             
             <!-- Seller Order Header -->
             <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-lg">
-              <div class="flex items-center gap-2">
-                 <span class="font-semibold text-gray-700">Order #{{ order.orderNumber }}</span>
-                 <span class="text-gray-400">|</span>
+              <div class="flex items-center gap-2"> 
                  <span class="text-sm text-gray-600">Seller: <span class="font-bold text-blue-600">{{ getSellerName(order) }}</span></span>
               </div>
               <span class="badge" :class="getStatusBadgeClass(order.status)">
@@ -102,7 +100,14 @@
               </div>
 
               <!-- Seller Order Footer -->
-              <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
+              
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
                 <div class="text-gray-500">
                    Shipping: {{ order.shippingAddress || 'N/A' }}
                 </div>
@@ -110,12 +115,6 @@
                   Subtotal: ฿{{ order.totalAmount.toLocaleString() }}
                 </div> -->
               </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
     </div>
   </div>
 </template>
