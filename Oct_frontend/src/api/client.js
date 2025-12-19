@@ -1,6 +1,6 @@
 // Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
 // This ensures API calls use the correct base path
-export const apiUrl = import.meta.env.VITE_API_URL_LOCAL || import.meta.env.BASE_URL;
+export const apiUrl = import.meta.env.BASE_URL;
 
 // --- Auth helpers ---
 const ACCESS_TOKEN_KEY = "accessToken";
