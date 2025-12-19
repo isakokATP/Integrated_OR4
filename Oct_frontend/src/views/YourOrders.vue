@@ -31,80 +31,90 @@
       </router-link>
     </div>
 
-    <!-- Orders List - Each order is one bill/card -->
-    <div v-else class="space-y-6">
-      <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md border-l-4" :class="getOrderBorderClass(order.status)">
-        <!-- Header: Order Time -->
-        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-          <h2 class="text-lg font-bold text-gray-800">{{ formatOrderDate(order.orderDate) }}</h2>
-          <div class="flex justify-between items-center mt-1">
-            <p class="text-sm text-gray-600">
-              Order Number: <span class="font-semibold">{{ order.orderNumber }}</span>
-            </p>
-            <span class="badge" :class="getStatusBadgeClass(order.status)">
-              {{ order.status }}
-            </span>
+    <!-- Bills List -->
+    <div v-else class="space-y-8">
+      <div v-for="bill in groupedBills" :key="bill.id" class="border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm">
+        
+        <!-- Bill Header -->
+        <div class="bg-gray-100 px-6 py-4 border-b border-gray-300 flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-800">Bill placed on {{ formatOrderDate(bill.billDate) }}</h2>
+            <p class="text-sm text-gray-500 mt-1">Contains {{ bill.orders.length }} seller order(s)</p>
+          </div>
+          <div class="flex flex-col md:items-end">
+             <p class="text-sm text-gray-500">Total Bill Amount</p>
+             <p class="text-2xl font-bold text-blue-700">฿{{ bill.totalAmount.toLocaleString() }}</p>
           </div>
         </div>
 
-        <!-- Order Content - Group items by seller -->
-        <div class="p-6 space-y-6">
-          <!-- Group items by seller -->
-          <div v-for="(sellerGroup, sellerId) in groupItemsBySeller(order.items)" :key="sellerId" class="space-y-4">
-            <!-- Seller Header -->
-            <div class="border-l-4 border-blue-400 pl-4 py-2 bg-blue-50 rounded-r">
-              <h3 class="font-semibold text-gray-700">Seller: {{ sellerGroup.sellerName }}</h3>
-            </div>
+        <!-- Bill Orders (Grouped by Seller) -->
+        <div class="p-6 space-y-6 bg-gray-50">
+          <div v-for="order in bill.orders" :key="order.orderNumber" class="bg-white rounded-lg shadow-sm border border-gray-200">
             
-            <!-- Items from this seller -->
-            <div class="space-y-3 ml-4">
-              <div v-for="item in sellerGroup.items" :key="item.saleItemId" class="flex gap-4 p-3 bg-gray-50 rounded-lg">
-                <!-- Item Image -->
-                <div class="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
-                  <img
-                    v-if="item.imageUrl"
-                    :src="getImageUrl(item.imageUrl)"
-                    :alt="item.description"
-                    class="w-full h-full object-cover"
-                  />
-                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                    No Image
+            <!-- Seller Order Header -->
+            <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-lg">
+              <div class="flex items-center gap-2">
+                 <span class="font-semibold text-gray-700">Order #{{ order.orderNumber }}</span>
+                 <span class="text-gray-400">|</span>
+                 <span class="text-sm text-gray-600">Seller: <span class="font-bold text-blue-600">{{ getSellerName(order) }}</span></span>
+              </div>
+              <span class="badge" :class="getStatusBadgeClass(order.status)">
+                {{ order.status }}
+              </span>
+            </div>
+
+            <!-- Order Items -->
+            <div class="p-5">
+              <div class="space-y-4">
+                <div v-for="item in order.items" :key="item.saleItemId" class="flex gap-4">
+                  <!-- Item Image -->
+                  <div class="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden border border-gray-200">
+                    <img
+                      v-if="item.imageUrl"
+                      :src="getImageUrl(item.imageUrl)"
+                      :alt="item.description"
+                      class="w-full h-full object-cover"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                      No Image
+                    </div>
+                  </div>
+
+                  <!-- Item Details -->
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 truncate">{{ item.description }}</p>
+                    <div class="mt-1 text-sm text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+                      <span v-if="item.brandName">Brand: {{ item.brandName }}</span>
+                      <span v-if="item.model">Model: {{ item.model }}</span>
+                      <span v-if="item.color">Color: {{ item.color }}</span>
+                      <span v-if="item.storageGb">{{ item.storageGb }}GB</span>
+                    </div>
+                    <div class="mt-2 text-sm flex justify-between items-end">
+                      <div class="text-gray-600">
+                        Qty: <span class="font-semibold">{{ item.quantity }}</span> × ฿{{ item.unitPrice.toLocaleString() }}
+                      </div>
+                      <div class="font-semibold text-gray-900">
+                        ฿{{ (item.quantity * item.unitPrice).toLocaleString() }}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- Item Details -->
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-800">{{ item.description }}</p>
-                  <!-- Display brand, model, color, storage size -->
-                  <div class="mt-1 text-sm text-gray-600">
-                    <span v-if="item.brandName" class="mr-2">Brand: <span class="font-semibold">{{ item.brandName }}</span></span>
-                    <span v-if="item.model" class="mr-2">Model: <span class="font-semibold">{{ item.model }}</span></span>
-                    <span v-if="item.color" class="mr-2">Color: <span class="font-semibold">{{ item.color }}</span></span>
-                    <span v-if="item.storageGb" class="mr-2">Storage: <span class="font-semibold">{{ item.storageGb }}GB</span></span>
-                  </div>
-                  <div class="mt-2 flex gap-4 text-sm text-gray-600">
-                    <span>Quantity: <span class="font-semibold">{{ item.quantity }}</span></span>
-                    <span>Unit Price: <span class="font-semibold">฿{{ item.unitPrice.toLocaleString() }}</span></span>
-                  </div>
+              <!-- Seller Order Footer -->
+              <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
+                <div class="text-gray-500">
+                   Shipping: {{ order.shippingAddress || 'N/A' }}
                 </div>
+                <!-- <div class="font-semibold text-gray-700">
+                  Subtotal: ฿{{ order.totalAmount.toLocaleString() }}
+                </div> -->
               </div>
             </div>
-          </div>
 
-          <!-- Order Summary Footer -->
-          <div class="pt-4 border-t border-gray-200 mt-4">
-            <div class="flex justify-between items-center">
-              <div class="text-sm text-gray-600">
-                <p>Shipping To: <span class="font-semibold">{{ order.shippingAddress || 'N/A' }}</span></p>
-                <p v-if="order.paymentDate" class="mt-1">Payment Date: <span class="font-semibold">{{ formatOrderDate(order.paymentDate) }}</span></p>
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-600">Total Amount:</p>
-                <p class="text-2xl font-bold text-blue-600">฿{{ order.totalAmount.toLocaleString() }}</p>
-              </div>
-            </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -135,52 +145,75 @@ const getCurrentUserId = () => {
   }
 };
 
-// Sort orders by orderDate DESC (newest first)
-const sortedOrders = computed(() => {
-  return orders.value
-    ? [...orders.value].sort((a, b) => {
-        const dateA = new Date(a.orderDate || a.orderTimestamp || 0);
-        const dateB = new Date(b.orderDate || b.orderTimestamp || 0);
-        return dateB - dateA; // DESC: newest first
-      })
-    : [];
-});
 
-// Group items within an order by seller
-const groupItemsBySeller = (items) => {
-  if (!items || items.length === 0) return {};
-  
-  const grouped = {};
-  items.forEach(item => {
-    const sellerId = item.sellerId || item.seller?.id || 'unknown';
-    const sellerName = item.sellerNickname || item.seller?.nickName || item.seller?.nickname || 'Unknown Seller';
-    
-    if (!grouped[sellerId]) {
-      grouped[sellerId] = {
-        sellerName: sellerName,
-        items: []
-      };
-    }
-    
-    grouped[sellerId].items.push(item);
+// Helper to get seller name from an order
+const getSellerName = (order) => {
+   // Assuming items in an order belong to the same seller as per backend structure
+   if (order.items && order.items.length > 0) {
+      const item = order.items[0];
+       // Try different possible properties for seller name
+      return item.sellerNickname || item.seller?.nickName || item.seller?.nickname || order.sellerNickname || 'Unknown Seller';
+   }
+   return order.sellerNickname || 'Unknown Seller';
+};
+
+// Group orders into bills based on time proximity (1 second window)
+const groupedBills = computed(() => {
+  if (!orders.value || orders.value.length === 0) return [];
+
+  // First sort by date descending
+  const sorted = [...orders.value].sort((a, b) => {
+    const dateA = new Date(a.orderDate || a.orderTimestamp || 0);
+    const dateB = new Date(b.orderDate || b.orderTimestamp || 0);
+    return dateB - dateA; // Newest first
   });
-  
-  return grouped;
-};
 
-// Get border color class based on order status
-const getOrderBorderClass = (status) => {
-  switch (status) {
-    case 'COMPLETED': return 'border-green-500';
-    case 'CANCELLED': return 'border-red-500';
-    case 'CANCELED': return 'border-red-500';
-    case 'PENDING': return 'border-yellow-500';
-    case 'PROCESSING': return 'border-blue-500';
-    case 'SHIPPED': return 'border-purple-500';
-    case 'DELIVERED': return 'border-green-600';
-    default: return 'border-gray-400';
-  }
-};
+  const bills = [];
+  let currentBill = null;
+
+  sorted.forEach(order => {
+    const orderTime = new Date(order.orderDate || order.orderTimestamp || 0).getTime();
+
+    if (!currentBill) {
+      // Start first bill
+      currentBill = {
+        id: `bill-${orderTime}`,
+        billDate: order.orderDate || order.orderTimestamp,
+        orders: [order],
+        totalAmount: order.totalAmount
+      };
+      bills.push(currentBill);
+    } else {
+      // Check if this order belongs to current bill (within 1000ms of the LATEST order in the group? 
+      // Or 1000ms of the PREVIOUSLY added order? 
+      // The logic: if (prevOrderTime - thisOrderTime) <= 1000ms. 
+      // Since sorted DESC, prevOrderTime >= thisOrderTime.
+      
+      const lastOrderInBill = currentBill.orders[currentBill.orders.length - 1];
+      const lastOrderTime = new Date(lastOrderInBill.orderDate || lastOrderInBill.orderTimestamp || 0).getTime();
+      
+      // Difference in ms
+      const diff = Math.abs(lastOrderTime - orderTime);
+
+      if (diff <= 1000) {
+        // Add to current bill
+        currentBill.orders.push(order);
+        currentBill.totalAmount += order.totalAmount;
+      } else {
+        // Create new bill
+         currentBill = {
+            id: `bill-${orderTime}`,
+            billDate: order.orderDate || order.orderTimestamp,
+            orders: [order],
+            totalAmount: order.totalAmount
+         };
+         bills.push(currentBill);
+      }
+    }
+  });
+
+  return bills;
+});
 
 // Format order date for display
 const formatOrderDate = (dateString) => {
