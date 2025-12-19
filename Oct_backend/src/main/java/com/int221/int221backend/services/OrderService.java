@@ -220,7 +220,10 @@ public class OrderService {
                 .shippingAddress(order.getShippingAddress())
                 .note(order.getNote())
                 .orderStatus(OrderStatus.valueOf(order.getStatus().name()))
-
+                .items(order.getItems().stream()
+                        .map(com.int221.int221backend.dto.response.history.OrderItemDetailDto::fromEntity)
+                        .collect(Collectors.toList()))
+                .buyerNickname(order.getBuyer().getNickName())
                 .build();
     }
 
