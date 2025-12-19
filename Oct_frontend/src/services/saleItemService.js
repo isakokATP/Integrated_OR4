@@ -20,11 +20,11 @@ async function fetchSaleItemsV2(
 ) {
   try {
     const params = new URLSearchParams();
-    
+
     // Basic pagination - Backend expects 0-based indexing
     params.append('page', page - 1);
     params.append('size', size);
-    
+
     // Sort parameters - Fixed to match Backend
     if (sortType === "asc") {
       params.append('sortField', 'brand.name');
@@ -37,14 +37,14 @@ async function fetchSaleItemsV2(
       params.append('sortField', 'id');
       params.append('sortDirection', 'asc');
     }
-    
+
     // Brand filter - Fixed parameter name to match Backend
     if (filters.brands && filters.brands.length > 0) {
       filters.brands.forEach(brand => {
         params.append('filterBrands', brand);
       });
     }
-    
+
     // Price filter - Fixed parameter names to match Backend
     if (filters.priceMin !== null && filters.priceMin !== undefined) {
       params.append('filterPriceLower', filters.priceMin);
@@ -52,7 +52,7 @@ async function fetchSaleItemsV2(
     if (filters.priceMax !== null && filters.priceMax !== undefined) {
       params.append('filterPriceUpper', filters.priceMax);
     }
-    
+
     // Storage filter - Fixed parameter name to match Backend
     if (filters.storageSizes && filters.storageSizes.length > 0) {
       filters.storageSizes.forEach(storage => {
@@ -69,9 +69,9 @@ async function fetchSaleItemsV2(
     if (filters.searchKeyWord && filters.searchKeyWord.trim() !== '') {
       params.append('searchKeyWord', filters.searchKeyWord.trim());
     }
-    
+
     const url = `${URL}/itb-mshop/v2/sale-items?${params.toString()}`;
-    
+
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -107,7 +107,7 @@ async function fetchSaleItemById(id) {
 async function createSaleItem(saleItemData, images = null) {
   try {
     // Get seller ID from token
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No authentication token found');
     }
@@ -121,16 +121,15 @@ async function createSaleItem(saleItemData, images = null) {
     }
 
     // Use the seller-specific endpoint
-    // Backend expects @RequestParam, so we use URLSearchParams or FormData
     const formData = new URLSearchParams();
-    
-    // Add sale item data as form parameters (backend expects @RequestParam)
+
+    // Add sale item data as form parameters
     formData.append('model', saleItemData.model);
     formData.append('brandId', saleItemData.brand.id);
     formData.append('description', saleItemData.description);
     formData.append('screenSize', (saleItemData.screenSizeInch || 0).toString());
     formData.append('price', saleItemData.price.toString());
-    
+
     if (saleItemData.ramGb !== null && saleItemData.ramGb !== undefined) {
       formData.append('ramGb', saleItemData.ramGb.toString());
     }
@@ -143,47 +142,37 @@ async function createSaleItem(saleItemData, images = null) {
     if (saleItemData.quantity !== null && saleItemData.quantity !== undefined) {
       formData.append('quantity', saleItemData.quantity.toString());
     }
-    
-    // Note: The /v2/sellers/{id}/sale-items endpoint doesn't support images
-    // If images are needed, we might need to use /v2/sale-items endpoint
-    // For now, we'll use the seller-specific endpoint without images
-    
-    const response = await fetch(`${URL}/itb-mshop/v2/sellers/${sellerId}/sale-items`, {
-      method: "POST",
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString()
-    });
 
-    if (!response.ok) {
-      let errorMessage = 'Unknown error';
-      
-      if (response.status === 400) {
-        errorMessage = 'Missing/Invalid request parameters';
-      } else if (response.status === 401) {
-        errorMessage = 'Seller not found or invalid token';
-      } else if (response.status === 403) {
-        errorMessage = 'User is not active, request seller id not matched with id in access token';
-      } else if (response.status === 404) {
-        errorMessage = 'Brand not found';
-      } else {
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          // If response is not JSON, use default message
+    try {
+      const data = await api.request(`/itb-mshop/v2/sellers/${sellerId}/sale-items`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      });
+      return data;
+    } catch (apiError) {
+      if (apiError.isApiError) {
+        let errorMessage = apiError.message || 'Unknown error';
+        const status = apiError.status;
+
+        if (status === 400) {
+          errorMessage = 'Missing/Invalid request parameters';
+        } else if (status === 401) {
+          errorMessage = 'Seller not found or invalid token';
+        } else if (status === 403) {
+          errorMessage = 'User is not active, request seller id not matched with id in access token';
+        } else if (status === 404) {
+          errorMessage = 'Brand not found';
         }
+
+        const error = new Error(errorMessage);
+        error.status = status;
+        throw error;
       }
-      
-      const error = new Error(errorMessage);
-      error.status = response.status;
-      throw error;
+      throw apiError;
     }
-    
-    const data = await response.json();
-    return data;
   } catch (error) {
     console.error("Create sale item error:", error);
     throw error;
@@ -217,7 +206,7 @@ export const updateSaleItem = async (id, saleItemData, imagesInfos = null) => {
     // Backend uses @ModelAttribute which requires FormData
     // Always use FormData regardless of whether images are provided
     const formData = new FormData();
-    
+
     // Add nested sale item data under 'saleItem.*' to match @ModelAttribute SaleItemImageInfo
     Object.keys(saleItemData).forEach(key => {
       if (key === 'brand' && saleItemData[key]) {
@@ -294,17 +283,17 @@ async function fetchStorageSizes() {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result = await response.json();
     const saleItems = result.content || result; // V2 API returns paginated result
-    
+
     // ดึง storage sizes ที่ไม่ซ้ำกันและไม่เป็น null
     const storageSizes = [...new Set(
       saleItems
         .map(item => item.storageGb)
         .filter(storage => storage !== null && storage !== undefined)
     )].sort((a, b) => a - b);
-    
+
     return storageSizes;
   } catch (error) {
     console.error("Fetch storage sizes error:", error);
@@ -414,42 +403,16 @@ const deleteAttachment = async (saleItemId, imageViewOrder) => {
 };
 
 // Function to fetch seller's sale items
+// Function to fetch seller's sale items
 async function fetchSellerSaleItems(sellerId, page = 0, size = 1000) {
   try {
-    const token = sessionStorage.getItem('accessToken');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
 
-    const url = `${URL}/itb-mshop/v2/sellers/${sellerId}/sale-items?${params.toString()}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Unauthorized: Invalid or missing token');
-      }
-      if (response.status === 403) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Forbidden: Access denied');
-      }
-      if (response.status === 400) {
-        throw new Error('Bad Request: Missing or invalid request parameters');
-      }
-      throw new Error(`Failed to fetch seller sale items: ${response.status}`);
-    }
-
-    return await response.json();
+    // api.get uses client.js which handles base URL, Auth header, and Refresh logic
+    const data = await api.get(`/itb-mshop/v2/sellers/${sellerId}/sale-items?${params.toString()}`);
+    return data;
   } catch (error) {
     console.error("Error fetching seller sale items:", error);
     throw error;

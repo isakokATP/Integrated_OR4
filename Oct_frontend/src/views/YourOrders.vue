@@ -13,6 +13,24 @@
     
     <h1 class="text-3xl font-bold mb-6">Your Orders</h1>
 
+    <!-- Tabs -->
+    <div class="flex space-x-4 mb-6 border-b border-gray-200">
+      <button
+        @click="currentTab = 'ALL'"
+        class="pb-2 px-4 font-medium text-sm transition-colors relative"
+        :class="currentTab === 'ALL' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'"
+      >
+        All Orders
+      </button>
+      <button
+        @click="currentTab = 'CANCELED'"
+        class="pb-2 px-4 font-medium text-sm transition-colors relative"
+        :class="currentTab === 'CANCELED' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'"
+      >
+        Canceled
+      </button>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center h-64">
       <span class="loading loading-spinner loading-lg text-blue-600"></span>
@@ -128,10 +146,11 @@ const router = useRouter();
 const loading = ref(false);
 const error = ref('');
 const orders = ref([]);
+const currentTab = ref('ALL');
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return null;
 
   try {
@@ -155,12 +174,23 @@ const getSellerName = (order) => {
    return order.sellerNickname || 'Unknown Seller';
 };
 
+// Filter orders based on current tab
+const filteredOrders = computed(() => {
+  if (!orders.value) return [];
+  if (currentTab.value === 'ALL') return orders.value;
+  if (currentTab.value === 'CANCELED') {
+    return orders.value.filter(o => o.status === 'CANCELLED' || o.status === 'CANCELED');
+  }
+  return orders.value;
+});
+
 // Group orders into bills based on time proximity (1 second window)
 const groupedBills = computed(() => {
-  if (!orders.value || orders.value.length === 0) return [];
+  const sourceOrders = filteredOrders.value;
+  if (!sourceOrders || sourceOrders.length === 0) return [];
 
   // First sort by date descending
-  const sorted = [...orders.value].sort((a, b) => {
+  const sorted = [...sourceOrders].sort((a, b) => {
     const dateA = new Date(a.orderDate || a.orderTimestamp || 0);
     const dateB = new Date(b.orderDate || b.orderTimestamp || 0);
     return dateB - dateA; // Newest first

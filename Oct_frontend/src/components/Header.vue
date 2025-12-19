@@ -12,13 +12,13 @@ const loginTrigger = ref(0);
 // Check if user is logged in
 const isLoggedIn = computed(() => {
   loginTrigger.value; // Force dependency
-  return !!sessionStorage.getItem('accessToken');
+  return !!localStorage.getItem('accessToken');
 });
 
 // Get user nickname from token
 const userNickname = computed(() => {
   loginTrigger.value; // Force dependency
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return null;
   
   try {
@@ -32,7 +32,7 @@ const userNickname = computed(() => {
 // Get user role from token
 const userRole = computed(() => {
   loginTrigger.value; // Force dependency
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return null;
   
   try {

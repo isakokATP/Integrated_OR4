@@ -13,17 +13,16 @@ export const apiUrl = isLocalhost
 const ACCESS_TOKEN_KEY = "accessToken";
 
 export function getStoredAccessToken() {
-  // ใช้ sessionStorage ตามของเดิม เพื่อไม่กระทบโค้ดอื่น
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function setStoredAccessToken(token) {
   if (!token) return;
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function clearStoredAccessToken() {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 function redirectToLogin(message) {
@@ -98,6 +97,16 @@ async function refreshAccessToken() {
 //   throw new Error("Invalid production API URL");
 // }
 
+// Helper to inject auth header
+function getAuthHeaders(options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getStoredAccessToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return headers;
+}
+
 async function apiCall(endpoint, options = {}, isRetry = false) {
   const url = `${apiUrl}${endpoint}`;
   console.log("--- API REQUEST LOG ---");
@@ -110,6 +119,10 @@ async function apiCall(endpoint, options = {}, isRetry = false) {
   };
 
   const requestOptions = { ...defaultOptions, ...options };
+
+  // Inject Auth header
+  const authHeaders = getAuthHeaders(requestOptions);
+  requestOptions.headers = authHeaders;
 
   const response = await fetch(url, requestOptions);
 
@@ -202,6 +215,8 @@ export const api = {
     }),
   delete: (endpoint, options = {}) =>
     apiCall(endpoint, { ...options, method: "DELETE" }),
+  request: (endpoint, options = {}) =>
+    apiCall(endpoint, options),
 };
 
 export function handleApiError(error, defaultMessage = "not connect server") {

@@ -158,7 +158,7 @@ const userProfile = ref(null);
 // Get user ID from sessionStorage (set during login)
 const getCurrentUserId = () => {
   // Check if user is logged in
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return null;
@@ -184,31 +184,14 @@ const fetchUserProfile = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       error.value = 'Not authenticated';
       router.push({ name: 'login-page' });
       return;
     }
 
-    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        error.value = 'Please log in again';
-        router.push({ name: 'login-page' });
-        return;
-      }
-      throw new Error(`Failed to fetch profile: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await api.get(`/itb-mshop/v2/users/${userId}`);
     console.log('Profile data received:', data);
     userProfile.value = data;
   } catch (err) {

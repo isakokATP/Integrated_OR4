@@ -214,7 +214,7 @@ onMounted(() => {
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = sessionStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
   if (!token) {
     return null;
   }
@@ -230,7 +230,7 @@ const getCurrentUserId = () => {
 
 // Get user role from token
 const getUserRole = () => {
-  const token = sessionStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
   if (!token) {
     return null;
   }

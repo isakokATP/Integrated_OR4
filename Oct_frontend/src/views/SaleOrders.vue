@@ -20,7 +20,19 @@ export default {
     const loading = ref(false);
     const error = ref("");
 
-    const sellerId = sessionStorage.getItem("sellerId");
+    const getSellerId = () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return null;
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.id;
+      } catch (e) {
+        console.error("Error decoding token:", e);
+        return null;
+      }
+    };
+
+    const sellerId = getSellerId();
 
     const fetchOrders = async () => {
       if (!sellerId) {
