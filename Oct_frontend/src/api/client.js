@@ -1,13 +1,6 @@
-const isLocalhost =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1" ||
-  window.location.hostname === "::1";
-
 // Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
 // This ensures API calls use the correct base path
-export const apiUrl = isLocalhost
-  ? import.meta.env.VITE_API_URL_LOCAL
-  : import.meta.env.BASE_URL; // Use BASE_URL for production (includes "/or4/" prefix)
+export const apiUrl = import.meta.env.VITE_API_URL_LOCAL || import.meta.env.BASE_URL;
 
 // --- Auth helpers ---
 const ACCESS_TOKEN_KEY = "accessToken";
