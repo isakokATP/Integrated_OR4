@@ -41,10 +41,7 @@
       <span>{{ error }}</span>
     </div>
 
-    <!-- DEBUG RAW JSON -->
-    <div v-if="orders.length > 0" class="p-4 bg-gray-100 mb-4 overflow-auto max-h-40 text-xs">
-       <pre>{{ JSON.stringify(orders[0], null, 2) }}</pre>
-    </div>
+
 
     <!-- Empty Orders -->
     <div v-else-if="!orders || orders.length === 0" class="text-center py-12">
