@@ -6,16 +6,16 @@ export const apiUrl = import.meta.env.BASE_URL;
 const ACCESS_TOKEN_KEY = "accessToken";
 
 export function getStoredAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function setStoredAccessToken(token) {
   if (!token) return;
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function clearStoredAccessToken() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 function redirectToLogin(message) {

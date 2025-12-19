@@ -150,7 +150,7 @@ const currentTab = ref('ALL');
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = localStorage.getItem('accessToken');
+  const token = sessionStorage.getItem('accessToken');
   if (!token) return null;
 
   try {

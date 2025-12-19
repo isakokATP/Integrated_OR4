@@ -78,7 +78,7 @@ async function onSubmit(e) {
 
       // Store access token
       if (data.accessToken) {
-        localStorage.setItem("accessToken", data.accessToken);
+        sessionStorage.setItem("accessToken", data.accessToken);
 
         // Decode JWT token to get user role
         try {

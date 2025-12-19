@@ -134,7 +134,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // Get token and user role
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
 
   if (!token) {
     // Not logged in, redirect to login

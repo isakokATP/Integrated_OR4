@@ -21,7 +21,7 @@ export default {
     const error = ref("");
 
     const getSellerId = () => {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
       if (!token) return null;
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));

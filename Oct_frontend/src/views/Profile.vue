@@ -148,7 +148,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '../components/Header.vue';
-import { handleApiError } from '../api/client';
+import { handleApiError, api } from '../api/client';
 
 const router = useRouter();
 const loading = ref(false);
@@ -158,7 +158,7 @@ const userProfile = ref(null);
 // Get user ID from sessionStorage (set during login)
 const getCurrentUserId = () => {
   // Check if user is logged in
-  const token = localStorage.getItem('accessToken');
+  const token = sessionStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return null;
@@ -184,7 +184,7 @@ const fetchUserProfile = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
     if (!token) {
       error.value = 'Not authenticated';
       router.push({ name: 'login-page' });
