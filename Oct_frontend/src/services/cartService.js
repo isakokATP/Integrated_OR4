@@ -19,9 +19,17 @@ const getCurrentUserId = () => {
 // Add item to cart
 export async function addToCart(saleItemId, quantity = 1) {
   try {
+    const token = localStorage.getItem('accessToken');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const data = await api.post('/itb-mshop/v2/cart/items', {
       saleItemId: saleItemId,
       quantity: quantity
+    }, {
+      headers: headers
     });
     return data;
   } catch (error) {
