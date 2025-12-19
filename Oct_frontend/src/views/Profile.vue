@@ -158,7 +158,7 @@ const userProfile = ref(null);
 // Get user ID from sessionStorage (set during login)
 const getCurrentUserId = () => {
   // Check if user is logged in
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return null;
@@ -184,7 +184,7 @@ const fetchUserProfile = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       error.value = 'Not authenticated';
       router.push({ name: 'login-page' });

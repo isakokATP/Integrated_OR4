@@ -6,25 +6,27 @@ export const apiUrl = import.meta.env.BASE_URL;
 const ACCESS_TOKEN_KEY = "accessToken";
 
 export function getStoredAccessToken() {
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function setStoredAccessToken(token) {
   if (!token) return;
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function clearStoredAccessToken() {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 function redirectToLogin(message) {
+  clearStoredAccessToken(); // Safety: always clear token before redirecting to login
   if (message) {
     // ใช้ alert แบบง่าย ๆ ให้ตรง requirement ข้อ error message
     alert(message);
+    window.location.href = `${import.meta.env.BASE_URL}login`;
+  } else {
+    window.location.href = `${import.meta.env.BASE_URL}login`;
   }
-  // ใช้ path /login ซึ่งแม็ปกับหน้า login page
-  window.location.href = `${import.meta.env.BASE_URL}login`;
 }
 
 // เรียก /v2/auth/refresh เพื่อขอ access token ใหม่ โดยใช้ HttpOnly refresh cookie
@@ -36,23 +38,6 @@ async function refreshAccessToken() {
       method: "POST",
       credentials: "include", // ต้องส่ง cookie ไปด้วย
     });
-
-    if (response.status === 200) {
-      const data = await response.json();
-      if (data.accessToken) {
-        setStoredAccessToken(data.accessToken);
-      }
-      return { ok: true, status: 200, accessToken: data.accessToken };
-    }
-
-    // แปลง error body เป็นข้อความ (ถ้ามี)
-    let errorMessage = "";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || "";
-    } catch (_) {
-      // ignore parse error
-    }
 
     switch (response.status) {
       case 400:

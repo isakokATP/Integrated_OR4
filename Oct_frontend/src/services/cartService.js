@@ -2,7 +2,7 @@ import { api } from "../api/client";
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     return null;
   }

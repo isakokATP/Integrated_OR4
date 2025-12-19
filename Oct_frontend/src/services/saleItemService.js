@@ -107,7 +107,7 @@ async function fetchSaleItemById(id) {
 async function createSaleItem(saleItemData, images = null) {
   try {
     // Get seller ID from token
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No authentication token found');
     }

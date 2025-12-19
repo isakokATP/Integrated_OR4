@@ -2,7 +2,7 @@ import { api } from "../api/client";
 
 // Get auth token
 const getAuthToken = () => {
-  return sessionStorage.getItem("accessToken");
+  return localStorage.getItem("accessToken");
 };
 
 // --- Process Seller Groups ---
