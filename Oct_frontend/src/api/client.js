@@ -31,7 +31,7 @@ function redirectToLogin(message) {
 
 // เรียก /v2/auth/refresh เพื่อขอ access token ใหม่ โดยใช้ HttpOnly refresh cookie
 async function refreshAccessToken() {
-  const refreshUrl = `${apiUrl}/itb-mshop/v2/auth/refresh`;
+  const refreshUrl = `${apiUrl}itb-mshop/v2/auth/refresh`;
 
   try {
     const response = await fetch(refreshUrl, {
@@ -86,7 +86,9 @@ function getAuthHeaders(options = {}) {
 }
 
 async function apiCall(endpoint, options = {}, isRetry = false) {
-  const url = `${apiUrl}${endpoint}`;
+  // Fix: Prevent double slashes if apiUrl ends with / and endpoint starts with /
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  const url = `${apiUrl}${cleanEndpoint}`;
   console.log("--- API REQUEST LOG ---");
   console.log("URL:", url);
 
