@@ -1,22 +1,21 @@
 <script>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import {
   fetchAndClassifySellerOrders,
   markOrderViewed,
 } from "@/services/orderService";
 import OrderList from "@/components/OrderList.vue";
-import OrderDetailModal from "@/components/OrderDetailModal.vue";
 import { newOrdersCount as globalNewOrdersCount, setNewOrdersCount } from "@/stores/orderStore";
 
 export default {
-  components: { OrderList, OrderDetailModal },
+  components: { OrderList },
   setup() {
+    const router = useRouter();
     const activeTab = ref("new");
     const newOrders = ref([]);
     const canceledOrders = ref([]);
     const allOrders = ref([]);
-    const selectedOrder = ref(null);
-    const showModal = ref(false);
     const loading = ref(false);
     const error = ref("");
 
@@ -58,19 +57,9 @@ export default {
       }
     };
 
-    const viewOrder = async (order) => {
-      selectedOrder.value = order;
-      showModal.value = true;
-
-      if (!order.isViewed && order.orderStatus === "COMPLETED") {
-        await markOrderViewed(order.orderId);
-        await fetchOrders();
-      }
-    };
-
-    const closeModal = () => {
-      showModal.value = false;
-      selectedOrder.value = null;
+    const viewOrder = (order) => {
+      // Navigate to detail page
+      router.push({ name: 'sale-order-detail-page', params: { id: order.orderId } });
     };
 
     onMounted(fetchOrders);
@@ -106,10 +95,7 @@ export default {
       newOrders,
       canceledOrders,
       allOrders,
-      selectedOrder,
-      showModal,
       viewOrder,
-      closeModal,
       loading,
       error,
       globalNewOrdersCount,
@@ -272,12 +258,5 @@ export default {
       </div>
 
     </div>
-
-    <!-- Modal -->
-    <OrderDetailModal
-      :order="selectedOrder"
-      :visible="showModal"
-      @close="closeModal"
-    />
   </div>
 </template>

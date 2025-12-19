@@ -277,4 +277,15 @@ public class OrderService {
         order.setIsViewed(true);
         orderRepository.save(order);
     }
+    @Transactional
+    public OrderResponseDto getSellerOrder(Long sellerId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        if (!order.getSeller().getId().equals(sellerId.intValue())) {
+            throw new AccessDeniedException("Access Denied: You do not have permission to view this order.");
+        }
+
+        return toOrderResponseDto(order);
+    }
 }

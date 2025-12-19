@@ -77,21 +77,39 @@ export async function getBuyerOrders(userId) {
 }
 
 // --- Get Seller Orders ---
-export async function getSellerOrders(sellerId) {
+export async function getSellerOrders(sellerId, type = "new") {
   try {
     const token = getAuthToken();
     if (!token) throw new Error("Not authenticated");
 
-    const response = await api.get(`/itb-mshop/v2/sellers/${sellerId}/orders`, {
+    const response = await api.get(`/itb-mshop/v2/sellers/${sellerId}/orders?type=${type}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    // api.get คืน body ที่ parse แล้วเลย (List<OrderResponseDto>)
     return response;
   } catch (err) {
     console.error("Error getting seller orders:", err);
+    throw err;
+  }
+}
+
+// --- Get Seller Order Detail ---
+export async function getSellerOrderDetail(sellerId, orderId) {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await api.get(`/itb-mshop/v2/sellers/${sellerId}/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response;
+  } catch (err) {
+    console.error("Error getting seller order detail:", err);
     throw err;
   }
 }
@@ -143,10 +161,28 @@ export function countNewOrders(orders) {
 }
 
 // --- Fetch and classify seller orders ---
+// --- Fetch and classify seller orders ---
 export async function fetchAndClassifySellerOrders(sellerId) {
   try {
-    const orders = await getSellerOrders(sellerId);
-    return classifySellerOrders(orders);
+    // Fetch all 3 types in parallel
+    const [newOrders, canceledOrders, allOrders] = await Promise.all([
+      getSellerOrders(sellerId, "new"),
+      getSellerOrders(sellerId, "canceled"),
+      getSellerOrders(sellerId, "all"),
+    ]);
+
+    // Note: 'newOrders' from backend are already filtered by isViewed=false, status=COMPLETED
+    // 'canceledOrders' are status=CANCELLED
+    // 'allOrders' are isViewed=true, status=COMPLETED (History)
+
+    // We sort history desc by orderId
+    const sortedAllOrders = allOrders.sort((a, b) => b.orderId - a.orderId);
+
+    return {
+      newOrders,
+      canceledOrders,
+      allOrders: sortedAllOrders
+    };
   } catch (err) {
     console.error("Error fetching and classifying seller orders:", err);
     throw err;

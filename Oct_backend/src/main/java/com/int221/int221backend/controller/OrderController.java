@@ -138,4 +138,32 @@ public class OrderController {
         }
         return null;
     }
+    @GetMapping("/v2/sellers/{id}/orders/{orderId}")
+    public ResponseEntity<?> getSellerOrderDetail(
+            @PathVariable Long id,
+            @PathVariable Long orderId,
+            HttpServletRequest request) {
+        try {
+            Long loggedInUserId = getUserIdFromRequest(request);
+            String userRole = jwtTokenProvider.extractRole(extractTokenFromRequest(request));
+
+            if (!"SELLER".equalsIgnoreCase(userRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access Denied: User is not a seller."));
+            }
+
+            if (!loggedInUserId.equals(id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access Denied: You can only view your own orders."));
+            }
+
+            OrderResponseDto order = orderService.getSellerOrder(id, orderId);
+            return ResponseEntity.ok(order);
+
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error fetching order detail: " + e.getMessage()));
+        }
+    }
 }

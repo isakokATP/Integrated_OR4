@@ -109,6 +109,11 @@ const routes = [
     name: "sale-orders-page",
     component: SaleOrders,
   },
+  {
+    path: "/sale-orders/:id",
+    name: "sale-order-detail-page",
+    component: () => import("../views/SaleOrderDetail.vue"),
+  },
 ];
 
 const router = createRouter({
