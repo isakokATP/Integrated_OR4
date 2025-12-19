@@ -342,7 +342,7 @@ const fetchProfile = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       error.value = 'Not authenticated';
       router.push({ name: 'login-page' });
@@ -385,7 +385,7 @@ const fetchProfile = async () => {
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return null;
@@ -422,7 +422,7 @@ const saveProfile = async () => {
     }
 
     const userId = getCurrentUserId();
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
 
     // Only nickname and fullname can be updated
     const updateData = {
