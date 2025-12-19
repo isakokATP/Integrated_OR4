@@ -109,6 +109,11 @@ const routes = [
     name: "sale-orders-page",
     component: SaleOrders,
   },
+  {
+    path: "/sale-orders/:id",
+    name: "sale-order-detail-page",
+    component: () => import("../views/SaleOrderDetail.vue"),
+  },
 ];
 
 const router = createRouter({
@@ -134,7 +139,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // Get token and user role
-  const token = sessionStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
 
   if (!token) {
     // Not logged in, redirect to login

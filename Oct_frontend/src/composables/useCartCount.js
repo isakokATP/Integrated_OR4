@@ -7,12 +7,12 @@ const cartCount = ref(0);
 // Function to update cart count
 export async function updateCartCount() {
   try {
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       cartCount.value = 0;
       return;
     }
-    
+
     const cartData = await getCart();
     if (cartData && cartData.totalItems !== undefined) {
       cartCount.value = cartData.totalItems;

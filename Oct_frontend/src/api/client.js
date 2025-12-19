@@ -1,66 +1,43 @@
-const isLocalhost =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1" ||
-  window.location.hostname === "::1";
-
 // Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
 // This ensures API calls use the correct base path
-export const apiUrl = isLocalhost
-  ? import.meta.env.VITE_API_URL_LOCAL
-  : import.meta.env.BASE_URL; // Use BASE_URL for production (includes "/or4/" prefix)
+export const apiUrl = import.meta.env.BASE_URL;
 
 // --- Auth helpers ---
 const ACCESS_TOKEN_KEY = "accessToken";
 
 export function getStoredAccessToken() {
-  // ใช้ sessionStorage ตามของเดิม เพื่อไม่กระทบโค้ดอื่น
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function setStoredAccessToken(token) {
   if (!token) return;
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function clearStoredAccessToken() {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 function redirectToLogin(message) {
+  clearStoredAccessToken(); // Safety: always clear token before redirecting to login
   if (message) {
     // ใช้ alert แบบง่าย ๆ ให้ตรง requirement ข้อ error message
     alert(message);
+    window.location.href = `${import.meta.env.BASE_URL}login`;
+  } else {
+    window.location.href = `${import.meta.env.BASE_URL}login`;
   }
-  // ใช้ path /login ซึ่งแม็ปกับหน้า login page
-  window.location.href = `${import.meta.env.BASE_URL}login`;
 }
 
 // เรียก /v2/auth/refresh เพื่อขอ access token ใหม่ โดยใช้ HttpOnly refresh cookie
 async function refreshAccessToken() {
-  const refreshUrl = `${apiUrl}/itb-mshop/v2/auth/refresh`;
+  const refreshUrl = `${apiUrl}itb-mshop/v2/auth/refresh`;
 
   try {
     const response = await fetch(refreshUrl, {
       method: "POST",
       credentials: "include", // ต้องส่ง cookie ไปด้วย
     });
-
-    if (response.status === 200) {
-      const data = await response.json();
-      if (data.accessToken) {
-        setStoredAccessToken(data.accessToken);
-      }
-      return { ok: true, status: 200, accessToken: data.accessToken };
-    }
-
-    // แปลง error body เป็นข้อความ (ถ้ามี)
-    let errorMessage = "";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || "";
-    } catch (_) {
-      // ignore parse error
-    }
 
     switch (response.status) {
       case 400:
@@ -98,10 +75,21 @@ async function refreshAccessToken() {
 //   throw new Error("Invalid production API URL");
 // }
 
+// Helper to inject auth header
+function getAuthHeaders(options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getStoredAccessToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return headers;
+}
+
 async function apiCall(endpoint, options = {}, isRetry = false) {
-  const url = `${apiUrl}${endpoint}`;
-  console.log("--- API REQUEST LOG ---");
-  console.log("URL:", url);
+  // Fix: Prevent double slashes if apiUrl ends with / and endpoint starts with /
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  const url = `${apiUrl}${cleanEndpoint}`;
+
 
   const defaultOptions = {
     headers: {
@@ -111,14 +99,19 @@ async function apiCall(endpoint, options = {}, isRetry = false) {
 
   const requestOptions = { ...defaultOptions, ...options };
 
+  // Inject Auth header
+  const authHeaders = getAuthHeaders(requestOptions);
+  requestOptions.headers = authHeaders;
+
   const response = await fetch(url, requestOptions);
 
   // ถ้า token หมดอายุ / invalid ให้ลอง refresh ตาม requirement
   if (!response.ok && (response.status === 401 || response.status === 403) && !isRetry) {
-    console.warn("Received 401/403. Trying to refresh access token...");
+
 
     const refreshResult = await refreshAccessToken();
     if (refreshResult.ok && refreshResult.accessToken) {
+
       // อัปเดต Authorization header ใน request เดิม (ถ้ามี)
       const newHeaders = new Headers(requestOptions.headers || {});
       newHeaders.set("Authorization", `Bearer ${refreshResult.accessToken}`);
@@ -166,12 +159,7 @@ async function handleErrorResponse(response) {
     response: response,
   };
 
-  console.error("--- API ERROR LOG ---");
-  console.error("URL:", apiError.url);
-  console.error("Status:", apiError.status);
-  console.error("Message:", apiError.message);
-  console.error("Full Error Object:", apiError);
-  console.error("----------------------");
+
 
   throw apiError;
 }
@@ -202,6 +190,8 @@ export const api = {
     }),
   delete: (endpoint, options = {}) =>
     apiCall(endpoint, { ...options, method: "DELETE" }),
+  request: (endpoint, options = {}) =>
+    apiCall(endpoint, options),
 };
 
 export function handleApiError(error, defaultMessage = "not connect server") {

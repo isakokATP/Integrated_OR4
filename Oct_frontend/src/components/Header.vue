@@ -12,13 +12,13 @@ const loginTrigger = ref(0);
 // Check if user is logged in
 const isLoggedIn = computed(() => {
   loginTrigger.value; // Force dependency
-  return !!sessionStorage.getItem('accessToken');
+  return !!localStorage.getItem('accessToken');
 });
 
 // Get user nickname from token
 const userNickname = computed(() => {
   loginTrigger.value; // Force dependency
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return null;
   
   try {
@@ -32,7 +32,7 @@ const userNickname = computed(() => {
 // Get user role from token
 const userRole = computed(() => {
   loginTrigger.value; // Force dependency
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return null;
   
   try {
@@ -206,11 +206,11 @@ watch(() => router.currentRoute.value.path, () => {
         </svg>
       </router-link>
 
-      <!-- cart icon -->
+      <!-- cart icon (Shopping Bag) -->
       <router-link
-        :to="{ name: 'cart-page' }"
+        :to="userRole === 'SELLER' ? { name: 'sale-orders-page' } : { name: 'cart-page' }"
         class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group relative"
-        title="Cart"
+        :title="userRole === 'SELLER' ? 'Sale Orders' : 'Cart'"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -226,8 +226,9 @@ watch(() => router.currentRoute.value.path, () => {
             d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
           />
         </svg>
-        <!-- Cart Badge -->
-        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+        <!-- Badge -->
+        <!-- For Sellers, technically we should show New Order count, but requirement says "number of orders". Using cart count for buyers. -->
+        <span v-if="userRole !== 'SELLER' && cartCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
           {{ cartCount }}
         </span>
       </router-link>

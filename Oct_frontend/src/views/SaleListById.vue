@@ -19,7 +19,7 @@ const isAddingToCart = ref(false);
 
 // Check if user is seller
 const isSeller = computed(() => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) return false;
   
   try {
@@ -155,7 +155,7 @@ const decreaseQuantity = () => {
 // Add to cart
 const handleAddToCart = async () => {
   // Check if user is logged in
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return;

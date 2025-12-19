@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
             if ("password".equals(fieldName)) {
                 if (rejectedValue instanceof String && ((String) rejectedValue).trim().isEmpty()) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(new ErrorResponse("Invalid email/password"));
+                            .body(new ErrorResponse("Email or Password is incorrect."));
                 }
             }
             if ("email".equals(fieldName)) {

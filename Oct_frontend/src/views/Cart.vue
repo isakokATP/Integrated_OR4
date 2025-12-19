@@ -471,6 +471,11 @@ const handlePlaceOrder = async () => {
     return;
   }
 
+  // Reload cart to get latest stock information before processing
+  // This ensures that if stock has changed (e.g. another user bought items),
+  // we detect it and preprocessSellerGroups correctly marks items as Canceled.
+  await loadCart();
+
   // Build seller groups with only selected items
   const sellerGroups = [];
 

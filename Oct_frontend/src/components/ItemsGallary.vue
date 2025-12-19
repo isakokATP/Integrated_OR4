@@ -19,7 +19,8 @@ async function handleAddToCart(event, item) {
   event.stopPropagation(); // Prevent card click
   
   // Check if user is logged in
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
+  
   if (!token) {
     router.push({ name: 'login-page' });
     return;

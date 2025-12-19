@@ -192,6 +192,23 @@ const itemToDelete = ref({ id: null, model: "" });
 const loading = ref(false);
 const error = ref("");
 const searchQuery = ref("");
+
+// Get current user ID from token
+const getCurrentUserId = () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.id;
+  } catch (e) {
+    console.error("Error decoding token:", e);
+    return null;
+  }
+};
+
 const sellerId = getCurrentUserId();
 
 const updateBadge = async () => {
@@ -209,28 +226,12 @@ const updateBadge = async () => {
 
 onMounted(() => {
   loadSaleItems();
-  updateBadge(); // <-- เรียก updateBadge เมื่อ mount
+  updateBadge();
 });
-
-// Get current user ID from token
-const getCurrentUserId = () => {
-  const token = sessionStorage.getItem("accessToken");
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.id;
-  } catch (e) {
-    console.error("Error decoding token:", e);
-    return null;
-  }
-};
 
 // Get user role from token
 const getUserRole = () => {
-  const token = sessionStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
   if (!token) {
     return null;
   }
@@ -345,10 +346,7 @@ const cancelDelete = () => {
   itemToDelete.value = { id: null, model: "" };
 };
 
-onMounted(() => {
-  loadSaleItems();
-  updateBadge();
-});
+
 
 watch(
   () => route.query.message,

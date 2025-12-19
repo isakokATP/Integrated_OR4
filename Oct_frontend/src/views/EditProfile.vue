@@ -229,6 +229,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { api } from '../api/client';
 
 const router = useRouter();
 const loading = ref(true);
@@ -342,31 +343,10 @@ const fetchProfile = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
-    const token = sessionStorage.getItem('accessToken');
-    if (!token) {
-      error.value = 'Not authenticated';
-      router.push({ name: 'login-page' });
-      return;
-    }
-
-    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        error.value = 'Please log in again';
-        router.push({ name: 'login-page' });
-        return;
-      }
-      throw new Error(`Failed to fetch profile: ${response.status}`);
-    }
-
-    originalProfile.value = await response.json();
+    // Use api.get instead of direct fetch logic
+    // api.get handles 401 refresh automatically
+    const data = await api.get(`/itb-mshop/v2/users/${userId}`);
+    originalProfile.value = data;
     
     // Initialize form data with current values
     formData.value = {
@@ -385,7 +365,7 @@ const fetchProfile = async () => {
 
 // Get current user ID from token
 const getCurrentUserId = () => {
-  const token = sessionStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
     router.push({ name: 'login-page' });
     return null;
@@ -422,7 +402,7 @@ const saveProfile = async () => {
     }
 
     const userId = getCurrentUserId();
-    const token = sessionStorage.getItem('accessToken');
+    // const token = localStorage.getItem('accessToken'); // Handled by api client
 
     // Only nickname and fullname can be updated
     const updateData = {
@@ -430,19 +410,8 @@ const saveProfile = async () => {
       fullName: formData.value.fullName.trim()
     };
 
-    const response = await fetch(`${import.meta.env.BASE_URL}itb-mshop/v2/users/${userId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updateData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update profile');
-    }
+    // Use api.put instead of direct fetch
+    await api.put(`/itb-mshop/v2/users/${userId}`, updateData);
 
     message.value = 'Profile data is updated successfully.';
     messageType.value = 'success';
