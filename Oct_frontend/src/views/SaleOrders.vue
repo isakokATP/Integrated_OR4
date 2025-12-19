@@ -62,7 +62,7 @@ export default {
       selectedOrder.value = order;
       showModal.value = true;
 
-      if (!order.isViewed && order.status === "Completed") {
+      if (!order.isViewed && order.orderStatus === "COMPLETED") {
         await markOrderViewed(order.orderId);
         await fetchOrders();
       }

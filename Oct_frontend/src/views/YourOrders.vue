@@ -73,8 +73,9 @@
             
             <!-- Seller Order Header -->
             <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-lg">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-4">
                  <span class="text-sm text-gray-600">Seller: <span class="font-bold text-blue-600">{{ getSellerName(order) }}</span></span>
+                 <span class="text-sm text-gray-500">Order #{{ order.orderNumber }}</span>
               </div>
               <span class="badge" :class="getStatusBadgeClass(order.orderStatus || order.status)">
                 {{ order.orderStatus || order.status }}
@@ -124,9 +125,9 @@
                 <div class="text-gray-500">
                    Shipping: {{ order.shippingAddress || 'N/A' }}
                 </div>
-                <!-- <div class="font-semibold text-gray-700">
+                <div class="font-semibold text-gray-700">
                   Subtotal: ฿{{ order.totalAmount.toLocaleString() }}
-                </div> -->
+                </div>
               </div>
             </div>
 
