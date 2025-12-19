@@ -175,8 +175,8 @@ export async function fetchAndClassifySellerOrders(sellerId) {
     // 'canceledOrders' are status=CANCELLED
     // 'allOrders' are isViewed=true, status=COMPLETED (History)
 
-    // Combine 'all' (history) with 'canceled' orders for the "All Orders" tab
-    const combinedAllOrders = [...allOrders, ...canceledOrders];
+    // Combine 'new' (unviewed completed), 'all' (viewed completed), and 'canceled' orders
+    const combinedAllOrders = [...newOrders, ...allOrders, ...canceledOrders];
 
     // Sort desc by orderId
     const sortedAllOrders = combinedAllOrders.sort((a, b) => b.orderId - a.orderId);
