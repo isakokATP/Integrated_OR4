@@ -31,61 +31,76 @@
       </router-link>
     </div>
 
-    <!-- Orders List (flat, not grouped) -->
+    <!-- Orders List - Each order is one bill/card -->
     <div v-else class="space-y-6">
-      <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md p-6 space-y-4">
-        <!-- Order Summary -->
-        <div class="flex justify-between items-start mb-4">
-          <div class="flex-1">
+      <div v-for="order in sortedOrders" :key="order.orderNumber" class="bg-white rounded-lg shadow-md border-l-4" :class="getOrderBorderClass(order.status)">
+        <!-- Header: Order Time -->
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <h2 class="text-lg font-bold text-gray-800">{{ formatOrderDate(order.orderDate) }}</h2>
+          <div class="flex justify-between items-center mt-1">
             <p class="text-sm text-gray-600">
-              Order Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.orderDate) }}</span>
+              Order Number: <span class="font-semibold">{{ order.orderNumber }}</span>
             </p>
-            <p class="text-sm text-gray-600">
-              Payment Date: <span class="font-semibold text-gray-800">{{ formatOrderDate(order.paymentDate) }}</span>
-            </p>
-            <p class="text-sm text-gray-600">
-              Seller: <span class="font-semibold text-gray-800">{{ order.sellerNickname }}</span>
-            </p>
-            <p class="text-sm text-gray-600">
-              Order Number: <span class="font-semibold text-gray-800">{{ order.orderNumber }}</span>
-            </p>
-            <p class="text-sm text-gray-600">
-              Shipping To: <span class="font-semibold text-gray-800">{{ order.shippingAddress || 'N/A' }}</span>
-            </p>
-            <p class="text-sm text-gray-600">
-              Total Amount: <span class="font-semibold text-blue-600 text-lg">฿{{ order.totalAmount.toLocaleString() }}</span>
-            </p>
-          </div>
-          <div class="text-right ml-4">
             <span class="badge" :class="getStatusBadgeClass(order.status)">
               {{ order.status }}
             </span>
           </div>
         </div>
 
-        <!-- Order Items -->
-        <div class="space-y-3">
-          <h4 class="font-semibold text-gray-700">Order Items:</h4>
-          <div v-for="item in order.items" :key="item.saleItemId" class="flex gap-4 p-3 bg-gray-50 rounded-lg">
-            <!-- Item Image -->
-            <div class="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
-              <img
-                v-if="item.imageUrl"
-                :src="getImageUrl(item.imageUrl)"
-                :alt="item.description"
-                class="w-full h-full object-cover"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                No Image
+        <!-- Order Content - Group items by seller -->
+        <div class="p-6 space-y-6">
+          <!-- Group items by seller -->
+          <div v-for="(sellerGroup, sellerId) in groupItemsBySeller(order.items)" :key="sellerId" class="space-y-4">
+            <!-- Seller Header -->
+            <div class="border-l-4 border-blue-400 pl-4 py-2 bg-blue-50 rounded-r">
+              <h3 class="font-semibold text-gray-700">Seller: {{ sellerGroup.sellerName }}</h3>
+            </div>
+            
+            <!-- Items from this seller -->
+            <div class="space-y-3 ml-4">
+              <div v-for="item in sellerGroup.items" :key="item.saleItemId" class="flex gap-4 p-3 bg-gray-50 rounded-lg">
+                <!-- Item Image -->
+                <div class="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
+                  <img
+                    v-if="item.imageUrl"
+                    :src="getImageUrl(item.imageUrl)"
+                    :alt="item.description"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                    No Image
+                  </div>
+                </div>
+
+                <!-- Item Details -->
+                <div class="flex-1">
+                  <p class="font-semibold text-gray-800">{{ item.description }}</p>
+                  <!-- Display brand, model, color, storage size -->
+                  <div class="mt-1 text-sm text-gray-600">
+                    <span v-if="item.brandName" class="mr-2">Brand: <span class="font-semibold">{{ item.brandName }}</span></span>
+                    <span v-if="item.model" class="mr-2">Model: <span class="font-semibold">{{ item.model }}</span></span>
+                    <span v-if="item.color" class="mr-2">Color: <span class="font-semibold">{{ item.color }}</span></span>
+                    <span v-if="item.storageGb" class="mr-2">Storage: <span class="font-semibold">{{ item.storageGb }}GB</span></span>
+                  </div>
+                  <div class="mt-2 flex gap-4 text-sm text-gray-600">
+                    <span>Quantity: <span class="font-semibold">{{ item.quantity }}</span></span>
+                    <span>Unit Price: <span class="font-semibold">฿{{ item.unitPrice.toLocaleString() }}</span></span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Item Details -->
-            <div class="flex-1">
-              <p class="font-semibold text-gray-800">{{ item.description }}</p>
-              <div class="mt-2 flex gap-4 text-sm text-gray-600">
-                <span>Quantity: <span class="font-semibold">{{ item.quantity }}</span></span>
-                <span>Unit Price: <span class="font-semibold">฿{{ item.unitPrice.toLocaleString() }}</span></span>
+          <!-- Order Summary Footer -->
+          <div class="pt-4 border-t border-gray-200 mt-4">
+            <div class="flex justify-between items-center">
+              <div class="text-sm text-gray-600">
+                <p>Shipping To: <span class="font-semibold">{{ order.shippingAddress || 'N/A' }}</span></p>
+                <p v-if="order.paymentDate" class="mt-1">Payment Date: <span class="font-semibold">{{ formatOrderDate(order.paymentDate) }}</span></p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-600">Total Amount:</p>
+                <p class="text-2xl font-bold text-blue-600">฿{{ order.totalAmount.toLocaleString() }}</p>
               </div>
             </div>
           </div>
@@ -120,12 +135,52 @@ const getCurrentUserId = () => {
   }
 };
 
-// Sort orders by orderDate DESC
+// Sort orders by orderDate DESC (newest first)
 const sortedOrders = computed(() => {
   return orders.value
-    ? [...orders.value].sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))
+    ? [...orders.value].sort((a, b) => {
+        const dateA = new Date(a.orderDate || a.orderTimestamp || 0);
+        const dateB = new Date(b.orderDate || b.orderTimestamp || 0);
+        return dateB - dateA; // DESC: newest first
+      })
     : [];
 });
+
+// Group items within an order by seller
+const groupItemsBySeller = (items) => {
+  if (!items || items.length === 0) return {};
+  
+  const grouped = {};
+  items.forEach(item => {
+    const sellerId = item.sellerId || item.seller?.id || 'unknown';
+    const sellerName = item.sellerNickname || item.seller?.nickName || item.seller?.nickname || 'Unknown Seller';
+    
+    if (!grouped[sellerId]) {
+      grouped[sellerId] = {
+        sellerName: sellerName,
+        items: []
+      };
+    }
+    
+    grouped[sellerId].items.push(item);
+  });
+  
+  return grouped;
+};
+
+// Get border color class based on order status
+const getOrderBorderClass = (status) => {
+  switch (status) {
+    case 'COMPLETED': return 'border-green-500';
+    case 'CANCELLED': return 'border-red-500';
+    case 'CANCELED': return 'border-red-500';
+    case 'PENDING': return 'border-yellow-500';
+    case 'PROCESSING': return 'border-blue-500';
+    case 'SHIPPED': return 'border-purple-500';
+    case 'DELIVERED': return 'border-green-600';
+    default: return 'border-gray-400';
+  }
+};
 
 // Format order date for display
 const formatOrderDate = (dateString) => {

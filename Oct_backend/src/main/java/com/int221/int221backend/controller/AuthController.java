@@ -68,7 +68,7 @@ public class AuthController {
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new ErrorResponse("Invalid email/password")
+                    new ErrorResponse("Email or Password is incorrect.")
             );
         } catch (DisabledException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
