@@ -41,6 +41,11 @@
       <span>{{ error }}</span>
     </div>
 
+    <!-- DEBUG RAW JSON -->
+    <div v-if="orders.length > 0" class="p-4 bg-gray-100 mb-4 overflow-auto max-h-40 text-xs">
+       <pre>{{ JSON.stringify(orders[0], null, 2) }}</pre>
+    </div>
+
     <!-- Empty Orders -->
     <div v-else-if="!orders || orders.length === 0" class="text-center py-12">
       <p class="text-xl text-gray-500">You have no orders yet</p>
@@ -179,11 +184,10 @@ const filteredOrders = computed(() => {
   if (!orders.value) return [];
   if (currentTab.value === 'ALL') return orders.value;
   if (currentTab.value === 'CANCELED') {
-    // API returns orderStatus, but code might expect status. Check both.
-    return orders.value.filter(o => 
-      (o.status === 'CANCELLED' || o.status === 'CANCELED') || 
-      (o.orderStatus === 'CANCELLED' || o.orderStatus === 'CANCELED')
-    );
+    return orders.value.filter(o => {
+      const status = (o.status || o.orderStatus || '').toUpperCase();
+      return status.includes('CANCEL');
+    });
   }
   return orders.value;
 });
@@ -265,12 +269,12 @@ const getImageUrl = (filename) => filename ? `/or4/uploads/${encodeURIComponent(
 
 // Get status badge class
 const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case 'COMPLETED': return 'badge-success';
-    case 'CANCELLED': return 'badge-error';
-    case 'PENDING': return 'badge-warning';
-    default: return 'badge-info';
-  }
+  if (!status) return 'badge-info';
+  const s = status.toUpperCase();
+  if (s === 'COMPLETED') return 'badge-success';
+  if (s.includes('CANCEL')) return 'badge-error';
+  if (s === 'PENDING') return 'badge-warning';
+  return 'badge-info';
 };
 
 // Load orders
