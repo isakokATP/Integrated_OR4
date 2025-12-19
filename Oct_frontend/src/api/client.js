@@ -89,8 +89,7 @@ async function apiCall(endpoint, options = {}, isRetry = false) {
   // Fix: Prevent double slashes if apiUrl ends with / and endpoint starts with /
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const url = `${apiUrl}${cleanEndpoint}`;
-  console.log("--- API REQUEST LOG ---");
-  console.log("URL:", url);
+
 
   const defaultOptions = {
     headers: {
@@ -108,12 +107,11 @@ async function apiCall(endpoint, options = {}, isRetry = false) {
 
   // ถ้า token หมดอายุ / invalid ให้ลอง refresh ตาม requirement
   if (!response.ok && (response.status === 401 || response.status === 403) && !isRetry) {
-    console.warn("Received 401/403. Trying to refresh access token...");
-    alert("DEBUG: Got 401/403 from API. Attempting refresh..."); // Debug
+
 
     const refreshResult = await refreshAccessToken();
     if (refreshResult.ok && refreshResult.accessToken) {
-      alert("DEBUG: Refresh Success! New Token: " + refreshResult.accessToken.substring(0, 10) + "..."); // Debug
+
       // อัปเดต Authorization header ใน request เดิม (ถ้ามี)
       const newHeaders = new Headers(requestOptions.headers || {});
       newHeaders.set("Authorization", `Bearer ${refreshResult.accessToken}`);
@@ -161,12 +159,7 @@ async function handleErrorResponse(response) {
     response: response,
   };
 
-  console.error("--- API ERROR LOG ---");
-  console.error("URL:", apiError.url);
-  console.error("Status:", apiError.status);
-  console.error("Message:", apiError.message);
-  console.error("Full Error Object:", apiError);
-  console.error("----------------------");
+
 
   throw apiError;
 }
