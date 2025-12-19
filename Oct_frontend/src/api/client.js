@@ -109,9 +109,11 @@ async function apiCall(endpoint, options = {}, isRetry = false) {
   // ถ้า token หมดอายุ / invalid ให้ลอง refresh ตาม requirement
   if (!response.ok && (response.status === 401 || response.status === 403) && !isRetry) {
     console.warn("Received 401/403. Trying to refresh access token...");
+    alert("DEBUG: Got 401/403 from API. Attempting refresh..."); // Debug
 
     const refreshResult = await refreshAccessToken();
     if (refreshResult.ok && refreshResult.accessToken) {
+      alert("DEBUG: Refresh Success! New Token: " + refreshResult.accessToken.substring(0, 10) + "..."); // Debug
       // อัปเดต Authorization header ใน request เดิม (ถ้ามี)
       const newHeaders = new Headers(requestOptions.headers || {});
       newHeaders.set("Authorization", `Bearer ${refreshResult.accessToken}`);
