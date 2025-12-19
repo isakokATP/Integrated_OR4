@@ -1,4 +1,4 @@
-import { handleApiError } from "../api/client";
+import { handleApiError, api } from "../api/client";
 
 // Use BASE_URL from Vite config (will be "/or4/" in production, "/" in development)
 // This ensures API calls use the correct base path
