@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: int221-mysql
+    restart: always
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - int221-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./Oct_backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: int221-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - ./users:/app/users
+    networks:
+      - int221-net
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pbi1?useSSL=false&serverTimezone=Asia/Bangkok&allowPublicKeyRetrieval=true
+
+  frontend:
+    build:
+      context: ./Oct_frontend
+      dockerfile: Dockerfile
+    container_name: int221-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./uploads:/app/uploads
+      - ./users:/app/users
+      # Mount SSL certificates for HTTPS (fullchain.pem, privkey.pem, dhparam-2048.pem)
+      - ./nginx/ssl:/ssl
+    networks:
+      - int221-net
+
+volumes:
+  mysql-data:
+
+networks:
+  int221-net:
