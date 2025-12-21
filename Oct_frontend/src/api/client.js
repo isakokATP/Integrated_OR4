@@ -65,17 +65,14 @@ async function refreshAccessToken() {
         break;
       case 400:
         // ไม่มี refresh token
-        clearStoredAccessToken();
         redirectToLogin(null);
         break;
       case 401:
         // refresh token invalid / expired
-        clearStoredAccessToken();
         redirectToLogin(null);
         break;
       case 403:
         // user ยังไม่ activate
-        clearStoredAccessToken();
         // Fixed: errorMessage was not defined, using default message or generic
         redirectToLogin(null);
         break;
