@@ -45,7 +45,8 @@ export default {
 
       try {
         const result = await fetchAndClassifySellerOrders(sellerId);
-        newOrders.value = result.newOrders;
+        // Include canceled orders in the "New Orders" tab as requested
+        newOrders.value = [...result.newOrders, ...result.canceledOrders].sort((a, b) => b.orderId - a.orderId);
         canceledOrders.value = result.canceledOrders;
         allOrders.value = result.allOrders;
         setNewOrdersCount(result.newOrders.concat(result.allOrders).length);

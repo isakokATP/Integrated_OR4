@@ -40,6 +40,13 @@ async function refreshAccessToken() {
     });
 
     switch (response.status) {
+      case 200:
+        const data = await response.json();
+        if (data.accessToken) {
+          setStoredAccessToken(data.accessToken);
+          return { ok: true, accessToken: data.accessToken };
+        }
+        break;
       case 400:
         // ไม่มี refresh token
         clearStoredAccessToken();
@@ -53,8 +60,9 @@ async function refreshAccessToken() {
       case 403:
         // user ยังไม่ activate
         clearStoredAccessToken();
+        // Fixed: errorMessage was not defined, using default message or generic
         redirectToLogin(
-          errorMessage || "Your account is not activated. Please check your email and sign in again."
+          "Your account is not activated. Please check your email and sign in again."
         );
         break;
       default:
