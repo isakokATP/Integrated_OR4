@@ -47,6 +47,15 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ""),
         },
+        "/itb-mshop": {
+          target: isProduction ? env.VITE_API_URL_PROD : env.VITE_API_URL_DEV,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/or4\/itb-mshop/, "/itb-mshop"), // Handle if prefixed in dev
+        },
+        "/uploads": {
+          target: isProduction ? env.VITE_API_URL_PROD : env.VITE_API_URL_DEV,
+          changeOrigin: true,
+        },
       },
     },
   };

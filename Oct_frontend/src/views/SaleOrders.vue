@@ -79,7 +79,8 @@ export default {
     };
 
     const getImageUrl = (filename) => {
-      return filename ? `/or4/uploads/${encodeURIComponent(filename)}` : null;
+      // Use BASE_URL from vite config to handle both dev (/) and prod (/or4/) handling
+      return filename ? `${import.meta.env.BASE_URL}uploads/${encodeURIComponent(filename)}` : null;
     };
 
     const getStatusColor = (status) => {
