@@ -18,15 +18,31 @@ export function clearStoredAccessToken() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
+
 function redirectToLogin(message) {
-  clearStoredAccessToken(); // Safety: always clear token before redirecting to login
-  if (message) {
-    // ใช้ alert แบบง่าย ๆ ให้ตรง requirement ข้อ error message
-    alert(message);
-    window.location.href = `${import.meta.env.BASE_URL}login`;
-  } else {
-    window.location.href = `${import.meta.env.BASE_URL}login`;
+  // Store current userId to check if the same user logs in again
+  const currentToken = getStoredAccessToken();
+  if (currentToken) {
+    try {
+      const payload = JSON.parse(atob(currentToken.split(".")[1]));
+      if (payload.id) {
+        localStorage.setItem("redirectUserId", payload.id);
+      }
+    } catch (e) {
+      // Ignore decoding errors
+    }
   }
+
+  clearStoredAccessToken(); // Safety: always clear token before redirecting to login
+
+  // Store current path to redirect back after login (if not already on login page)
+  const currentPath = window.location.pathname + window.location.search;
+  if (!currentPath.includes("login")) {
+    localStorage.setItem("redirectPath", currentPath);
+  }
+
+  // No alert as requested
+  window.location.href = `${import.meta.env.BASE_URL}login`;
 }
 
 // เรียก /v2/auth/refresh เพื่อขอ access token ใหม่ โดยใช้ HttpOnly refresh cookie
@@ -50,20 +66,18 @@ async function refreshAccessToken() {
       case 400:
         // ไม่มี refresh token
         clearStoredAccessToken();
-        redirectToLogin("Your session has expired. Please sign in again.");
+        redirectToLogin(null);
         break;
       case 401:
         // refresh token invalid / expired
         clearStoredAccessToken();
-        redirectToLogin("Your session is invalid or has expired. Please sign in again.");
+        redirectToLogin(null);
         break;
       case 403:
         // user ยังไม่ activate
         clearStoredAccessToken();
         // Fixed: errorMessage was not defined, using default message or generic
-        redirectToLogin(
-          "Your account is not activated. Please check your email and sign in again."
-        );
+        redirectToLogin(null);
         break;
       default:
         // กรณีอื่น ๆ

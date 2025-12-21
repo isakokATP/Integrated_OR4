@@ -81,11 +81,27 @@ async function onSubmit(e) {
         localStorage.setItem("accessToken", data.accessToken);
 
         // Decode JWT token to get user role
+
         try {
           const payload = JSON.parse(atob(data.accessToken.split(".")[1]));
           const userRole = payload.role;
 
           message.value = "Logged in successfully!";
+
+          // Check for redirect path (Only if it's the same user)
+          const redirectPath = localStorage.getItem("redirectPath");
+          const redirectUserId = localStorage.getItem("redirectUserId");
+
+          // Clean up localStorage immediately to avoid stale data
+          localStorage.removeItem("redirectPath");
+          localStorage.removeItem("redirectUserId");
+
+          if (redirectPath && redirectUserId && String(redirectUserId) === String(payload.id)) {
+             setTimeout(() => {
+                window.location.href = redirectPath;
+             }, 1000);
+             return; // Stop further redirects
+          }
 
           // Redirect based on user role
           if (userRole === "SELLER") {
@@ -99,6 +115,17 @@ async function onSubmit(e) {
         } catch (e) {
           console.error("Error decoding token:", e);
           message.value = "Logged in successfully!";
+          
+          // Check for redirect path in catch block too
+          const redirectPath = localStorage.getItem("redirectPath");
+          if (redirectPath) {
+             localStorage.removeItem("redirectPath");
+             setTimeout(() => {
+                window.location.href = redirectPath;
+             }, 1000);
+             return;
+          }
+
           setTimeout(() => router.push({ name: "sale-items-page" }), 1000);
         }
       } else {
