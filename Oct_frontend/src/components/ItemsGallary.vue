@@ -3,6 +3,8 @@ import { useRouter } from "vue-router";
 import { addToCart } from "../services/cartService";
 import { updateCartCount } from "../composables/useCartCount";
 
+import defaultImage from '../assets/iphone.png';
+
 const props = defineProps({
   items: Array,
 });
@@ -41,6 +43,14 @@ async function handleAddToCart(event, item) {
     }
   }
 }
+
+const getImageUrl = (item) => {
+  if (item.saleItemImages && item.saleItemImages.length > 0) {
+    const filename = item.saleItemImages[0].fileName || item.saleItemImages[0].filename;
+    return `/or4/itb-mshop/images/${encodeURIComponent(filename)}`;
+  }
+  return null;
+};
 </script>
 
 <template>
@@ -71,9 +81,10 @@ async function handleAddToCart(event, item) {
         >
           <div class="relative overflow-hidden">
             <img
-              src="../assets/iphone.png"
+              :src="getImageUrl(item) || defaultImage"
               alt="Product"
               class="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+              @error="$event.target.src = defaultImage"
             />
             <!-- Hover overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
