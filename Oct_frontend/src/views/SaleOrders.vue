@@ -79,8 +79,8 @@ export default {
     };
 
     const getImageUrl = (filename) => {
-      // Use BASE_URL from vite config to handle both dev (/) and prod (/or4/) handling
-      return filename ? `${import.meta.env.BASE_URL}uploads/${encodeURIComponent(filename)}` : null;
+      // Use absolute path /uploads/ as Nginx has a root-level location for it
+      return filename ? `/uploads/${encodeURIComponent(filename)}` : null;
     };
 
     const getStatusColor = (status) => {

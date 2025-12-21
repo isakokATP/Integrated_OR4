@@ -441,7 +441,7 @@ function getImagePreview(file) {
 function getImageUrl(fileName) {
   // Use Nginx to serve images directly from shared volume
   // Frontend is served at /or4/ base path
-  return `/or4/uploads/${encodeURIComponent(fileName)}`;
+  return `/uploads/${encodeURIComponent(fileName)}`;
 }
 
 function getMainImagePreview() {

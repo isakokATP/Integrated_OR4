@@ -153,7 +153,7 @@ const formatDate = (dateString) => {
         hour: "2-digit", minute: "2-digit"
     });
 };
-const getImageUrl = (filename) => filename ? `/or4/uploads/${encodeURIComponent(filename)}` : null;
+const getImageUrl = (filename) => filename ? `/uploads/${encodeURIComponent(filename)}` : null;
 
 const getCurrentUserId = () => {
   const token = localStorage.getItem("accessToken");

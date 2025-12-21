@@ -279,7 +279,7 @@ import { updateCartCount } from "../composables/useCartCount";
 // Get image URL
 const getImageUrl = (filename) => {
   if (!filename) return null;
-  return `/or4/uploads/${encodeURIComponent(filename)}`;
+  return `/uploads/${encodeURIComponent(filename)}`;
 };
 
 const router = useRouter();

@@ -40,7 +40,7 @@ function getImageUrl(fileNameOrFilename) {
   const name = fileNameOrFilename ?? "";
   // Use Nginx to serve images directly from shared volume
   // Frontend is served at /or4/ base path
-  return `/or4/uploads/${encodeURIComponent(name)}`;
+  return `/uploads/${encodeURIComponent(name)}`;
 }
 
 const mainImageUrl = computed(() => {
