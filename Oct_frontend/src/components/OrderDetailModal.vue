@@ -119,7 +119,7 @@ export default {
     };
 
     const getImageUrl = (filename) => {
-      return filename ? `/uploads/${encodeURIComponent(filename)}` : null;
+      return filename ? `/or4/itb-mshop/images/${encodeURIComponent(filename)}` : null;
     };
 
     return { close, formatCurrency, formatDate, getImageUrl };
