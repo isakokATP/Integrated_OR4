@@ -80,7 +80,7 @@ export default {
 
     const getImageUrl = (filename) => {
       // Use absolute path /uploads/ as Nginx has a root-level location for it
-      return filename ? `/uploads/${encodeURIComponent(filename)}` : null;
+      return filename ? `/or4/itb-mshop/images/${encodeURIComponent(filename)}` : null;
     };
 
     const getStatusColor = (status) => {
