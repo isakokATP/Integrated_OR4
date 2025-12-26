@@ -224,6 +224,7 @@ public class OrderService {
                         .map(com.int221.int221backend.dto.response.history.OrderItemDetailDto::fromEntity)
                         .collect(Collectors.toList()))
                 .buyerNickname(order.getBuyer().getNickName())
+                .isViewed(order.getIsViewed())
                 .build();
     }
 

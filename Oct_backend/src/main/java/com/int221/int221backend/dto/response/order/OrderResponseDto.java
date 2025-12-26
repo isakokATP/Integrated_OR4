@@ -23,4 +23,5 @@ public class OrderResponseDto {
     private String note;
     private java.util.List<com.int221.int221backend.dto.response.history.OrderItemDetailDto> items;
     private String buyerNickname;
+    private Boolean isViewed;
 }
