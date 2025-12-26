@@ -181,8 +181,8 @@ const fetchOrder = async () => {
         const data = await getSellerOrderDetail(sellerId, orderId);
         order.value = data;
         
-        // Always try to mark as viewed if status is COMPLETED
-        if (data.orderStatus === 'COMPLETED') {
+        // Always try to mark as viewed if status is COMPLETED or CANCELLED
+        if (['COMPLETED', 'CANCELLED'].includes(data.orderStatus)) {
              try {
                 await markOrderViewed(orderId);
              } catch(ignore) {
